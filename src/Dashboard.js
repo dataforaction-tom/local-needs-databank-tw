@@ -4,11 +4,13 @@ import ObservationsChart from './ObservationsChart';
 import supabase from './supabaseClient';
 
 function Dashboard({ dashboardId }) {
-  const [datasets, setDatasets] = useState([]);
-  const [observations, setObservations] = useState([]);
-  const [selectedDatasetId, setSelectedDatasetId] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [filteredObservations, setFilteredObservations] = useState([]);
+    const [datasets, setDatasets] = useState([]);
+    const [observations, setObservations] = useState([]);
+    const [filteredObservations, setFilteredObservations] = useState([]);
+    const [regions, setRegions] = useState([]);
+    const [selectedRegion, setSelectedRegion] = useState('All');
+    const [selectedDatasetId, setSelectedDatasetId] = useState('');
+    const [loading, setLoading] = useState(true);
 
 
   useEffect(() => {
@@ -27,61 +29,82 @@ function Dashboard({ dashboardId }) {
 
       if (datasetsError) {
         console.error('Error fetching datasets', datasetsError);
+        setLoading(false);
         return;
       }
 
       setDatasets(datasetsData.map(dd => dd.datasets));
+      setSelectedDatasetId(datasetsData[0]?.dataset?.id);  // Automatically select the first dataset
 
-      // Fetch observations for the first dataset initially or based on user action
-      fetchObservations(datasetsData[0]?.dataset?.id);
+           // Fetch unique regions
+           const { data: regionsData, error: regionsError } = await supabase
+           .from('observations')
+           .select('region', { distinct: true });
+           
+   
+         if (regionsError) {
+           console.error('Error fetching regions', regionsError);
+         } else {
+           setRegions(['All', ...new Set(regionsData.map(r => r.region))]);
+         }
+   
+         setLoading(false);
+       }
+   
+       fetchData();
+     }, [dashboardId]);
 
-      setLoading(false);
-    }
+     useEffect(() => {
+        fetchObservations(selectedDatasetId);
+      }, [selectedDatasetId, selectedRegion]);
 
-    fetchData();
-  }, [dashboardId]);
-
-  const fetchObservations = async (datasetId) => {
-    if (!datasetId) return;
-
-    const { data: observationsData, error: observationsError } = await supabase
-      .from('observations')
-      .select('*')
-      .eq('dataset_id', datasetId);
-
-    if (observationsError) {
-      console.error('Error fetching observations', observationsError);
-    } else {
-      setObservations(observationsData);
-    }
-  };
-
-  const handleDatasetChange = (e) => {
-    const datasetId = e.target.value;
-    setSelectedDatasetId(datasetId);
-    fetchObservations(datasetId);
-  };
+      const fetchObservations = async (datasetId) => {
+        if (!datasetId) return;
+    
+        let query = supabase.from('observations').select('*').eq('dataset_id', datasetId);
+        if (selectedRegion !== 'All') {
+          query = query.eq('region', selectedRegion);
+        }
+        console.log(query);
+        const { data, error } = await query;
+        console.log('observation data',data);
+        if (error) {
+          console.error('Error fetching observations', error);
+        } else {
+          setObservations(data);
+          setFilteredObservations(data); // Initially set filtered data as all data
+        }
+      };
+    
+      const handleDatasetChange = (e) => {
+        setSelectedDatasetId(e.target.value);
+      };
+    
+      const handleRegionChange = (e) => {
+        setSelectedRegion(e.target.value);
+      };
 
   return (
     <div className="dashboard">
       <h1>Dashboard Overview</h1>
+      <select value={selectedRegion} onChange={handleRegionChange}>
+        {regions.map(region => (
+          <option key={region} value={region}>{region}</option>
+        ))}
+      </select>
       <select value={selectedDatasetId || ''} onChange={handleDatasetChange}>
         <option value="">Select a Dataset</option>
         {datasets.map(dataset => (
           <option key={dataset.id} value={dataset.id}>{dataset.title}</option>
         ))}
       </select>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
+      {loading ? <p>Loading...</p> : (
         <>
           <ObservationsTable
             observations={observations}
             setFilteredObservations={setFilteredObservations}
-            />
-
-            <ObservationsChart observations={filteredObservations} />
-
+          />
+          <ObservationsChart observations={filteredObservations} />
         </>
       )}
     </div>
