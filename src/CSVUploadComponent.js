@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse';
 import TablePreview from './TablePreview';
-import supabase from './supabaseClient';  // Adjust this path according to your project structure
+import supabase from './supabaseClient';  
 
 const CSVUploadComponent = () => {
   const [data, setData] = useState([]);
@@ -20,10 +20,12 @@ const CSVUploadComponent = () => {
 
   const handleDragOver = (e) => {
     e.preventDefault(); // Prevent default behavior (Prevent file from being opened)
+    e.stopPropagation(); // Stop propagation to prevent affecting other elements.
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
+    e.stopPropagation(); // Ensure the event does not propagate.
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFileDrop(e.dataTransfer.files[0]);
     }
@@ -133,9 +135,10 @@ const CSVUploadComponent = () => {
   };
 
   return (
-    <div className='p-4'>
+    <div className='p-4 my-20'>
       <div
         className='border-dashed border-4 border-gray-400 py-12 flex justify-center items-center cursor-pointer'
+        style={{ position: 'relative' }} // Ensure this div is positioned relatively
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
@@ -143,7 +146,7 @@ const CSVUploadComponent = () => {
           type="file"
           accept=".csv"
           onChange={(e) => handleFileDrop(e.target.files[0])}
-          style={{ width: "100%", height: "100%", opacity: 0, position: "absolute" }}
+          style={{ width: "100%", height: "100%", opacity: 0, position: "absolute", zIndex: 10 }}
         />
         <p>Drag and drop your CSV file here, or click to select files</p>
       </div>
