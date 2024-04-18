@@ -2,6 +2,34 @@ import React, { useMemo } from 'react';
 import { useTable } from 'react-table';
 import Select from 'react-select';
 
+const customStyles = {
+  option: (provided, state) => ({
+    ...provided,
+    color: 'black',  // Ensures dropdown text is black
+  }),
+  control: styles => ({ ...styles, backgroundColor: 'white' }),
+  singleValue: (provided, state) => {
+    return { ...provided, color: 'black' };
+  },
+  multiValue: (provided, state) => ({
+    ...provided,
+    backgroundColor: '#662583',  // Purple background for selected options
+  }),
+  multiValueLabel: (provided, state) => ({
+    ...provided,
+    color: 'white',  // White text for selected options
+  }),
+  multiValueRemove: (provided, state) => ({
+    ...provided,
+    color: 'white',  // White text for the remove icon in selected options
+    ':hover': {
+      backgroundColor: '#C7215D',  // Darker purple background on hover in selected options
+      color: 'white',
+    },
+  }),
+};
+
+
 const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) => {
   const options = [
     { value: 'Place', label: 'Place' },
@@ -21,6 +49,7 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) =
             value={mappings[idx]}
             onChange={option => onMappingChange(idx, option)}
             className='mb-2'
+            styles={customStyles}
           />
           {column}
         </div>
@@ -49,11 +78,11 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) =
   return (
     <div className='overflow-x-auto'>
       <table {...getTableProps()} className='min-w-full divide-y divide-gray-200'>
-        <thead className='bg-gray-50'>
+        <thead className='bg-gray-50 sticky top-0'>
           {headerGroups.map(headerGroup => (
             <tr {...headerGroup.getHeaderGroupProps()}>
               {headerGroup.headers.map(column => (
-                <th {...column.getHeaderProps()} className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                <th {...column.getHeaderProps()} className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-[#662583] text-white'>
                   {column.render('Header')}
                 </th>
               ))}
@@ -64,9 +93,9 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) =
           {rows.map(row => {
             prepareRow(row);
             return (
-              <tr {...row.getRowProps(getRowProps(row))}>
+              <tr {...row.getRowProps(getRowProps(row)) }>
                 {row.cells.map(cell => (
-                  <td {...cell.getCellProps()} className='px-6 py-4 whitespace-nowrap'>
+                  <td {...cell.getCellProps()} className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold border'>
                     {cell.render('Cell')}
                   </td>
                 ))}

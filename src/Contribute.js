@@ -4,7 +4,9 @@ import CSVUploadComponent from './CSVUploadComponent'; // adjust the path as nec
 const Contribute = () => {
   return (
     <div className="container mx-auto px-4">
-      <h1 className="text-xl font-semibold text-gray-800 my-4">Contribute Data</h1>
+      <h1 className="text-4xl font-semibold text-gray-800 my-4 text-center">Contribute Data</h1>
+      <p className='font-bold text-lg text-center'>Welcome to the Local Needs Databank contribution page</p>
+      <p className='font-bold text-lg text-center'>Here you can contribute data to the databank using this tool following our data standard</p>
       <CSVUploadComponent />
     </div>
   );
