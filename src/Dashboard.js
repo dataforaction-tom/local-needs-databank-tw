@@ -12,6 +12,8 @@ function Dashboard({ dashboardId }) {
     const [selectedRegion, setSelectedRegion] = useState('All');
     const [selectedDataset, setSelectedDataset] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isTableVisible, setIsTableVisible] = useState(true);
+
 
     useEffect(() => {
         async function fetchData() {
@@ -96,33 +98,52 @@ const fetchObservations = async (datasetId) => {
         setSelectedRegion(e.target.value);
     };
 
+    const toggleTableVisibility = () => {
+      setIsTableVisible(!isTableVisible);
+    };
+    
+
     return (
-        <div className="bg-slate-50 p-5 m-5">
-            <h3 className='text-lg font-bold px-5'>Select your dataset from here. You can explore this in the table and chart below</h3>
-            <Select
-                value={selectedDataset}
-                onChange={handleDatasetChange}
-                options={datasets}
-                placeholder="Select a Dataset"
-                isClearable
-                isSearchable
-                className='w-1/3 px-5'
-            />
-            {loading ? <p>Loading...</p> : (
-                <>
-                    <ObservationsTable
-                        title={selectedDataset ? selectedDataset.label : ''}
-                        observations={observations}
-                        setFilteredObservations={setFilteredObservations}
-                    />
-                    <ObservationsChart
-                        observations={filteredObservations}
-                        title={selectedDataset ? selectedDataset.label : ''}
-                    />
-                </>
-            )}
-        </div>
-    );
+      <div className="bg-slate-50 p-5 m-5">
+          <h3 className='text-lg font-bold px-5'>Select your dataset from here. You can explore this in the table and chart below</h3>
+          <Select
+              value={selectedDataset}
+              onChange={handleDatasetChange}
+              options={datasets}
+              placeholder="Select a Dataset"
+              isClearable
+              isSearchable
+              className='w-1/3 px-5 mb-4'
+          />
+          <div className="flex justify-between items-center">
+              <div className="flex-grow">
+                  {/* Placeholder for additional content or spacing */}
+              </div>
+              <button 
+                  onClick={toggleTableVisibility}
+                  className="bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300"
+              >
+                  {isTableVisible ? 'Hide Table' : 'Show Table'}
+              </button>
+          </div>
+          {loading ? <p>Loading...</p> : (
+              <>
+                  {isTableVisible && (
+                      <ObservationsTable
+                          title={selectedDataset ? selectedDataset.label : ''}
+                          observations={observations}
+                          setFilteredObservations={setFilteredObservations}
+                      />
+                  )}
+                  <ObservationsChart
+                      observations={filteredObservations}
+                      title={selectedDataset ? selectedDataset.label : ''}
+                  />
+              </>
+          )}
+      </div>
+  );
+  
 }
 
 export default Dashboard;

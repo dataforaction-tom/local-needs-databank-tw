@@ -11,6 +11,7 @@ const Navigation = () => {
     { name: 'Context', path: '/context' },
     { name: 'Charity', path: '/charity' },
     { name: 'Explore', path: '/explore' },
+    { name: 'Contribute', path: '/contribute'}
   ];
 
   return (
@@ -21,7 +22,7 @@ const Navigation = () => {
           <li key={index} className="flex-grow text-center border-r-2 border-white">
             <NavLink
               to={item.path}
-              className={`block p-4 text-white transition-colors duration-300 ${
+              className={`block py-4 text-white transition-colors duration-300 text-xl font-bold ${
                 location.pathname === item.path
                   ? 'bg-[#C7215D]'
                   : 'hover:bg-[#C7215D]'

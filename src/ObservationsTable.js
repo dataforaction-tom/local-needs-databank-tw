@@ -149,7 +149,7 @@ const regionOptions = useMemo(() => {
                     <span>
                       {column.isSorted ? (column.isSortedDesc ? ' 🔽' : ' 🔼') : ''}
                     </span>
-                    <div>{column.canFilter ? column.render('Filter') : null}</div>
+                    {column.canFilter && column.id !== 'value' && column.id !== 'date' ? column.render('Filter') : null}
                   </th>
                 ))}
               </tr>

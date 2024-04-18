@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Dashboard from './Dashboard';
 import Navigation from './Navigation';
 import Health from './Health';
+import Contribute from './Contribute';
 // Import your page components for routing
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard dashboardId={1} />} />
           <Route path="/health" element={<Health/>} />
+          <Route path="/contribute" element={<Contribute/>}/>
           {/* Define other routes corresponding to navItems in your Navigation component */}
           {/* For example:
               <Route path="/health-social" element={<HealthSocial />} />
