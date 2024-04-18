@@ -136,7 +136,7 @@ const regionOptions = useMemo(() => {
 
 
    return (
-    <div className='p-5 m-5'>
+    <div className='p-5 my-5'>
       <h2 className='text-xl font-bold'>{title || 'Filtered Observations Table'}</h2>
       <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
         <table {...getTableProps()} className="min-w-full divide-y divide-gray-200">
