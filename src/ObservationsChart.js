@@ -3,6 +3,7 @@ import Chart from 'chart.js/auto';
 
 function ObservationsChart({ observations }) {
   const chartRef = useRef(null);
+  const colorPalette = ['#662583', '#C7215D', '#881866', '#dd35a5'];
 
   useEffect(() => {
     if (!observations || observations.length === 0) {
@@ -11,28 +12,25 @@ function ObservationsChart({ observations }) {
     }
 
     const chartContext = chartRef.current.getContext('2d');
-    const filteredObservations = observations.filter(obs => obs && obs.region); // Ensure obs is valid and has a region property
-    const groupedData = groupDataByPlaceAndYear(filteredObservations);
+    const places = [...new Set(observations.map(obs => obs.place))].sort();  // Define places array here
 
-    // Make sure groupedData is not empty and is a valid object
-    if (!groupedData || Object.keys(groupedData).length === 0) {
-      console.log("Grouped data is empty or invalid.");
-      return; // Exit if grouped data is invalid
+    if (window.myBarChart) {
+      window.myBarChart.destroy();
     }
 
-    const chart = new Chart(chartContext, {
+    const datasets = createDatasets(observations, places);  // Pass places to function
+
+    window.myBarChart = new Chart(chartContext, {
       type: 'bar',
       data: {
-        labels: Object.keys(groupedData),
-        datasets: Object.keys(groupedData[Object.keys(groupedData)[0]]).map(year => ({
-          label: year,
-          data: Object.values(groupedData).map(placeData => placeData[year] || 0),
-          backgroundColor: getRandomColor(),
-          stack: 'Stack 0'
-        }))
+        labels: places,
+        datasets: datasets
       },
       options: {
         scales: {
+          x: {
+            stacked: false,
+          },
           y: {
             beginAtZero: true
           }
@@ -40,35 +38,43 @@ function ObservationsChart({ observations }) {
         plugins: {
           legend: {
             display: true
+          },
+          tooltip: {
+            enabled: true,
+            mode: 'index',
+            intersect: false
           }
         }
       }
     });
 
-    return () => chart && chart.destroy();
   }, [observations]);
 
-  function groupDataByPlaceAndYear(data) {
-    const grouped = {};
-    data.forEach(item => {
-      const place = item.place;
-      const year = new Date(item.date).getFullYear();
-      if (!grouped[place]) {
-        grouped[place] = {};
+  function createDatasets(data, places) {  // Accept places as an argument
+    const datasetMap = {};
+
+    data.forEach(obs => {
+      const name = obs.name;
+      const place = obs.place;
+      const value = parseInt(obs.value, 10);
+
+      if (!datasetMap[name]) {
+        datasetMap[name] = {
+          label: name,
+          data: Array(places.length).fill(0),  // Initialize array based on number of places
+          backgroundColor: colorPalette[(Object.keys(datasetMap).length) % colorPalette.length], // Cycle through the color palette
+          borderColor: colorPalette[(Object.keys(datasetMap).length) % colorPalette.length] // Same color for border
+        };
       }
-      grouped[place][year] = (grouped[place][year] || 0) + parseInt(item.value, 10);
+
+      const index = places.indexOf(place);
+      datasetMap[name].data[index] = (datasetMap[name].data[index] || 0) + value;
     });
-    return grouped;
+
+    return Object.values(datasetMap);
   }
 
-  function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  }
+ 
 
   return (
     <canvas ref={chartRef} />

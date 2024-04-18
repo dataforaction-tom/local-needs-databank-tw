@@ -65,9 +65,9 @@ function Dashboard({ dashboardId }) {
         if (selectedRegion !== 'All') {
           query = query.eq('region', selectedRegion);
         }
-        console.log(query);
+        
         const { data, error } = await query;
-        console.log('observation data',data);
+        
         if (error) {
           console.error('Error fetching observations', error);
         } else {
