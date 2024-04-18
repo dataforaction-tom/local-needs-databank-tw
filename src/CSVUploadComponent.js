@@ -75,13 +75,14 @@ const CSVUploadComponent = () => {
     setErrorRows([]);
     const result = await submitData(data, headerMappings, additionalFields);
     setLoading(false);
-    setMessage(result.message);
-    if (!result.success) {
-      setErrorRows(result.errorRows);
-      document.querySelector(`#row-${result.errorRows[0]}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  };
 
+    if (!result.success) {
+        setErrorRows(result.errorRows);  // Update state to mark error rows
+        setMessage(result.message);  // Display the error messages to the user
+    } else {
+        setMessage('Data uploaded successfully.');
+    }
+};
   const submitData = async (data, mappings, additionalFields) => {
     const headers = Object.keys(data[0]);
     const errors = [];

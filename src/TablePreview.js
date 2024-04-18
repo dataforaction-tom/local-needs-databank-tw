@@ -29,6 +29,12 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) =
     }));
   }, [columns, mappings, onMappingChange]);
 
+  const getRowProps = row => ({
+    style: {
+      backgroundColor: errorRows.includes(row.index + 1) ? '#f8d7da' : '' // Light red background for error rows, adjusting index to match data slice
+    }
+  });
+
   const {
     getTableProps,
     getTableBodyProps,
@@ -54,12 +60,11 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) =
             </tr>
           ))}
         </thead>
-        <tbody {...getTableBodyProps()} className='bg-white divide-y divide-gray-200'>
-          {rows.map((row, index) => {
+        <tbody {...getTableBodyProps()}>
+          {rows.map(row => {
             prepareRow(row);
-            const rowError = errorRows.includes(index + 1); // Adjust index to account for header
             return (
-              <tr {...row.getRowProps()} className={rowError ? 'bg-red-100' : ''} id={`row-${index + 1}`}>
+              <tr {...row.getRowProps(getRowProps(row))}>
                 {row.cells.map(cell => (
                   <td {...cell.getCellProps()} className='px-6 py-4 whitespace-nowrap'>
                     {cell.render('Cell')}
