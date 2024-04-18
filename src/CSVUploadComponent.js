@@ -6,6 +6,7 @@ import supabase from './supabaseClient';
 const CSVUploadComponent = () => {
   const [data, setData] = useState([]);
   const [columns, setColumns] = useState([]);
+  const [showFields, setShowFields] = useState(false); // State to control the visibility of input fields
   const [headerMappings, setHeaderMappings] = useState([]);
   const [additionalFields, setAdditionalFields] = useState({
     name: '',
@@ -24,6 +25,9 @@ const CSVUploadComponent = () => {
     name: false
   });
   
+  const toggleFields = () => {
+    setShowFields(!showFields); // Toggle the state to show or hide fields
+  };
 
   const handleDragOver = (e) => {
     e.preventDefault(); // Prevent default behavior (Prevent file from being opened)
@@ -198,6 +202,28 @@ const CSVUploadComponent = () => {
         />
         <p>Drag and drop your CSV file here, or click to select files</p>
       </div>
+
+      <div className='flex flex-col space-y-4 font-semibold text-black'>
+      <p>If you do not have a particular column in your data, you can use the input fields below to add to your data. PLEASE BE AWARE This will add the value you enter to EVERY row of your data.</p>
+      <p>For example, if you add Newcastle in the Place field, every row in your data will show as having been in Newcastle.</p>
+      <p>Click below to show these fields</p>
+      <div className='flex items-center justify-center'>
+        <button onClick={toggleFields} className="bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300 w-1/3 my-1">
+        {showFields ? 'Hide Additional Fields' : 'Show Additional Fields'}
+      </button>
+      </div>
+
+      {showFields && (
+        <div className='flex flex-col space-y-4 font-semibold text-black mb-4'>
+          
+          <input type="text" placeholder="Description" value={additionalFields.name} onChange={(e) => handleFieldChange('name', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
+          <input type="text" placeholder="Place" value={additionalFields.place} onChange={(e) => handleFieldChange('place', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
+          <input type="text" placeholder="Date" value={additionalFields.date} onChange={(e) => handleFieldChange('date', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
+          <input type="text" placeholder="Period" value={additionalFields.period} onChange={(e) => handleFieldChange('period', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
+        </div>
+      )}
+      </div>
+      <div className='my-5'>
       {data.length > 0 && columns.length > 0 && (
         <TablePreview
           data={data}
@@ -207,7 +233,7 @@ const CSVUploadComponent = () => {
           errorRows={errorRows}
         />
       )}
-
+      </div>
       <p className='my-5 text-lg font-bold'>All submissions require Name, Place, Date and Value. You can view which of these you have provided or indicated below. At 100% you have all the required fields</p>
       <div className="w-full bg-gray-300">
       <div className="bg-[#662583] text-xs font-medium text-blue-100 text-center p-0.5 leading-none" style={{ width: `${calculateCompletionPercentage()}%` }}> {calculateCompletionPercentage()}% Complete</div>
@@ -216,18 +242,18 @@ const CSVUploadComponent = () => {
       {Object.keys(completionStatus).map(key => (
         <RequirementFeedback key={key} isComplete={completionStatus[key]} field={key.charAt(0).toUpperCase() + key.slice(1)} />
       ))}
-        <input type="text" placeholder="Description" value={additionalFields.name} onChange={(e) => handleFieldChange('name', e.target.value)} className="p-2 border" />
-        <input type="text" placeholder="Place" value={additionalFields.place} onChange={(e) => handleFieldChange('place', e.target.value)} className="p-2 border" />
-        <input type="text" placeholder="Date" value={additionalFields.date} onChange={(e) => handleFieldChange('date', e.target.value)} className="p-2 border" />
-        <input type="text" placeholder="Period" value={additionalFields.period} onChange={(e) => handleFieldChange('period', e.target.value)} className="p-2 border" />
+        
       </div>
+      <div className='flex flex-row gap-4'>
       {isValid && !loading && (
         <button className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300' onClick={handleSubmission}>
           Submit Data
         </button>
       )}
+      {message && <p className='font-semibold text-xl text-red-500'>{message}</p>}
+      </div>
       {loading && <p>Submitting data...</p>}
-      {message && <p>{message}</p>}
+      
     </div>
   );
 };
