@@ -1,13 +1,46 @@
 import React from 'react';
 import Select from 'react-select';
 
-function ColumnFilter({ column }) {
+const customStyles = {
+  option: (provided, state) => ({
+    ...provided,
+    color: 'black',  // Ensures dropdown text is black
+  }),
+  control: styles => ({ ...styles, backgroundColor: 'white' }),
+  singleValue: (provided, state) => {
+    return { ...provided, color: 'black' };
+  },
+  multiValue: (provided, state) => ({
+    ...provided,
+    backgroundColor: '#662583',  // Purple background for selected options
+  }),
+  multiValueLabel: (provided, state) => ({
+    ...provided,
+    color: 'white',  // White text for selected options
+  }),
+  multiValueRemove: (provided, state) => ({
+    ...provided,
+    color: 'white',  // White text for the remove icon in selected options
+    ':hover': {
+      backgroundColor: '#C7215D',  // Darker purple background on hover in selected options
+      color: 'white',
+    },
+  }),
+};
+
+function ColumnFilter({ column, onFilterChange }) {
   const { filterValue, setFilter, filterOptions = [], id } = column;
 
-  // Ensure that filterOptions is always an array
   const options = Array.isArray(filterOptions) ? filterOptions : [];
-
   const multiSelectColumns = ['place', 'name', 'region'];
+
+  const handleChange = (value) => {
+    const valueArray = value ? value.map(item => item.value) : [];
+    setFilter(valueArray);
+    if (onFilterChange) {
+      onFilterChange(id, valueArray);
+    }
+  };
 
   if (multiSelectColumns.includes(id)) {
     const selectedValues = options.filter(option => Array.isArray(filterValue) && filterValue.includes(option.value));
@@ -16,11 +49,10 @@ function ColumnFilter({ column }) {
       <Select
         isMulti
         value={selectedValues}
-        onChange={value => {
-          setFilter(value ? value.map(item => item.value) : []);
-        }}
+        onChange={handleChange}
         options={options}
         className="text-sm"
+        styles={customStyles} 
       />
     );
   } else {
@@ -29,13 +61,15 @@ function ColumnFilter({ column }) {
         Search: {' '}
         <input
           value={filterValue || ''}
-          onChange={e => setFilter(e.target.value || undefined)}
-          placeholder="Filter..."
-          style={{
-            fontSize: '1rem',
-            margin: '0',
-            padding: '3px'
+          onChange={e => {
+            const newVal = e.target.value || undefined;
+            setFilter(newVal);
+            if (onFilterChange) {
+              onFilterChange(id, newVal ? [newVal] : []);
+            }
           }}
+          placeholder="Filter..."
+          style={{ fontSize: '1rem', margin: '0', padding: '3px' }}
         />
       </span>
     );

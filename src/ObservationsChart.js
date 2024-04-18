@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
 
-function ObservationsChart({ observations }) {
+function ObservationsChart({ observations, title }) {
   const chartRef = useRef(null);
   const colorPalette = ['#662583', '#C7215D', '#881866', '#dd35a5'];
 
@@ -77,7 +77,10 @@ function ObservationsChart({ observations }) {
  
 
   return (
+    <div className='p-5 m-5'>
+    <h2 className='text-xl font-bold '>{title || 'Filtered Observations Table'}</h2>
     <canvas ref={chartRef} />
+    </div>
   );
 }
 

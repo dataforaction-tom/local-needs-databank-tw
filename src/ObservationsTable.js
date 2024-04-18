@@ -1,6 +1,13 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { useTable, useFilters, useGlobalFilter, useSortBy, usePagination } from 'react-table';
 import ColumnFilter from './ColumnFilter'; // Ensure this component is correctly imported
+import { CSVLink } from 'react-csv'; // Import CSVLink
+import {
+  ChevronDoubleLeftIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronDoubleRightIcon
+} from '@heroicons/react/24/solid';
 
 const columnStyles = {
   name: { width: '30%' },
@@ -10,9 +17,11 @@ const columnStyles = {
   place: { width: '30%' },
   region: { width: '20%' }
 };
-function ObservationsTable({ observations, setFilteredObservations }) {
+function ObservationsTable({ observations, setFilteredObservations, title }) {
   // Debug: Log the observations to check incoming data
   console.log("Observations data:", observations);
+
+  
 
   const placeOptions = useMemo(() => {
     // Create unique options from the 'place' data field
@@ -117,32 +126,25 @@ const regionOptions = useMemo(() => {
     console.log("Filtered Observations:", rows.map(row => row.original));
   }, [rows, setFilteredObservations]);
 
-  useEffect(() => {
-    console.log("Table State:", state);
-  }, [state]);
-  
-  useEffect(() => {
-    console.log("Current Filters:", state.filters);
-  }, [state.filters]);
+  // CSV Data should be the current filtered and paged rows
+  const csvData = page.map(row => row.original);
 
-  useEffect(() => {
-    console.log("Sample data:", observations.slice(0, 5));
-  }, [observations]);
+
   
    // Define the scrolling container style
    const scrollContainerStyle = { maxHeight: '400px', overflowY: 'auto' };
 
 
    return (
-    <div>
-      <h2>Filtered Observations Table</h2>
+    <div className='p-5 m-5'>
+      <h2 className='text-xl font-bold'>{title || 'Filtered Observations Table'}</h2>
       <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
         <table {...getTableProps()} className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50 sticky top-0">
             {headerGroups.map(headerGroup => (
               <tr {...headerGroup.getHeaderGroupProps()}>
                 {headerGroup.headers.map(column => (
-                  <th {...column.getHeaderProps(column.getSortByToggleProps())} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th {...column.getHeaderProps(column.getSortByToggleProps())} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-[#662583] text-white">
                     {column.render('Header')}
                     <span>
                       {column.isSorted ? (column.isSortedDesc ? ' 🔽' : ' 🔼') : ''}
@@ -153,13 +155,13 @@ const regionOptions = useMemo(() => {
               </tr>
             ))}
           </thead>
-          <tbody {...getTableBodyProps()} className="bg-white divide-y divide-gray-200">
-            {page.map(row => {
+          <tbody {...getTableBodyProps()} className="divide-y divide-gray-200">
+            {page.map((row, index) => {
               prepareRow(row);
               return (
-                <tr {...row.getRowProps()}>
+                <tr {...row.getRowProps()} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}`}>
                   {row.cells.map(cell => (
-                    <td {...cell.getCellProps()} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td {...cell.getCellProps()} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold border">
                       {cell.render('Cell')}
                     </td>
                   ))}
@@ -169,10 +171,21 @@ const regionOptions = useMemo(() => {
           </tbody>
         </table>
       </div>
-        <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>{'<<'}</button>
-        <button onClick={() => previousPage()} disabled={!canPreviousPage}>{'<'}</button>
-        <button onClick={() => nextPage()} disabled={!canNextPage}>{'>'}</button>
-        <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>{'>>'}</button>
+      
+      <div className="flex justify-between items-center mt-4">
+      <div className="flex space-x-2">
+        <button onClick={() => gotoPage(0)} disabled={!canPreviousPage} className="p-2">
+          <ChevronDoubleLeftIcon className="h-5 w-5 text-gray-700" />
+        </button>
+        <button onClick={() => previousPage()} disabled={!canPreviousPage} className="p-2">
+          <ChevronLeftIcon className="h-5 w-5 text-gray-700" />
+        </button>
+        <button onClick={() => nextPage()} disabled={!canNextPage} className="p-2">
+          <ChevronRightIcon className="h-5 w-5 text-gray-700" />
+        </button>
+        <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage} className="p-2">
+          <ChevronDoubleRightIcon className="h-5 w-5 text-gray-700" />
+        </button>
         <span>
           Page{' '}
           <strong>
@@ -182,6 +195,7 @@ const regionOptions = useMemo(() => {
         <select
           value={state.pageSize}
           onChange={e => setPageSize(Number(e.target.value))}
+          className="border rounded-md text-gray-700 p-2 ml-2"
         >
           {[10, 20, 30, 40, 50].map(pageSize => (
             <option key={pageSize} value={pageSize}>
@@ -190,8 +204,17 @@ const regionOptions = useMemo(() => {
           ))}
         </select>
       </div>
-    
-  );
+      <CSVLink
+        data={csvData}
+        filename="filtered-observations.csv"
+        className="bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300"
+        target="_blank"
+      >
+        Download CSV
+      </CSVLink>
+    </div>
+  </div>
+);
 }
 
 export default ObservationsTable;
