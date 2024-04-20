@@ -2,6 +2,7 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import Dashboard from './Dashboard';
 import Card from './Card';
+import LocalAuthoritiesMap from './Maptest';
 
 const Health = () => {
     const cardData = [
@@ -43,6 +44,7 @@ const Health = () => {
           
         </div>
         <Dashboard dashboardId={1} />
+        <LocalAuthoritiesMap />
         </div>
       );
     };

@@ -3,6 +3,7 @@ import ObservationsTable from './ObservationsTable';
 import ObservationsChart from './ObservationsChart';
 import supabase from './supabaseClient';
 import Select from 'react-select';
+import LocalAuthorityMap from './Maptest'; // Ensure you import your map component
 
 function Dashboard({ dashboardId }) {
     const [datasets, setDatasets] = useState([]);
@@ -141,6 +142,10 @@ const fetchObservations = async (datasetId) => {
                   />
               </>
           )}
+          <LocalAuthorityMap
+                        selectedDataset={selectedDataset}
+                        filteredObservations={filteredObservations}
+                    />
       </div>
   );
   
