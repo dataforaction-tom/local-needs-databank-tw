@@ -100,8 +100,19 @@ const fetchObservations = async (datasetId) => {
     };
 
     const toggleTableVisibility = () => {
-      setIsTableVisible(!isTableVisible);
-    };
+        if (typeof setIsTableVisible !== 'function') {
+          console.error("setState function 'setIsTableVisible' is not available.");
+          return;
+        }
+      
+        if (typeof isTableVisible !== 'boolean') {
+          console.error("Invalid state: 'isTableVisible' is not a boolean.");
+          return;
+        }
+      
+        setIsTableVisible(!isTableVisible);
+      };
+      
     
 
     return (
@@ -136,10 +147,12 @@ const fetchObservations = async (datasetId) => {
                           setFilteredObservations={setFilteredObservations}
                       />
                   )}
+                  
                   <ObservationsChart
                       observations={filteredObservations}
                       title={selectedDataset ? selectedDataset.label : ''}
                   />
+                  
               </>
           )}
           <LocalAuthorityMap

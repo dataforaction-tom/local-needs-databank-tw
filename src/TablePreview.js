@@ -1,11 +1,13 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useTable } from 'react-table';
 import Select from 'react-select';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const customStyles = {
   option: (provided, state) => ({
     ...provided,
-    color: 'black',  // Ensures dropdown text is black
+    color: 'black',
   }),
   control: styles => ({ ...styles, backgroundColor: 'white' }),
   singleValue: (provided, state) => {
@@ -13,39 +15,48 @@ const customStyles = {
   },
   multiValue: (provided, state) => ({
     ...provided,
-    backgroundColor: '#662583',  // Purple background for selected options
+    backgroundColor: '#662583',
   }),
   multiValueLabel: (provided, state) => ({
     ...provided,
-    color: 'white',  // White text for selected options
+    color: 'white',
   }),
   multiValueRemove: (provided, state) => ({
     ...provided,
-    color: 'white',  // White text for the remove icon in selected options
+    color: 'white',
     ':hover': {
-      backgroundColor: '#C7215D',  // Darker purple background on hover in selected options
+      backgroundColor: '#C7215D',
       color: 'white',
     },
   }),
 };
 
-
 const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) => {
-  const options = [
-    { value: 'Place', label: 'Place' },
-    { value: 'Date', label: 'Date' },
-    { value: 'Period', label: 'Period' },
-    { value: 'Value', label: 'Value' },
-    { value: 'Name', label: 'Name' },
-    { value: 'Ignore', label: 'Ignore' }
-  ];
+  const columnsValid = columns && columns.length > 0 && columns.every(column => column);
+  const dataValid = data && data.length > 0;
+
+  // Use useEffect to handle side effects like toast notifications
+  useEffect(() => {
+    if (!columnsValid && data.length > 0) {
+      toast.error("CSV does not contain headers. Headers are required.");
+    }
+  }, [columnsValid, data.length]);
 
   const dataColumns = useMemo(() => {
+    if (!columnsValid) return [];
+
     return columns.map((column, idx) => ({
       Header: () => (
         <div>
           <Select
-            options={options}
+            options={[
+              { value: 'Place', label: 'Place' },
+              { value: 'Date', label: 'Date' },
+              { value: 'Period', label: 'Period' },
+              { value: 'Value', label: 'Value' },
+              { value: 'Name', label: 'Name' },
+              { value: 'Ignore', label: 'Ignore' }
+            ]}
             value={mappings[idx]}
             onChange={option => onMappingChange(idx, option)}
             className='mb-2'
@@ -58,10 +69,9 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) =
     }));
   }, [columns, mappings, onMappingChange]);
 
-  const getRowProps = row => ({
-    style: {
-      backgroundColor: errorRows.includes(row.index + 1) ? '#f8d7da' : '' // Light red background for error rows, adjusting index to match data slice
-    }
+  const tableInstance = useTable({
+    columns: dataColumns,
+    data: dataValid ? data : []
   });
 
   const {
@@ -70,13 +80,20 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) =
     headerGroups,
     rows,
     prepareRow,
-  } = useTable({
-    columns: dataColumns,
-    data: data.slice(1) // Exclude the header row for table data
-  });
+  } = tableInstance;
+
+  if (!dataValid || !columnsValid) {
+    return (
+      <div>
+        <ToastContainer />
+        <div className="font-bold text-red-500 text-xl">No valid CSV data or columns to display. Please check your have headers in your csv and data is not corrupted</div>
+      </div>
+    );
+  }
 
   return (
     <div className='overflow-x-auto'>
+      <ToastContainer />
       <table {...getTableProps()} className='min-w-full divide-y divide-gray-200'>
         <thead className='bg-gray-50 sticky top-0'>
           {headerGroups.map(headerGroup => (
@@ -93,7 +110,11 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) =
           {rows.map(row => {
             prepareRow(row);
             return (
-              <tr {...row.getRowProps(getRowProps(row)) }>
+              <tr {...row.getRowProps({
+                style: {
+                  backgroundColor: errorRows.includes(row.index) ? '#f8d7da' : '' // Light red background for error rows
+                }
+              })}>
                 {row.cells.map(cell => (
                   <td {...cell.getCellProps()} className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold border'>
                     {cell.render('Cell')}

@@ -92,11 +92,15 @@ function ObservationsChart({ observations, title }) {
   
 
   const toggleChartType = () => {
+    if (!chartTypes.length) {
+      console.error("Chart types are not defined.");
+      return;
+    }
     const currentTypeIndex = chartTypes.indexOf(chartType);
     const nextTypeIndex = (currentTypeIndex + 1) % chartTypes.length;
     setChartType(chartTypes[nextTypeIndex]);
   };
-
+  
 
   const downloadImage = () => {
     // Ensure the chart is rendered by checking if the canvas context is available

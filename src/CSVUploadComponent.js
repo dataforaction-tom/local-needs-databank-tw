@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import Papa from 'papaparse';
 import TablePreview from './TablePreview';
 import supabase from './supabaseClient';  
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const CSVUploadComponent = () => {
   const [data, setData] = useState([]);
@@ -43,18 +46,37 @@ const CSVUploadComponent = () => {
   };
 
   const handleFileDrop = (file) => {
+    // Check if the file type is CSV
+    if (file.type !== "text/csv" && !file.name.endsWith('.csv')) {
+      setMessage('Error: The file must be a CSV file.');
+      toast.error('The file must be a CSV file.');
+      return;
+    }
+
     Papa.parse(file, {
       complete: (results) => {
+        if (results.errors.length > 0) {
+          setMessage('Error parsing CSV: ' + results.errors.map(e => e.message).join(', '));
+          toast.error('Error parsing CSV: ' + results.errors.map(e => e.message).join(', '));
+          return;
+        }
+
         if (Array.isArray(results.data) && results.data.length > 0) {
-          const headers = Object.keys(results.data[0]);
+          // Check for headers
+          if (!results.meta.fields || results.meta.fields.length === 0) {
+            setMessage('Error: CSV does not contain headers.');
+            toast.error('CSV does not contain headers.');
+            return;
+          }
+
+          const headers = results.meta.fields;
           setData(results.data);
           setColumns(headers);
           const initialMappings = headers.map(header => ({ value: 'Ignore', label: 'Ignore' }));
           setHeaderMappings(initialMappings);
-          validateMappings(initialMappings); // Validate initial mappings
         } else {
-          console.error('Parsed data is not in expected format:', results.data);
           setMessage('Error in CSV format: No data or incorrect format.');
+          toast.error('Error in CSV format: No data or incorrect format.');
         }
       },
       header: true,
@@ -62,6 +84,7 @@ const CSVUploadComponent = () => {
       skipEmptyLines: true
     });
   };
+
   
 
   const validateMappings = (mappings) => {
@@ -187,12 +210,19 @@ const CSVUploadComponent = () => {
   };
 
   return (
+    <div>
+      <ToastContainer />
     <div className='p-4'>
       <div
         className='border-dashed border-4 border-gray-400 bg-purple-100 py-12 flex justify-center items-center cursor-pointer my-10'
         style={{ position: 'relative' }} // Ensure this div is positioned relatively
         onDragOver={handleDragOver}
-        onDrop={handleDrop}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFileDrop(e.dataTransfer.files[0]);
+          }
+        }}
       >
         <input
           type="file"
@@ -202,6 +232,9 @@ const CSVUploadComponent = () => {
         />
         <p>Drag and drop your CSV file here, or click to select files</p>
       </div>
+
+      {/* Display error or success messages */}
+      {message && <p className='font-semibold text-xl text-red-500'>{message}</p>}
 
       <div className='flex flex-col space-y-4 font-semibold text-black'>
       <p>If you do not have a particular column in your data, you can use the input fields below to add to your data. PLEASE BE AWARE This will add the value you enter to EVERY row of your data.</p>
@@ -254,6 +287,7 @@ const CSVUploadComponent = () => {
       </div>
       {loading && <p>Submitting data...</p>}
       
+    </div>
     </div>
   );
 };
