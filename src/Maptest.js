@@ -1,9 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, useMap  } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import supabase from './supabaseClient';
 import L from 'leaflet';
 import chroma from 'chroma-js';
+
+function Legend({ colorScale }) {
+    const map = useMap();
+
+    React.useEffect(() => {
+        const legend = L.control({ position: 'bottomright' });
+
+        legend.onAdd = function () {
+            const div = L.DomUtil.create('div', 'info legend');
+            div.style.padding = '6px 8px';
+            div.style.background = 'rgba(255,255,255,0.8)';
+            div.style.boxShadow = '0 0 15px rgba(0,0,0,0.2)';
+            div.style.borderRadius = '5px';
+            div.style.fontSize = '14px';
+
+            const grades = colorScale.domain();
+            const labels = [];
+
+            for (let i = 0; i < grades.length - 1; i++) {
+                const from = grades[i];
+                const to = grades[i + 1];
+                const color = colorScale(from + (to - from) / 2).hex();
+
+                labels.push(
+                    `<span style="background: ${color}; width: 24px; height: 24px; display: inline-block; margin-right: 5px; border: 1px solid #ddd;"></span> ` +
+                    `${Math.round(from)}&ndash;${Math.round(to)}`
+                );
+            }
+
+            div.innerHTML = labels.join('<br>');
+            return div;
+        };
+
+        legend.addTo(map);
+
+        return () => {
+            map.removeControl(legend);
+        };
+    }, [map, colorScale]);
+
+    return null;
+}
+
+
 
 function LocalAuthorityMap({ selectedDataset, filteredObservations }) {
     const [geoJsonData, setGeoJsonData] = useState([]);
@@ -11,14 +55,20 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations }) {
     const [loading, setLoading] = useState(true);
     const [map, setMap] = useState(null);
 
-    // Function to create a color scale based on the data
     const getColorScale = (data) => {
         const values = data.flatMap(feature =>
             feature.properties.observations.map(obs => obs.value)
         );
         const min = Math.min(...values);
         const max = Math.max(...values);
-        return chroma.scale(['pink', '#662583']).domain([min, max]);
+        const range = max - min;
+        console.log('range', range);
+        const step = range / 10; // Adjust the number of intervals as needed
+        console.log('step', step);
+        const domain = Array.from({length: 11}, (_, i) => min + i * step);
+        console.log('domain', domain);
+    
+        return chroma.scale(['pink', '#662583']).domain(domain).mode('lab');
     };
 
     useEffect(() => {
@@ -76,7 +126,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations }) {
         if (feature.properties.observations.length > 0) {
             popupContent += `<div><strong>Observations:</strong><ul>`;
             feature.properties.observations.forEach(obs => {
-                popupContent += `<li>${obs.name}: ${obs.value} on ${obs.date}</li>`;
+                popupContent += `<li>${obs.name}: ${obs.value}</li>`;
             });
             popupContent += `</ul></div>`;
         } else {
@@ -88,6 +138,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations }) {
     const renderGeoJsonLayer = () => {
         const colorScale = getColorScale(filteredGeoJsonFeatures);
         return (
+            <>
             <GeoJSON
                 data={filteredGeoJsonFeatures}
                 onEachFeature={(feature, layer) => onEachFeature(feature, layer, colorScale)}
@@ -98,18 +149,20 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations }) {
                     fillOpacity: 0.9
                 })}
             />
+            <Legend colorScale={colorScale} />
+            </>
         );
     };
 
     if (loading) {
-        return <div>Loading map...</div>;
+        return <div></div>;
     }
 
     return (
         <MapContainer
             center={[54.5, -2]}
             zoom={7}
-            style={{ height: '600px', width: '50%' }}
+            style={{ height: '600px', width: '100%' }}
             whenCreated={setMap}
             key={filteredGeoJsonFeatures.length}
         >

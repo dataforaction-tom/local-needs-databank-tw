@@ -4,6 +4,7 @@ import ObservationsChart from './ObservationsChart';
 import supabase from './supabaseClient';
 import Select from 'react-select';
 import LocalAuthorityMap from './Maptest'; // Ensure you import your map component
+import MultiObservationsChart from './MultiObservationsChart';
 
 function Dashboard({ dashboardId }) {
     const [datasets, setDatasets] = useState([]);
@@ -159,6 +160,10 @@ const fetchObservations = async (datasetId) => {
                         selectedDataset={selectedDataset}
                         filteredObservations={filteredObservations}
                     />
+            <MultiObservationsChart
+                      observations={filteredObservations}
+                      title={selectedDataset ? selectedDataset.label : ''}
+                  />
       </div>
   );
   
