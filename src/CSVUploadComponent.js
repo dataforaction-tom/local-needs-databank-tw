@@ -88,7 +88,7 @@ const CSVUploadComponent = () => {
   
 
   const validateMappings = (mappings) => {
-    const requiredFields = ['Value', 'Place', 'Date', 'Name'];
+    const requiredFields = ['Value', 'Place', 'Date', ];
     const mappedFields = mappings.filter(mapping => mapping.value !== 'Ignore').map(mapping => mapping.value);
     const newCompletionStatus = {};
   
@@ -130,57 +130,65 @@ const CSVUploadComponent = () => {
         setMessage('Data uploaded successfully.');
     }
 };
-  const submitData = async (data, mappings, additionalFields) => {
-    const headers = Object.keys(data[0]);
-    const errors = [];
-    const errorRows = [];
-    const processedData = data.map((row, rowIndex) => {
-      const entry = {};
-      let rowHasError = false;
-  
-      headers.forEach((header, idx) => {
-        const mapping = mappings[idx].value;
-        if (mapping !== 'Ignore') {
-          if (mapping.toLowerCase() === 'value') {
-            // Try converting the 'Value' column to a number
-            const numericValue = parseFloat(row[header]);
-            if (isNaN(numericValue)) {
-              errors.push(`Row ${rowIndex + 1}: Value '${row[header]}' is not a valid number.`);
-              if (!rowHasError) {
-                errorRows.push(rowIndex);
-                rowHasError = true;
-              }
-            } else {
-              entry[mapping.toLowerCase()] = numericValue.toString(); // Store as string for Supabase
-            }
-          } else {
-            entry[mapping.toLowerCase()] = row[header];
+const submitData = async (data, mappings, additionalFields) => {
+  const headers = Object.keys(data[0]);
+  const errors = [];
+  const errorRows = [];
+  const processedData = [];
+
+  data.forEach((row, rowIndex) => {
+    // For each row, create an entry for each "value" column selected
+    mappings.forEach((mapping, idx) => {
+      if (mapping.value !== 'Ignore' && mapping.label === 'Value') {
+        const entry = {};
+        let rowHasError = false;
+
+        // Store the header as 'name' in Supabase and the column value as 'value'
+        const value = parseFloat(row[headers[idx]]);
+        if (isNaN(value)) {
+          errors.push(`Row ${rowIndex + 1}: '${row[headers[idx]]}' is not a valid number.`);
+          if (!rowHasError) {
+            errorRows.push(rowIndex);
+            rowHasError = true;
           }
+        } else {
+          entry['name'] = headers[idx];  // Use the column header as the 'name'
+          entry['value'] = value;  // Store the number as 'value'
+
+          // Include other mapped fields
+          mappings.forEach((m, i) => {
+            if (m.value !== 'Ignore' && m.label !== 'Value') {
+              entry[m.value.toLowerCase()] = row[headers[i]];
+            }
+          });
+
+          // Add additional fields with default values if not already present
+          Object.entries(additionalFields).forEach(([key, value]) => {
+            if (value && !entry[key.toLowerCase()]) {
+              entry[key.toLowerCase()] = value;
+            }
+          });
+
+          processedData.push(entry);
         }
-      });
-  
-      // Add additional fields with default values if not already present
-      Object.entries(additionalFields).forEach(([key, value]) => {
-        if (value && !entry[key.toLowerCase()]) {
-          entry[key.toLowerCase()] = value;
-        }
-      });
-  
-      return entry;
+      }
     });
-  
-    if (errors.length > 0) {
-      return { success: false, message: `Data validation failed:\n${errors.join('\n')}`, errorRows };
-    }
-  
-    const { data: response, error } = await supabase.from('observations').insert(processedData);
-    if (error) {
-      console.error('Error uploading data: ', error);
-      return { success: false, message: 'Failed to upload data.', errorRows };
-    }
-  
-    return { success: true, message: 'Data uploaded successfully.' };
-  };
+  });
+
+  if (errors.length > 0) {
+    return { success: false, message: `Data validation failed:\n${errors.join('\n')}`, errorRows };
+  }
+
+  // Batch insert data to Supabase
+  const { data: response, error } = await supabase.from('observations').insert(processedData);
+  if (error) {
+    console.error('Error uploading data: ', error);
+    return { success: false, message: 'Failed to upload data.', errorRows };
+  }
+
+  return { success: true, message: 'Data uploaded successfully.' };
+};
+
 
   const RequirementFeedback = ({ isComplete, field }) => {
     return (
