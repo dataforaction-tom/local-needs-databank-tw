@@ -4,6 +4,8 @@ import TablePreview from './TablePreview';
 import supabase from './supabaseClient';  
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Select from 'react-select';
+
 
 
 const CSVUploadComponent = () => {
@@ -17,6 +19,21 @@ const CSVUploadComponent = () => {
     date: '',
     period: ''
   });
+  const [datasetFields, setDatasetFields] = useState({
+    title: '',
+    license: '',
+    originalURL: '',
+    publishedDate: '',
+    owner: '',
+    description: ''
+  });
+    // Options for the License select field
+    const licenseOptions = [
+      { value: 'CC BY', label: 'CC BY' },
+      { value: 'CC BY-SA', label: 'CC BY-SA' },
+      { value: 'CC0', label: 'CC0' }
+    ];
+  
   const [errorRows, setErrorRows] = useState([]);
   const [isValid, setIsValid] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -43,6 +60,11 @@ const CSVUploadComponent = () => {
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFileDrop(e.dataTransfer.files[0]);
     }
+  };
+
+   // Handler for changes in the select field
+   const handleSelectChange = (selectedOption) => {
+    setDatasetFields({...datasetFields, license: selectedOption.value});
   };
 
   const handleFileDrop = (file) => {
@@ -120,17 +142,52 @@ const CSVUploadComponent = () => {
     setLoading(true);
     setMessage('');
     setErrorRows([]);
-    const result = await submitData(data, headerMappings, additionalFields);
-    setLoading(false);
-
-    if (!result.success) {
-        setErrorRows(result.errorRows);  // Update state to mark error rows
-        setMessage(result.message);  // Display the error messages to the user
-    } else {
-        setMessage('Data uploaded successfully.');
+  
+    console.log("Attempting to create dataset with fields:", datasetFields);
+  
+    // Including .select() to ensure the inserted data is returned
+    const { data: datasetData, error: datasetError } = await supabase
+      .from('datasets')
+      .insert({
+        title: datasetFields.title,
+        license: datasetFields.license,
+        original_url: datasetFields.originalURL,
+        published_date: datasetFields.publishedDate,
+        owner: datasetFields.owner,
+        dataset_description: datasetFields.description
+      })
+      .select();
+  
+    console.log("Dataset creation response data:", datasetData);
+    console.log("Dataset creation error:", datasetError);
+  
+    if (datasetError) {
+      console.error("Failed to create dataset record:", datasetError);
+      setMessage(`Failed to create dataset record: ${datasetError.message}`);
+      setLoading(false);
+      return;
     }
-};
-const submitData = async (data, mappings, additionalFields) => {
+  
+    if (datasetData && datasetData.length > 0) {
+      const datasetId = datasetData[0].id;  // Assume 'id' is the primary key
+      const result = await submitData(data, headerMappings, additionalFields, datasetId);
+      setLoading(false);
+  
+      if (!result.success) {
+        setErrorRows(result.errorRows);
+        setMessage(result.message);
+      } else {
+        setMessage('Data and dataset uploaded successfully.');
+      }
+    } else {
+      setMessage("No dataset was created, unable to upload observations.");
+      setLoading(false);
+    }
+  };
+  
+  
+const submitData = async (data, mappings, additionalFields, datasetId) => {
+  
   const headers = Object.keys(data[0]);
   const errors = [];
   const errorRows = [];
@@ -140,7 +197,7 @@ const submitData = async (data, mappings, additionalFields) => {
     // For each row, create an entry for each "value" column selected
     mappings.forEach((mapping, idx) => {
       if (mapping.value !== 'Ignore' && mapping.label === 'Value') {
-        const entry = {};
+        const entry = { dataset_id: datasetId }; 
         let rowHasError = false;
 
         // Store the header as 'name' in Supabase and the column value as 'value'
@@ -244,6 +301,22 @@ const submitData = async (data, mappings, additionalFields) => {
       {/* Display error or success messages */}
       {message && <p className='font-semibold text-xl text-red-500'>{message}</p>}
 
+      <div className='flex flex-col space-y-4 font-semibold text-black mb-4'>
+        <input type="text" placeholder="Dataset Title" value={datasetFields.title} onChange={(e) => setDatasetFields({...datasetFields, title: e.target.value})} className="p-2 border placeholder-black placeholder-italic" />
+         <Select
+        value={licenseOptions.find(option => option.value === datasetFields.license)}
+        onChange={handleSelectChange}
+        options={licenseOptions}
+        className="basic-single"
+        classNamePrefix="select"
+      />
+        <input type="text" placeholder="Original URL" value={datasetFields.originalURL} onChange={(e) => setDatasetFields({...datasetFields, originalURL: e.target.value})} className="p-2 border placeholder-black placeholder-italic" />
+        <input type="date" placeholder="Published Date" value={datasetFields.publishedDate} onChange={(e) => setDatasetFields({...datasetFields, publishedDate: e.target.value})} className="p-2 border placeholder-black placeholder-italic" />
+        <input type="text" placeholder="Owner" value={datasetFields.owner} onChange={(e) => setDatasetFields({...datasetFields, owner: e.target.value})} className="p-2 border placeholder-black placeholder-italic" />
+        <input type="text" placeholder="Dataset Description" value={datasetFields.description} onChange={(e) => setDatasetFields({...datasetFields, description: e.target.value})} className="p-2 border placeholder-black placeholder-italic" />
+      </div>
+
+
       <div className='flex flex-col space-y-4 font-semibold text-black'>
       <p>If you do not have a particular column in your data, you can use the input fields below to add to your data. PLEASE BE AWARE This will add the value you enter to EVERY row of your data.</p>
       <p>For example, if you add Newcastle in the Place field, every row in your data will show as having been in Newcastle.</p>
@@ -257,7 +330,6 @@ const submitData = async (data, mappings, additionalFields) => {
       {showFields && (
         <div className='flex flex-col space-y-4 font-semibold text-black mb-4'>
           
-          <input type="text" placeholder="Description" value={additionalFields.name} onChange={(e) => handleFieldChange('name', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
           <input type="text" placeholder="Place" value={additionalFields.place} onChange={(e) => handleFieldChange('place', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
           <input type="text" placeholder="Date" value={additionalFields.date} onChange={(e) => handleFieldChange('date', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
           <input type="text" placeholder="Period" value={additionalFields.period} onChange={(e) => handleFieldChange('period', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />

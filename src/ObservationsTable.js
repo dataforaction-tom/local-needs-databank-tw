@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useTable, useFilters, useGlobalFilter, useSortBy, usePagination } from 'react-table';
 import ColumnFilter from './ColumnFilter'; // Ensure this component is correctly imported
 import { CSVLink } from 'react-csv'; // Import CSVLink
@@ -17,11 +17,13 @@ const columnStyles = {
   place: { width: '30%' },
   region: { width: '20%' }
 };
+
+
 function ObservationsTable({ observations, setFilteredObservations, title }) {
   // Debug: Log the observations to check incoming data
   console.log("Observations data:", observations);
 
-  
+  const [allFilters, setAllFilters] = useState([]); // State to control filters
 
   const placeOptions = useMemo(() => {
     // Create unique options from the 'place' data field
@@ -41,6 +43,14 @@ const regionOptions = useMemo(() => {
   const regions = new Set(observations.map(obs => obs.region));
   return Array.from(regions).map(region => ({ value: region, label: region }));
 }, [observations]);
+
+// Set the initial region filter when options are ready and no filter is set
+useEffect(() => {
+  if (regionOptions.length > 0 && allFilters.length === 0) {
+    setAllFilters([{ id: 'region', value: regionOptions[0].value }]);
+  }
+}, [regionOptions]);
+
 
   const columns = useMemo(() => [
     {
@@ -112,6 +122,7 @@ const regionOptions = useMemo(() => {
       columns, 
       data: observations,
       initialState: { pageIndex: 0 },
+      state: {filters: allFilters},
       filterTypes,
     },
     useFilters,
@@ -120,6 +131,9 @@ const regionOptions = useMemo(() => {
     usePagination
   );
 
+  
+
+
    // Effect to update filtered observations
    useEffect(() => {
     setFilteredObservations(rows.map(row => row.original));
@@ -127,7 +141,7 @@ const regionOptions = useMemo(() => {
   }, [rows, setFilteredObservations]);
 
   // CSV Data should be the current filtered and paged rows
-  const csvData = page.map(row => row.original);
+  const csvData = rows.map(row => row.original);
 
 
   

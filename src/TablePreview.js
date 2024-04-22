@@ -35,7 +35,6 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) =
   const columnsValid = columns && columns.length > 0 && columns.every(column => column);
   const dataValid = data && data.length > 0;
 
-  // Use useEffect to handle side effects like toast notifications
   useEffect(() => {
     if (!columnsValid && data.length > 0) {
       toast.error("CSV does not contain headers. Headers are required.");
@@ -94,40 +93,41 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) =
   return (
     <div className='overflow-x-auto'>
       <ToastContainer />
-      <table {...getTableProps()} className='min-w-full divide-y divide-gray-200'>
-        <thead className='bg-gray-50 sticky top-0'>
-          {headerGroups.map(headerGroup => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map(column => (
-                <th {...column.getHeaderProps()} className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-[#662583] text-white'>
-                  {column.render('Header')}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody {...getTableBodyProps()}>
-          {rows.map(row => {
-            prepareRow(row);
-            return (
-              <tr {...row.getRowProps({
-                style: {
-                  backgroundColor: errorRows.includes(row.index) ? '#f8d7da' : '' // Light red background for error rows
-                }
-              })}>
-                {row.cells.map(cell => (
-                  <td {...cell.getCellProps()} className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold border'>
-                    {cell.render('Cell')}
-                  </td>
+      <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+        <table {...getTableProps()} className='min-w-full divide-y divide-gray-200'>
+          <thead className='bg-gray-50 sticky top-0'>
+            {headerGroups.map(headerGroup => (
+              <tr {...headerGroup.getHeaderGroupProps()}>
+                {headerGroup.headers.map(column => (
+                  <th {...column.getHeaderProps()} className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-[#662583] text-white'>
+                    {column.render('Header')}
+                  </th>
                 ))}
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            ))}
+          </thead>
+          <tbody {...getTableBodyProps()}>
+            {rows.map(row => {
+              prepareRow(row);
+              return (
+                <tr {...row.getRowProps({
+                  style: {
+                    backgroundColor: errorRows.includes(row.index) ? '#f8d7da' : '' // Light red background for error rows
+                  }
+                })}>
+                  {row.cells.map(cell => (
+                    <td {...cell.getCellProps()} className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold border'>
+                      {cell.render('Cell')}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
 export default TablePreview;
-

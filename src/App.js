@@ -5,6 +5,7 @@ import Navigation from './Navigation';
 import Health from './Health';
 import Contribute from './Contribute';
 import ErrorBoundary from './ErrorBoundary'; // Ensure this is correctly imported
+import Test from './Test'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
             <Route path="/" element={<Dashboard dashboardId={1} />} />
             <Route path="/health" element={<Health />} />
             <Route path="/contribute" element={<Contribute />} />
+            <Route path="/context" element={<Test />} />
             {/* Define other routes corresponding to navItems in your Navigation component */}
           </Routes>
         </ErrorBoundary>

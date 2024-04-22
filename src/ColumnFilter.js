@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Select from 'react-select';
 
 const customStyles = {
   option: (provided, state) => ({
     ...provided,
-    color: 'black',  // Ensures dropdown text is black
+    color: 'black',
   }),
   control: styles => ({ ...styles, backgroundColor: 'white' }),
   singleValue: (provided, state) => {
@@ -12,27 +12,38 @@ const customStyles = {
   },
   multiValue: (provided, state) => ({
     ...provided,
-    backgroundColor: '#662583',  // Purple background for selected options
+    backgroundColor: '#662583',
   }),
   multiValueLabel: (provided, state) => ({
     ...provided,
-    color: 'white',  // White text for selected options
+    color: 'white',
   }),
   multiValueRemove: (provided, state) => ({
     ...provided,
-    color: 'white',  // White text for the remove icon in selected options
+    color: 'white',
     ':hover': {
-      backgroundColor: '#C7215D',  // Darker purple background on hover in selected options
+      backgroundColor: '#C7215D',
       color: 'white',
     },
   }),
 };
 
 function ColumnFilter({ column, onFilterChange }) {
-  const { filterValue, setFilter, filterOptions = [], id } = column;
+  const { filterValue = [], setFilter, filterOptions = [], id } = column;
 
   const options = Array.isArray(filterOptions) ? filterOptions : [];
   const multiSelectColumns = ['place', 'name', 'region'];
+
+  // Set the default filter value for the 'region' column when the component mounts
+  useEffect(() => {
+    if (id === 'region' && options.length > 0 && filterValue.length === 0) {
+      const firstOption = [{ value: options[0].value, label: options[0].label }];
+      setFilter(firstOption.map(item => item.value));
+      if (onFilterChange) {
+        onFilterChange(id, firstOption.map(item => item.value));
+      }
+    }
+  }, [filterValue, id, onFilterChange, options, setFilter]);
 
   const handleChange = (value) => {
     const valueArray = value ? value.map(item => item.value) : [];

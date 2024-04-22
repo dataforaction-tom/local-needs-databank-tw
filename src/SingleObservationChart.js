@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Chart from 'chart.js/auto';
 
-function SingleObservationChart({ data, name, title }) {
+function SingleObservationChart({ data, name, title, startColorIndex, colorPalette }) {
   const chartRef = useRef(null);
-  const colorPalette = ['#662583', '#C7215D', '#881866', '#dd35a5'];
+
   const [chartType, setChartType] = useState('bar');
   const [indexAxis, setIndexAxis] = useState('x');
 
@@ -24,10 +24,9 @@ function SingleObservationChart({ data, name, title }) {
     const datasets = Object.keys(dataByYear).map((year, index) => ({
       label: `${name} ${year}`,
       data: places.map(place => dataByYear[year][place] || 0),
-      backgroundColor: chartType === 'pie' ? places.map((_, placeIndex) => colorPalette[placeIndex % colorPalette.length]) : colorPalette[index % colorPalette.length],
-      borderColor: chartType === 'pie' ? places.map((_, placeIndex) => colorPalette[placeIndex % colorPalette.length]) : colorPalette[index % colorPalette.length]
+      backgroundColor: chartType === 'pie' ? places.map((_, placeIndex) => colorPalette[(startColorIndex + placeIndex) % colorPalette.length]) : colorPalette[(startColorIndex + index) % colorPalette.length],
+      borderColor: chartType === 'pie' ? places.map((_, placeIndex) => colorPalette[(startColorIndex + placeIndex) % colorPalette.length]) : colorPalette[(startColorIndex + index) % colorPalette.length]
     }));
-
     
 
     window[`chart_${name}`] = new Chart(chartContext, {
@@ -76,7 +75,7 @@ function SingleObservationChart({ data, name, title }) {
     return () => {
       window[`chart_${name}`].destroy();
     };
-  }, [data, chartType, indexAxis]);
+  }, [data, chartType, indexAxis, startColorIndex, colorPalette]);
 
   const toggleChartType = () => {
     const types = ['bar', 'line', 'pie'];
@@ -103,9 +102,9 @@ function SingleObservationChart({ data, name, title }) {
   };
 
   return (
-    <div className={`relative p-5 m-5 flex flex-col ${chartType === 'pie' ? 'w-1/2 h-1/2' : 'w-full h-auto'}`}>
+    <div className={`relative p-5 m-5 flex flex-col ${chartType === 'pie' ? 'w-1/2 h-1/2' : 'w-full h-300px'}`}>
       <h2 className='text-xl font-bold'>{title || `${name} Chart`}</h2>
-      <canvas ref={chartRef} height="200" width="200"/>
+      <canvas ref={chartRef} />
       <div className='flex justify-end mt-4'>
         <button 
           className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
