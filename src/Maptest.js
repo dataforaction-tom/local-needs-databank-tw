@@ -65,18 +65,26 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
     const getColorScaleAndBreaks = (data) => {
         const values = data.flatMap(feature => feature.properties.observations.map(obs => obs.value));
         const min = Math.min(...values);
+        console.log('min', min)
         const max = Math.max(...values);
-        const range = max - min;
+        console.log('max', max)
+        
+        // Round min and max to the nearest ten
+        const roundedMin = Math.floor(min / 10) * 10;
+        const roundedMax = Math.ceil(max / 10) * 10;
+        const range = roundedMax - roundedMin;
         const step = range / 10;
-        const domain = Array.from({length: 11}, (_, i) => min + i * step);
-    
-        console.log("Domains", domain); // Ensure domain is correct
+        
+        // Calculate breaks rounded to the nearest ten
+        const breaks = Array.from({length: 11}, (_, i) => roundedMin + i * step);
+
+        console.log("Domains", breaks); // Ensure domain is correct
     
         // Create the color scale directly with the domain
-        const colorScale = chroma.scale(['pink', '#662583']).domain(domain);
+        const colorScale = chroma.scale(['pink', '#662583']).domain(breaks);
     
         // Return both the color scale and the domain as "breaks" for consistency
-        return { colorScale, breaks: domain };
+        return { colorScale, breaks };
     };
 
     useEffect(() => {
@@ -84,10 +92,12 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
             if (selectedDataset && selectedDataset.value) {
                 setLoading(true);
                 try {
-                    const response = await supabase.rpc('get_enriched_geojson_data', { p_dataset_id: parseInt(selectedDataset.value, 10) });
+                    const response = await supabase.rpc('new_get_enriched_geojson_data', { p_dataset_id: parseInt(selectedDataset.value, 10) });
                     if (!response.error && response.data) {
-                        setGeoJsonData(response.data);
-                        setFilteredGeoJsonFeatures(response.data);
+                        const normalizedData = normalizeGeoJSON(response.data);
+                        setGeoJsonData(normalizedData);
+                        setFilteredGeoJsonFeatures(normalizedData);
+                        console.log('response from supabase- normalized', normalizedData);
                     } else {
                         setGeoJsonData([]);
                     }
@@ -98,9 +108,27 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
                 setLoading(false);
             }
         };
+        
 
         fetchGeoJsonData();
     }, [selectedDataset]);
+
+    const normalizeGeoJSON = (data) => {
+        return data.map(feature => {
+            if (feature.geometry.type === "Polygon") {
+                // Convert Polygon to MultiPolygon format
+                return {
+                    ...feature,
+                    geometry: {
+                        type: "MultiPolygon",
+                        coordinates: [feature.geometry.coordinates]  // Add an extra array wrap
+                    }
+                };
+            }
+            return feature;  // Return MultiPolygons unchanged
+        });
+    };
+    
 
     useEffect(() => {
         if (geoJsonData.length > 0) {
@@ -113,13 +141,16 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
 
     useEffect(() => {
         if (map && filteredGeoJsonFeatures.length > 0) {
-            const geoJsonLayer = L.geoJSON(filteredGeoJsonFeatures);
+            const geoJsonLayer = L.geoJSON(filteredGeoJsonFeatures, {
+                onEachFeature: (feature, layer) => onEachFeature(feature, layer)
+            }).addTo(map);
             const bounds = geoJsonLayer.getBounds();
             map.fitBounds(bounds, { padding: [50, 50] });
         } else if (map) {
             map.setView([54.5, -2], 6);
         }
     }, [filteredGeoJsonFeatures, map]);
+    
 
     const onEachFeature = (feature, layer, colorScale) => {
         let maxValue = feature.properties.observations.reduce((max, obs) => Math.max(max, obs.value), 0);
