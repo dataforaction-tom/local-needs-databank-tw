@@ -14,11 +14,14 @@ function MultiObservationsChart({ observations, title }) {
   }, {});
 
   return (
-    <div className='flex'>
-      <h2>{title || 'Observation Charts'}</h2>
+    <div className="my5">
+      <h2 className="text-2xl font-bold text-center my-10">{title || 'Observation Charts'}</h2>
+    <div className='grid-cols-2'>
+      
       {Object.keys(groupByObservation).map(name => (
         <SingleObservationChart key={name} data={groupByObservation[name]} name={name} chartType={chartType} />
       ))}
+    </div>
     </div>
   );
 }

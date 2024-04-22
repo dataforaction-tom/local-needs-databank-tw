@@ -137,7 +137,11 @@ const regionOptions = useMemo(() => {
 
    return (
     <div className='p-5 my-5'>
+      <div className='flex justify-between'>
       <h2 className='text-xl font-bold'>{title || 'Filtered Observations Table'}</h2>
+      <p className='text-lg font-semibold text-slate-800'>Note - Using the filters in the table will also filter the charts and maps below</p>
+
+      </div>
       <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
         <table {...getTableProps()} className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50 sticky top-0">

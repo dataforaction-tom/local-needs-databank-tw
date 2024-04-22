@@ -38,6 +38,7 @@ function SingleObservationChart({ data, name, title }) {
       },
       options: {
         indexAxis: chartType === 'bar' ? indexAxis : undefined,
+        
         plugins: {
           tooltip: {
             callbacks: {
@@ -104,7 +105,7 @@ function SingleObservationChart({ data, name, title }) {
   return (
     <div className={`relative p-5 m-5 flex flex-col ${chartType === 'pie' ? 'w-1/2 h-1/2' : 'w-full h-auto'}`}>
       <h2 className='text-xl font-bold'>{title || `${name} Chart`}</h2>
-      <canvas ref={chartRef} />
+      <canvas ref={chartRef} height="200" width="200"/>
       <div className='flex justify-end mt-4'>
         <button 
           className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'

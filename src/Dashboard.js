@@ -118,7 +118,7 @@ const fetchObservations = async (datasetId) => {
 
     return (
       <div className="bg-slate-50 p-5 m-5">
-          <h3 className='text-lg font-bold px-5'>Select your dataset from here. You can explore this in the table and chart below</h3>
+          <h3 className='text-lg font-bold px-5'>Select your dataset from here. You can explore this in the table, chart(s) and map below</h3>
           <Select
               value={selectedDataset}
               onChange={handleDatasetChange}
@@ -159,6 +159,7 @@ const fetchObservations = async (datasetId) => {
           <LocalAuthorityMap
                         selectedDataset={selectedDataset}
                         filteredObservations={filteredObservations}
+                        title={selectedDataset ? selectedDataset.label : ''}
                     />
             <MultiObservationsChart
                       observations={filteredObservations}

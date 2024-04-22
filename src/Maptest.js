@@ -5,7 +5,20 @@ import supabase from './supabaseClient';
 import L from 'leaflet';
 import chroma from 'chroma-js';
 
-function Legend({ colorScale }) {
+function getColor(value, classes, colorScale) {
+    // Find the index of the class that the value falls into
+    for (let i = 0; i < classes.length - 1; i++) {
+        if (value >= classes[i] && value < classes[i + 1]) {
+            // Return the color at the midpoint of the class range for better accuracy
+            const midPoint = classes[i] + (classes[i + 1] - classes[i]) / 2;
+            return colorScale(midPoint).hex();
+        }
+    }
+    // Handle the case where value is in the last class
+    return colorScale(classes[classes.length - 1]).hex();
+}
+
+function Legend({ colorScale, breaks }) {
     const map = useMap();
 
     React.useEffect(() => {
@@ -19,21 +32,14 @@ function Legend({ colorScale }) {
             div.style.borderRadius = '5px';
             div.style.fontSize = '14px';
 
-            const grades = colorScale.domain();
-            const labels = [];
+            for (let i = 0; i < breaks.length - 1; i++) {
+                const from = breaks[i];
+                const to = breaks[i + 1];
+                const color = colorScale((from + to) / 2).hex();
 
-            for (let i = 0; i < grades.length - 1; i++) {
-                const from = grades[i];
-                const to = grades[i + 1];
-                const color = colorScale(from + (to - from) / 2).hex();
-
-                labels.push(
-                    `<span style="background: ${color}; width: 24px; height: 24px; display: inline-block; margin-right: 5px; border: 1px solid #ddd;"></span> ` +
-                    `${Math.round(from)}&ndash;${Math.round(to)}`
-                );
+                div.innerHTML += `<i style="background: ${color}; width: 18px; height: 18px; display: inline-block; margin-right: 5px;"></i> ${from}&ndash;${to}<br>`;
             }
 
-            div.innerHTML = labels.join('<br>');
             return div;
         };
 
@@ -42,33 +48,35 @@ function Legend({ colorScale }) {
         return () => {
             map.removeControl(legend);
         };
-    }, [map, colorScale]);
+    }, [map, colorScale, breaks]);
 
     return null;
 }
 
 
 
-function LocalAuthorityMap({ selectedDataset, filteredObservations }) {
+
+function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
     const [geoJsonData, setGeoJsonData] = useState([]);
     const [filteredGeoJsonFeatures, setFilteredGeoJsonFeatures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [map, setMap] = useState(null);
 
-    const getColorScale = (data) => {
-        const values = data.flatMap(feature =>
-            feature.properties.observations.map(obs => obs.value)
-        );
+    const getColorScaleAndBreaks = (data) => {
+        const values = data.flatMap(feature => feature.properties.observations.map(obs => obs.value));
         const min = Math.min(...values);
         const max = Math.max(...values);
         const range = max - min;
-        console.log('range', range);
-        const step = range / 10; // Adjust the number of intervals as needed
-        console.log('step', step);
+        const step = range / 10;
         const domain = Array.from({length: 11}, (_, i) => min + i * step);
-        console.log('domain', domain);
     
-        return chroma.scale(['pink', '#662583']).domain(domain).mode('lab');
+        console.log("Domains", domain); // Ensure domain is correct
+    
+        // Create the color scale directly with the domain
+        const colorScale = chroma.scale(['pink', '#662583']).domain(domain);
+    
+        // Return both the color scale and the domain as "breaks" for consistency
+        return { colorScale, breaks: domain };
     };
 
     useEffect(() => {
@@ -136,7 +144,9 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations }) {
     };
 
     const renderGeoJsonLayer = () => {
-        const colorScale = getColorScale(filteredGeoJsonFeatures);
+        const { colorScale, breaks } = getColorScaleAndBreaks(filteredGeoJsonFeatures);
+    
+        console.log("Breaks:", breaks); // Debug: Check what breaks contains
         return (
             <>
             <GeoJSON
@@ -149,7 +159,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations }) {
                     fillOpacity: 0.9
                 })}
             />
-            <Legend colorScale={colorScale} />
+            <Legend colorScale={colorScale} breaks={breaks} />
             </>
         );
     };
@@ -159,6 +169,8 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations }) {
     }
 
     return (
+        <div>
+            <h2 className='text-2xl font-bold text-center mt-10'>{title || 'Observation Charts'}</h2>
         <MapContainer
             center={[54.5, -2]}
             zoom={7}
@@ -172,6 +184,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations }) {
                 ></TileLayer>
             {renderGeoJsonLayer()}
         </MapContainer>
+        </div>
     );
 }
 
