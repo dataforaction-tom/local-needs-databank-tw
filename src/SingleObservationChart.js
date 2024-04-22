@@ -8,6 +8,15 @@ function SingleObservationChart({ data, name, title, startColorIndex, colorPalet
   const [indexAxis, setIndexAxis] = useState('x');
 
   useEffect(() => {
+    const handleResize = () => {
+      // Force the chart to resize on window resize
+      if (window[`chart_${name}`]) {
+        window[`chart_${name}`].resize();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
     const chartContext = chartRef.current.getContext('2d');
     if (window[`chart_${name}`]) {
       window[`chart_${name}`].destroy();
@@ -27,7 +36,6 @@ function SingleObservationChart({ data, name, title, startColorIndex, colorPalet
       backgroundColor: chartType === 'pie' ? places.map((_, placeIndex) => colorPalette[(startColorIndex + placeIndex) % colorPalette.length]) : colorPalette[(startColorIndex + index) % colorPalette.length],
       borderColor: chartType === 'pie' ? places.map((_, placeIndex) => colorPalette[(startColorIndex + placeIndex) % colorPalette.length]) : colorPalette[(startColorIndex + index) % colorPalette.length]
     }));
-    
 
     window[`chart_${name}`] = new Chart(chartContext, {
       type: chartType,
@@ -36,8 +44,9 @@ function SingleObservationChart({ data, name, title, startColorIndex, colorPalet
         datasets: datasets
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         indexAxis: chartType === 'bar' ? indexAxis : undefined,
-        
         plugins: {
           tooltip: {
             callbacks: {
@@ -73,9 +82,12 @@ function SingleObservationChart({ data, name, title, startColorIndex, colorPalet
     });
 
     return () => {
-      window[`chart_${name}`].destroy();
+      window.removeEventListener('resize', handleResize);
+      if (window[`chart_${name}`]) {
+        window[`chart_${name}`].destroy();
+      }
     };
-  }, [data, chartType, indexAxis, startColorIndex, colorPalette]);
+  }, [data, chartType, indexAxis, startColorIndex, colorPalette, name]);
 
   const toggleChartType = () => {
     const types = ['bar', 'line', 'pie'];
@@ -102,26 +114,28 @@ function SingleObservationChart({ data, name, title, startColorIndex, colorPalet
   };
 
   return (
-    <div className={`relative p-5 m-5 flex flex-col ${chartType === 'pie' ? 'w-1/2 h-1/2' : 'w-full h-300px'}`}>
+    <div className={`relative p-5 m-5 flex flex-col ${chartType === 'pie' ? 'w-full h-full' : 'w-full'}`}>
       <h2 className='text-xl font-bold'>{title || `${name} Chart`}</h2>
-      <canvas ref={chartRef} />
-      <div className='flex justify-end mt-4'>
+      <div style={{ position: 'relative', width: '100%', minHeight: '400px' }}>
+        <canvas ref={chartRef} />
+      </div>
+      <div className='flex flex-col md:flex-row justify-end mt-4 space-y-2 md:space-y-0 md:space-x-2'>
         <button 
-          className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
+          className='bg-[#662583] text-white font-medium py-2 px-4 rounded hover:bg-[#C7215D] transition-colors duration-300 text-sm'
           onClick={toggleChartType}
         >
           Toggle Chart Type
         </button>
         {chartType === 'bar' && (
           <button 
-            className='ml-2 bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
+            className='bg-[#662583] text-white font-medium py-2 px-4 rounded hover:bg-[#C7215D] transition-colors duration-300 text-sm'
             onClick={toggleAxis}
           >
             Toggle Axis
           </button>
         )}
         <button 
-          className='ml-2 bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
+          className='bg-[#662583] text-white font-medium py-2 px-4 rounded hover:bg-[#C7215D] transition-colors duration-300 text-sm'
           onClick={downloadChart}
         >
           Download Chart
@@ -130,5 +144,5 @@ function SingleObservationChart({ data, name, title, startColorIndex, colorPalet
     </div>
   );
 }
-
 export default SingleObservationChart;
+

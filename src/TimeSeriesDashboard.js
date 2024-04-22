@@ -7,7 +7,7 @@ import LocalAuthorityMap from './Maptest'; // Ensure you import your map compone
 import MultiObservationsChart from './MultiObservationsChart';
 import TimeObservationsChart from './TimeObservationsChart';
 
-function Dashboard({ dashboardId }) {
+function TimeSeriesDashboard({ dashboardId }) {
     const [datasets, setDatasets] = useState([]);
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
@@ -149,31 +149,16 @@ const fetchObservations = async (datasetId) => {
                           setFilteredObservations={setFilteredObservations}
                       />
                   )}
-                  
-                  <ObservationsChart
-                      observations={filteredObservations}
-                      title={selectedDataset ? selectedDataset.label : ''}
-                  />
-                  
-              </>
-          )}
-          <LocalAuthorityMap
-                        selectedDataset={selectedDataset}
-                        filteredObservations={filteredObservations}
-                        title={selectedDataset ? selectedDataset.label : ''}
-                    />
-            <MultiObservationsChart
-                      observations={filteredObservations}
-                      title={selectedDataset ? selectedDataset.label : ''}
-                  />
-
+                </>
+            )}
             <TimeObservationsChart
-                    observations={filteredObservations}
-                    title={selectedDataset ? selectedDataset.label : ''}
-                    />
-      </div>
-  );
+                observations={filteredObservations}
+                title={selectedDataset ? selectedDataset.label : ''}
+            />
+        </div>
+    );
+    
   
 }
 
-export default Dashboard;
+export default TimeSeriesDashboard;

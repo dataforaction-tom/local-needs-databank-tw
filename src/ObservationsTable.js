@@ -151,22 +151,19 @@ useEffect(() => {
 
    return (
     <div className='p-5 my-5'>
-      <div className='flex justify-between'>
-      <h2 className='text-xl font-bold'>{title || 'Filtered Observations Table'}</h2>
-      <p className='text-lg font-semibold text-slate-800'>Note - Using the filters in the table will also filter the charts and maps below</p>
-
+      <div className='flex flex-col md:flex-row justify-between'>
+        <h2 className='text-xl font-bold'>{title || 'Filtered Observations Table'}</h2>
+        <p className='text-sm md:text-lg font-semibold text-slate-800'>Note - Using the filters in the table will also filter the charts and maps below</p>
       </div>
-      <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+      <div style={{ maxHeight: '400px', overflowX: 'auto' }}>
         <table {...getTableProps()} className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50 sticky top-0">
             {headerGroups.map(headerGroup => (
               <tr {...headerGroup.getHeaderGroupProps()}>
                 {headerGroup.headers.map(column => (
-                  <th {...column.getHeaderProps(column.getSortByToggleProps())} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-[#662583] text-white">
+                  <th {...column.getHeaderProps(column.getSortByToggleProps())} className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-[#662583] text-white">
                     {column.render('Header')}
-                    <span>
-                      {column.isSorted ? (column.isSortedDesc ? ' 🔽' : ' 🔼') : ''}
-                    </span>
+                    
                     {column.canFilter && column.id !== 'value' && column.id !== 'date' ? column.render('Filter') : null}
                   </th>
                 ))}
@@ -179,7 +176,7 @@ useEffect(() => {
               return (
                 <tr {...row.getRowProps()} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}`}>
                   {row.cells.map(cell => (
-                    <td {...cell.getCellProps()} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold border">
+                    <td {...cell.getCellProps()} className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold border">
                       {cell.render('Cell')}
                     </td>
                   ))}
@@ -189,50 +186,21 @@ useEffect(() => {
           </tbody>
         </table>
       </div>
-      
-      <div className="flex justify-between items-center mt-4">
-      <div className="flex space-x-2">
-        <button onClick={() => gotoPage(0)} disabled={!canPreviousPage} className="p-2">
-          <ChevronDoubleLeftIcon className="h-5 w-5 text-gray-700" />
-        </button>
-        <button onClick={() => previousPage()} disabled={!canPreviousPage} className="p-2">
-          <ChevronLeftIcon className="h-5 w-5 text-gray-700" />
-        </button>
-        <button onClick={() => nextPage()} disabled={!canNextPage} className="p-2">
-          <ChevronRightIcon className="h-5 w-5 text-gray-700" />
-        </button>
-        <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage} className="p-2">
-          <ChevronDoubleRightIcon className="h-5 w-5 text-gray-700" />
-        </button>
-        <span>
-          Page{' '}
-          <strong>
-            {state.pageIndex + 1} of {pageCount}
-          </strong>
-        </span>
-        <select
-          value={state.pageSize}
-          onChange={e => setPageSize(Number(e.target.value))}
-          className="border rounded-md text-gray-700 p-2 ml-2"
+      <div className="flex flex-col md:flex-row justify-between items-center mt-4 space-y-2 md:space-y-0">
+        <div className="flex space-x-2">
+          {/* Pagination and other controls */}
+        </div>
+        <CSVLink
+          data={csvData}
+          filename="filtered-observations.csv"
+          className="bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300"
+          target="_blank"
         >
-          {[10, 20, 30, 40, 50].map(pageSize => (
-            <option key={pageSize} value={pageSize}>
-              Show {pageSize}
-            </option>
-          ))}
-        </select>
+          Download CSV
+        </CSVLink>
       </div>
-      <CSVLink
-        data={csvData}
-        filename="filtered-observations.csv"
-        className="bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300"
-        target="_blank"
-      >
-        Download CSV
-      </CSVLink>
     </div>
-  </div>
-);
+  );
 }
 
 export default ObservationsTable;

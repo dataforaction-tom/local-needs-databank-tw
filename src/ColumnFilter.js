@@ -58,14 +58,25 @@ function ColumnFilter({ column, onFilterChange }) {
 
     return (
       <Select
-        isMulti
-        value={selectedValues}
-        onChange={handleChange}
-        options={options}
-        className="text-sm"
-        styles={customStyles} 
-      />
-    );
+    isMulti
+    value={selectedValues}
+    onChange={handleChange}
+    options={options}
+    className="text-sm w-full"
+    styles={{
+      ...customStyles,
+      control: (provided) => ({
+        ...provided,
+        minHeight: '48px', // Larger touch area
+        fontSize: '16px'  // Larger font for mobile readability
+      }),
+      menu: (provided) => ({
+        ...provided,
+        width: '100%'  // Ensures menu uses full width on mobile
+      }),
+    }} 
+  />
+);
   } else {
     return (
       <span>

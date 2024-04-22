@@ -5,16 +5,15 @@ import Chart from 'chart.js/auto';
 const useResponsiveChart = (chartRef) => {
   useEffect(() => {
     const handleResize = () => {
-      // Adjust height when width is below a breakpoint, e.g., 768px for typical mobile devices
-      if (window.innerWidth < 768) {
+      if (window.innerWidth < 768) { // Adjust breakpoint as needed
         chartRef.current.style.height = '400px'; // Set a more suitable height for mobile
       } else {
-        chartRef.current.style.height = '600px'; // Use default height for non-mobile devices
+        chartRef.current.style.height = '600px'; // Default height for larger screens
       }
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize(); // Set initial size on load
+    handleResize(); // Initialize the size on component mount
 
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -22,9 +21,9 @@ const useResponsiveChart = (chartRef) => {
   }, [chartRef]);
 };
 
-function ObservationsChart({ observations, title }) {
+function TimeObservationsChart({ observations, title }) {
   const chartRef = useRef(null);
-  useResponsiveChart(chartRef); // Apply the responsive hook
+  useResponsiveChart(chartRef); // Apply the responsive hook to adjust chart height
 
   const colorPalette = ['#662583', '#C7215D', '#881866', '#dd35a5'];
   const [chartType, setChartType] = useState('bar');
@@ -42,60 +41,69 @@ function ObservationsChart({ observations, title }) {
 
   useEffect(() => {
     const chartContext = chartRef.current.getContext('2d');
-    const places = [...new Set(observations.map(obs => obs.place))].sort();
+    const years = [...new Set(observations.map(obs => new Date(obs.date).getFullYear()))].sort();
 
-    if (window.myBarChart) {
-      window.myBarChart.destroy();
+    if (window.TimeObservationsChart) {
+      window.TimeObservationsChart.destroy();
     }
 
-    const datasets = createDatasets(observations, places, computedColorMapping);
+    const datasets = createDatasets(observations, years, computedColorMapping);
 
-    window.myBarChart = new Chart(chartContext, {
+    window.TimeObservationsChart = new Chart(chartContext, {
       type: chartType,
       data: {
-        labels: places,
+        labels: years,
         datasets: datasets
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        indexAxis: indexAxis,
-        scales: {
-          x: {
-            barPercentage: 1,
-            categoryPercentage: 0.6
-          },
-          y: {
-            beginAtZero: true
-          }
-        },
+        indexAxis: chartType === 'bar' ? indexAxis : undefined,
         plugins: {
           legend: {
             display: true
           }
+        },
+        scales: {
+          x: {
+            display: chartType !== 'pie',
+            stacked: chartType === 'bar'
+          },
+          y: {
+            display: chartType !== 'pie',
+            stacked: chartType === 'bar',
+            beginAtZero: true
+          }
         }
       }
     });
+
+    return () => {
+      if (window.TimeObservationsChart) {
+        window.TimeObservationsChart.destroy();
+      }
+    };
   }, [observations, chartType, computedColorMapping, indexAxis]);
 
-  function createDatasets(data, places, colorMapping) {
+  function createDatasets(data, years, colorMapping) {
     const datasetMap = {};
 
     data.forEach(obs => {
       const name = obs.name;
       const value = parseInt(obs.value, 10);
+      const year = new Date(obs.date).getFullYear();
 
       if (!datasetMap[name]) {
         datasetMap[name] = {
           label: name,
-          data: Array(places.length).fill(0),
+          data: Array(years.length).fill(0),
           backgroundColor: colorMapping[name],
           borderColor: colorMapping[name]
         };
       }
-      const placeIndex = places.indexOf(obs.place);
-      if (placeIndex !== -1) {
-        datasetMap[name].data[placeIndex] = value;
+      const yearIndex = years.indexOf(year);
+      if (yearIndex !== -1) {
+        datasetMap[name].data[yearIndex] = value;
       }
     });
 
@@ -103,7 +111,14 @@ function ObservationsChart({ observations, title }) {
   }
 
   const toggleChartType = () => {
-    setIndexAxis(indexAxis === 'x' ? 'y' : 'x'); // Toggle index axis to switch chart orientation
+    const types = ['bar', 'line', 'pie'];
+    setChartType(prevType => {
+      const nextIndex = (types.indexOf(prevType) + 1) % types.length;
+      return types[nextIndex];
+    });
+    if (chartType === 'bar') {
+      setIndexAxis(indexAxis === 'x' ? 'y' : 'x');
+    }
   };
 
   const downloadImage = () => {
@@ -121,20 +136,21 @@ function ObservationsChart({ observations, title }) {
   };
 
   return (
-    <div className='relative p-5 m-5'>
+    <div className='relative p-5 m-5 flex flex-col'>
       <h2 className='text-xl font-bold'>{title || 'Filtered Observations Table'}</h2>
       
+        
         <div style={{ position: 'relative', width: '100%', height: 'auto' }}>
           <canvas ref={chartRef} />
         </div>
-        <div className='flex justify-end mt-4'>
+        <div className='flex flex-col md:flex-row justify-end mt-4 space-y-2 md:space-y-0 md:space-x-2'>
         <button 
-              className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
+              className='bg-[#662583] text-white font-medium py-2 px-4 rounded hover:bg-[#C7215D] transition-colors duration-300 text-sm'
               onClick={toggleChartType}>
-            Toggle Chart Orientation
+            Toggle Chart Type
           </button>
           <button 
-              className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
+              className='bg-[#662583] text-white font-medium py-2 px-4 rounded hover:bg-[#C7215D] transition-colors duration-300 text-sm'
               onClick={downloadImage}>
             Download Chart
           </button>
@@ -144,4 +160,4 @@ function ObservationsChart({ observations, title }) {
   );
 }
 
-export default ObservationsChart;
+export default TimeObservationsChart;

@@ -3,6 +3,8 @@ import { Route, Routes } from 'react-router-dom';
 import Dashboard from './Dashboard';
 import Card from './Card';
 import LocalAuthoritiesMap from './Maptest';
+import TimeObservationsChart from './TimeObservationsChart';
+import TimeSeriesDashboard from './TimeSeriesDashboard';
 
 const Health = () => {
     const cardData = [
@@ -43,6 +45,7 @@ const Health = () => {
           </div>
           
         </div>
+        <TimeSeriesDashboard dashboardId={4} />
         <Dashboard dashboardId={1} />
         <LocalAuthoritiesMap />
         </div>

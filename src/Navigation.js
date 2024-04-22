@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 
 const Navigation = () => {
   const location = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
     { name: 'Health & Social', path: '/health' },
@@ -15,28 +16,37 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="bg-[#662583]">
-      <ul className="flex">
-        {navItems.map((item, index) => (
-          // "flex-grow" will make each link grow evenly to take up available space
-          <li key={index} className="flex-grow text-center border-r-2 border-white">
-            <NavLink
-              to={item.path}
-              className={`block py-4 text-white transition-colors duration-300 text-xl font-bold ${
-                location.pathname === item.path
-                  ? 'bg-[#C7215D]'
-                  : 'hover:bg-[#C7215D]'
-              }`}
-              // Add "mx-1" for a slight gap between each item
-              style={{ margin: '0 0.25rem' }}
-            >
-              {item.name}
-            </NavLink>
-          </li>
-        ))}
-      </ul>
+    <nav className="bg-[#662583] relative">
+      <div className="flex justify-between items-center p-4">
+        <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
+          {/* SVG icon for menu */}
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M2.5 3a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 .5.5v0a.5.5 0 0 1-.5.5H3.5A.5.5 0 0 1 3 8v0zm-.5 4.5A.5.5 0 0 1 3 12h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5v0z"/>
+          </svg>
+        </button>
+        <ul className={`${
+          isOpen ? 'flex' : 'hidden'
+        } flex-col absolute top-full left-0 w-full bg-[#662583] z-20 md:flex md:flex-row md:static md:z-auto`}>
+          {navItems.map((item, index) => (
+            <li key={index} className="w-full text-center border-b-2 border-white md:border-b-0 md:border-r-2">
+              <NavLink
+                to={item.path}
+                className={`block py-3 text-white transition-colors duration-300 text-lg font-bold ${
+                  location.pathname === item.path
+                    ? 'bg-[#C7215D]'
+                    : 'hover:bg-[#C7215D]'
+                }`}
+                onClick={() => setIsOpen(false)}  // Close the menu on click
+              >
+                {item.name}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </div>
     </nav>
   );
 };
 
 export default Navigation;
+
