@@ -41,7 +41,7 @@ function ColumnFilter({ column, onFilterChange }) {
   useEffect(() => {
     if (id === 'region' && options.length > 0 && !userHasInteracted && !initialSetDone) {
       const timer = setTimeout(() => {
-        if (!userHasInteracted) { // Double check user interaction before setting
+        if (!userHasInteracted && options.length > 1) { // Additional check here
           const initialOption = [options[0].value];
           setFilter(initialOption);
           if (onFilterChange) {
@@ -50,6 +50,7 @@ function ColumnFilter({ column, onFilterChange }) {
           setInitialSetDone(true);
         }
       }, 500); // Delay to account for data load
+  
       return () => clearTimeout(timer); // Cleanup timer
     }
   }, [id, options, onFilterChange, userHasInteracted, initialSetDone, setFilter]);
@@ -74,6 +75,8 @@ function ColumnFilter({ column, onFilterChange }) {
         options={options}
         className="text-sm w-full"
         styles={customStyles} 
+        isDisabled={options.length === 0} // Disable if no options available
+        placeholder={options.length > 0 ? "Select..." : "No options available"}
       />
     );
   } else {
