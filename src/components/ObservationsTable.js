@@ -94,8 +94,7 @@ const yearOptions = useMemo(() => {
     getTableProps,
     getTableBodyProps,
     headerGroups,
-    page, // Use 'page' instead of 'rows' for pagination
-    rows,    
+     rows,    
     prepareRow,    
   } = useTable(
     { 
@@ -108,7 +107,7 @@ const yearOptions = useMemo(() => {
     useFilters,
     useGlobalFilter,
     useSortBy,
-    usePagination
+    
   );
 
   
@@ -189,7 +188,7 @@ const yearOptions = useMemo(() => {
             ))}
           </thead>
           <tbody {...getTableBodyProps()} className="divide-y divide-gray-200">
-            {page.map((row, index) => {
+            {rows.map((row, index) => {
               prepareRow(row);
               return (
                 <tr {...row.getRowProps()} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}`}>
