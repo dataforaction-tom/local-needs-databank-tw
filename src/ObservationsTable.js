@@ -1,29 +1,16 @@
-import React, { useMemo, useEffect, useState, useRef } from 'react';
+import React, { useMemo, useEffect, useState,} from 'react';
 import { useTable, useFilters, useGlobalFilter, useSortBy, usePagination } from 'react-table';
 import ColumnFilter from './ColumnFilter'; // Ensure this component is correctly imported
 import { CSVLink } from 'react-csv'; // Import CSVLink
-import {
-  ChevronDoubleLeftIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronDoubleRightIcon
-} from '@heroicons/react/24/solid';
 
-const columnStyles = {
-  name: { width: '30%' },
-  date: { width: '5%' },
-  period: { width: '5%' },
-  value: { width: '10%' },
-  place: { width: '30%' },
-  region: { width: '20%' }
-};
+
 
 
 function ObservationsTable({ observations, setFilteredObservations, title }) {
   // Debug: Log the observations to check incoming data
   console.log("Observations data:", observations);
 
-  const [allFilters, setAllFilters] = useState([]); // State to control filters
+  const [allFilters] = useState([]); // State to control filters
 
   const placeOptions = useMemo(() => {
     // Create unique options from the 'place' data field
@@ -44,12 +31,7 @@ const regionOptions = useMemo(() => {
   return Array.from(regions).map(region => ({ value: region, label: region }));
 }, [observations]);
 
-// Set the initial region filter when options are ready and no filter is set
-useEffect(() => {
-  if (regionOptions.length > 0 && allFilters.length === 0) {
-    setAllFilters([{ id: 'region', value: regionOptions[0].value }]);
-  }
-}, [regionOptions]);
+
 
 
   const columns = useMemo(() => [
@@ -107,16 +89,8 @@ useEffect(() => {
     getTableBodyProps,
     headerGroups,
     page, // Use 'page' instead of 'rows' for pagination
-    rows,
-    nextPage,
-    previousPage,
-    canNextPage,
-    canPreviousPage,
-    prepareRow,
-    state,
-    setPageSize,
-    pageCount,
-    gotoPage
+    rows,    
+    prepareRow,    
   } = useTable(
     { 
       columns, 
@@ -155,7 +129,7 @@ useEffect(() => {
         <h2 className='text-xl font-bold'>{title || 'Filtered Observations Table'}</h2>
         <p className='text-sm md:text-lg font-semibold text-slate-800'>Note - Using the filters in the table will also filter the charts and maps below</p>
       </div>
-      <div style={{ maxHeight: '400px', overflowX: 'auto' }}>
+      <div style={scrollContainerStyle}>
         <table {...getTableProps()} className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50 sticky top-0">
             {headerGroups.map(headerGroup => (

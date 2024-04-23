@@ -8,7 +8,7 @@ import ErrorBoundary from './ErrorBoundary'; // Ensure this is correctly importe
 import Test from './Test'
 
 function App() {
-  return (
+  return (  
     <Router>
       <Navigation /> {/* This will render the navigation bar */}
       <div className="App">

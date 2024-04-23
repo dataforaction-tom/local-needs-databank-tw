@@ -25,20 +25,21 @@ const useResponsiveChart = (chartRef) => {
 function ObservationsChart({ observations, title }) {
   const chartRef = useRef(null);
   useResponsiveChart(chartRef); // Apply the responsive hook
-
-  const colorPalette = ['#662583', '#C7215D', '#881866', '#dd35a5'];
-  const [chartType, setChartType] = useState('bar');
   const [indexAxis, setIndexAxis] = useState('x');
 
-  const computedColorMapping = useMemo(() => {
-    const newColorMapping = {};
-    observations.forEach((obs, index) => {
-      if (!newColorMapping[obs.name]) {
-        newColorMapping[obs.name] = colorPalette[index % colorPalette.length];
-      }
-    });
-    return newColorMapping;
-  }, [observations]);
+ const colorPalette = useMemo(() => {
+  return ['#662583', '#C7215D', '#881866', '#dd35a5'];
+}, []); // Empty dependency array means this runs only once when the component mounts
+
+const computedColorMapping = useMemo(() => {
+  const newColorMapping = {};
+  observations.forEach((obs, index) => {
+    if (!newColorMapping[obs.name]) {
+      newColorMapping[obs.name] = colorPalette[index % colorPalette.length];
+    }
+  });
+  return newColorMapping;
+}, [observations, colorPalette]); // Now `colorPalette` is stable and can be a dependency
 
   useEffect(() => {
     const chartContext = chartRef.current.getContext('2d');
@@ -51,7 +52,7 @@ function ObservationsChart({ observations, title }) {
     const datasets = createDatasets(observations, places, computedColorMapping);
 
     window.myBarChart = new Chart(chartContext, {
-      type: chartType,
+      type: 'bar',
       data: {
         labels: places,
         datasets: datasets
@@ -76,7 +77,7 @@ function ObservationsChart({ observations, title }) {
         }
       }
     });
-  }, [observations, chartType, computedColorMapping, indexAxis]);
+  }, [observations, computedColorMapping, indexAxis]);
 
   function createDatasets(data, places, colorMapping) {
     const datasetMap = {};

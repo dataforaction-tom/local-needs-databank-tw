@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Select from 'react-select';
 
 const customStyles = {
@@ -30,22 +30,32 @@ const customStyles = {
 
 function ColumnFilter({ column, onFilterChange }) {
   const { filterValue = [], setFilter, filterOptions = [], id } = column;
+  const [initialSetDone, setInitialSetDone] = useState(false);
+  const [userHasInteracted, setUserHasInteracted] = useState(false);
 
-  const options = Array.isArray(filterOptions) ? filterOptions : [];
+  // Memoize options to ensure it only recalculates when filterOptions changes
+  const options = useMemo(() => Array.isArray(filterOptions) ? filterOptions : [], [filterOptions]);
+  
   const multiSelectColumns = ['place', 'name', 'region'];
 
-  // Set the default filter value for the 'region' column when the component mounts
   useEffect(() => {
-    if (id === 'region' && options.length > 0 && filterValue.length === 0) {
-      const firstOption = [{ value: options[0].value, label: options[0].label }];
-      setFilter(firstOption.map(item => item.value));
-      if (onFilterChange) {
-        onFilterChange(id, firstOption.map(item => item.value));
-      }
+    if (id === 'region' && options.length > 0 && !userHasInteracted && !initialSetDone) {
+      const timer = setTimeout(() => {
+        if (!userHasInteracted) { // Double check user interaction before setting
+          const initialOption = [options[0].value];
+          setFilter(initialOption);
+          if (onFilterChange) {
+            onFilterChange(id, initialOption);
+          }
+          setInitialSetDone(true);
+        }
+      }, 500); // Delay to account for data load
+      return () => clearTimeout(timer); // Cleanup timer
     }
-  }, [filterValue, id, onFilterChange, options, setFilter]);
+  }, [id, options, onFilterChange, userHasInteracted, initialSetDone, setFilter]);
 
   const handleChange = (value) => {
+    setUserHasInteracted(true);
     const valueArray = value ? value.map(item => item.value) : [];
     setFilter(valueArray);
     if (onFilterChange) {
@@ -53,30 +63,19 @@ function ColumnFilter({ column, onFilterChange }) {
     }
   };
 
-  if (multiSelectColumns.includes(id)) {
-    const selectedValues = options.filter(option => Array.isArray(filterValue) && filterValue.includes(option.value));
+  const selectedValues = options.filter(option => filterValue.includes(option.value));
 
+  if (multiSelectColumns.includes(id)) {
     return (
       <Select
-    isMulti
-    value={selectedValues}
-    onChange={handleChange}
-    options={options}
-    className="text-sm w-full"
-    styles={{
-      ...customStyles,
-      control: (provided) => ({
-        ...provided,
-        minHeight: '48px', // Larger touch area
-        fontSize: '16px'  // Larger font for mobile readability
-      }),
-      menu: (provided) => ({
-        ...provided,
-        width: '100%'  // Ensures menu uses full width on mobile
-      }),
-    }} 
-  />
-);
+        isMulti
+        value={selectedValues}
+        onChange={handleChange}
+        options={options}
+        className="text-sm w-full"
+        styles={customStyles} 
+      />
+    );
   } else {
     return (
       <span>
@@ -84,6 +83,7 @@ function ColumnFilter({ column, onFilterChange }) {
         <input
           value={filterValue || ''}
           onChange={e => {
+            setUserHasInteracted(true);
             const newVal = e.target.value || undefined;
             setFilter(newVal);
             if (onFilterChange) {

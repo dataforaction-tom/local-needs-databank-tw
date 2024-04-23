@@ -237,7 +237,7 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
   }
 
   // Batch insert data to Supabase
-  const { data: response, error } = await supabase.from('observations').insert(processedData);
+  const { data: error } = await supabase.from('observations').insert(processedData);
   if (error) {
     console.error('Error uploading data: ', error);
     return { success: false, message: 'Failed to upload data.', errorRows };
@@ -282,12 +282,7 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
         className='border-dashed border-4 border-gray-400 bg-purple-100 py-12 flex justify-center items-center cursor-pointer my-10'
         style={{ position: 'relative' }} // Ensure this div is positioned relatively
         onDragOver={handleDragOver}
-        onDrop={(e) => {
-          e.preventDefault();
-          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            handleFileDrop(e.dataTransfer.files[0]);
-          }
-        }}
+        onDrop={handleDrop}
       >
         <input
           type="file"
