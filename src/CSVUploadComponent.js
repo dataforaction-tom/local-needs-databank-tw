@@ -11,7 +11,7 @@ import Select from 'react-select';
 const CSVUploadComponent = () => {
   const [data, setData] = useState([]);
   const [columns, setColumns] = useState([]);
-  const [showFields, setShowFields] = useState(false); // State to control the visibility of input fields
+  const [showFields, setShowFields] = useState(false); 
   const [headerMappings, setHeaderMappings] = useState([]);
   const [additionalFields, setAdditionalFields] = useState({
     name: '',
@@ -50,8 +50,8 @@ const CSVUploadComponent = () => {
   };
 
   const handleDragOver = (e) => {
-    e.preventDefault(); // Prevent default behavior (Prevent file from being opened)
-    e.stopPropagation(); // Stop propagation to prevent affecting other elements.
+    e.preventDefault(); 
+    e.stopPropagation(); 
   };
 
   const handleDrop = (e) => {
@@ -177,7 +177,7 @@ const CSVUploadComponent = () => {
     return; // Exit the function if the date is invalid
   }
   
-    // Including .select() to ensure the inserted data is returned
+    
     const { data: datasetData, error: datasetError } = await supabase
       .from('datasets')
       .insert({
@@ -242,7 +242,7 @@ const CSVUploadComponent = () => {
           // Convert date fields if designated as a 'date' type in the mappings
           if (mapping.value.toLowerCase() === 'date') {
             value = convertDateToISO(value);
-            if (value === '') {  // If conversion fails, log an error
+            if (value === '') {  
               errors.push(`Row ${rowIndex + 1}: Invalid date format in '${header}'.`);
               errorRows.push(rowIndex);
               rowHasError = true;
@@ -278,7 +278,7 @@ const CSVUploadComponent = () => {
           }
         });
   
-        processedData.push(entry);  // Add this entry to processedData only if no errors were flagged
+        processedData.push(entry);  
       }
     });
   
@@ -330,7 +330,7 @@ const CSVUploadComponent = () => {
     <div className='p-4'>
       <div
         className='border-dashed border-4 border-gray-400 bg-purple-100 py-12 flex justify-center items-center cursor-pointer my-10'
-        style={{ position: 'relative' }} // Ensure this div is positioned relatively
+        style={{ position: 'relative' }} 
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >

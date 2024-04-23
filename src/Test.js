@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import Dashboard from './Dashboard';
 import Card from './Card';
-import LocalAuthoritiesMap from './Maptest';
+import LocalAuthoritiesMap from './Map';
 
 const Health = () => {
     const cardData = [

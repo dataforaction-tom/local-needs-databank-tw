@@ -1,14 +1,13 @@
 import React, { useMemo, useEffect, useState,} from 'react';
 import { useTable, useFilters, useGlobalFilter, useSortBy, usePagination } from 'react-table';
-import ColumnFilter from './ColumnFilter'; // Ensure this component is correctly imported
-import { CSVLink } from 'react-csv'; // Import CSVLink
+import ColumnFilter from './ColumnFilter'; 
+import { CSVLink } from 'react-csv'; 
 
 
 
 
 function ObservationsTable({ observations, setFilteredObservations, title, license, owner, dataset_description, original_url, published_date }) {
-  // Debug: Log the observations to check incoming data
-  console.log("Observations data:", observations);
+  
 
   const [allFilters] = useState([]); // State to control filters
 
@@ -26,13 +25,13 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
 }, [observations]);
 
 const regionOptions = useMemo(() => {
-  // Create unique options from the 'name' data field
+  // Create unique options from the 'region' data field
   const regions = new Set(observations.map(obs => obs.region));
   return Array.from(regions).map(region => ({ value: region, label: region }));
 }, [observations]);
 
 const yearOptions = useMemo(() => {
-  // Create unique options from the 'name' data field
+  // Create unique options from the 'year' data field
   const years = new Set(observations.map(obs => obs.year));
   return Array.from(years).map(year => ({ value: year, label: year }));
 }, [observations]);
@@ -45,21 +44,21 @@ const yearOptions = useMemo(() => {
       Header: 'Name',
       accessor: 'name', // accessor is the "key" in the data
       Filter: ColumnFilter,
-      filter: 'multiSelect', // Assuming your ColumnFilter can handle this type of filtering
-      filterOptions: nameOptions // Pass the name options to the filter
+      filter: 'multiSelect', 
+      filterOptions: nameOptions 
     },
     {
       Header: 'Place',
       accessor: 'place',
       Filter: ColumnFilter,
-      filter: 'multiSelect', // Correct property for setting filter type in React Table v7
+      filter: 'multiSelect', 
       filterOptions: placeOptions
     },
     {
       Header: 'Region',
       accessor: 'region',
       Filter: ColumnFilter,
-      filter: 'multiSelect', // Correct property for setting filter type in React Table v7
+      filter: 'multiSelect', 
       filterOptions: regionOptions
     },
     {
@@ -82,10 +81,10 @@ const yearOptions = useMemo(() => {
 
   const filterTypes = useMemo(() => ({
     multiSelect: (rows, columnId, filterValues) => {
-      console.log(`Filtering ${rows.length} rows on ${columnId} with values:`, filterValues);
+      
       if (filterValues.length === 0) return rows;
       const filteredRows = rows.filter(row => filterValues.includes(row.values[columnId]));
-      console.log(`Filtered down to ${filteredRows.length} rows`);
+      
       return filteredRows;
     }
   }), []);
@@ -115,10 +114,10 @@ const yearOptions = useMemo(() => {
   
 
 
-   // Effect to update filtered observations
+   
    useEffect(() => {
     setFilteredObservations(rows.map(row => row.original));
-    console.log("Filtered Observations:", rows.map(row => row.original));
+    
   }, [rows, setFilteredObservations]);
 
 
@@ -142,7 +141,7 @@ const yearOptions = useMemo(() => {
     // Append metadata as single cell entries at the bottom
     const dataWithMeta = [
       ...dataRows,
-      {}, // Optional: empty row for separation
+      {}, 
       ...metadataEntries.map(entry => ({ "Metadata": entry }))
     ];
   
@@ -163,7 +162,7 @@ const yearOptions = useMemo(() => {
 
 
   
-   // Define the scrolling container style
+   // Define the scrolling container style for table
    const scrollContainerStyle = { maxHeight: '400px', overflowY: 'auto' };
 
 
@@ -207,7 +206,7 @@ const yearOptions = useMemo(() => {
       </div>
       <div className="flex flex-col md:flex-row justify-between items-center mt-4 space-y-2 md:space-y-0">
         <div className="flex space-x-2">
-          {/* Pagination and other controls */}
+          
         </div>
         <CSVLink
           data={csvData}
@@ -217,13 +216,16 @@ const yearOptions = useMemo(() => {
         >
           Download CSV
         </CSVLink>
+        
       </div>
+      <div className='grid-cols-1'>
       <p className='text-xs font-italic'>{dataset_description}</p>
       <p className='text-xs font-italic'>Data made available under {license}</p>
       <p className='text-xs font-italic'>Owner: {owner}</p>
       <p className='text-xs font-italic'>Published {published_date}</p>
       <p className='text-xs font-italic'>Original Data Available at{original_url}</p>
 
+    </div>
     </div>
   );
 }

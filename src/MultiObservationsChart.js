@@ -20,8 +20,8 @@ function MultiObservationsChart({ observations, title }) {
           key={name} 
           data={groupByObservation[name]} 
           name={name} 
-          startColorIndex={index % colorPalette.length} // Pass the start color index based on position
-          colorPalette={colorPalette} // Pass the full color palette
+          startColorIndex={index % colorPalette.length} 
+          colorPalette={colorPalette} 
         />
       ))}
     </div>

@@ -65,25 +65,18 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
     const getColorScaleAndBreaks = (data) => {
         const values = data.flatMap(feature => feature.properties.observations.map(obs => obs.value));
         const min = Math.min(...values);
-        console.log('min', min)
+      
         const max = Math.max(...values);
-        console.log('max', max)
+        
         
         // Round min and max to the nearest ten
         const roundedMin = Math.floor(min / 10) * 10;
         const roundedMax = Math.ceil(max / 10) * 10;
         const range = roundedMax - roundedMin;
-        const step = range / 10;
-        
-        // Calculate breaks rounded to the nearest ten
-        const breaks = Array.from({length: 11}, (_, i) => roundedMin + i * step);
-
-        console.log("Domains", breaks); // Ensure domain is correct
-    
-        // Create the color scale directly with the domain
+        const step = range / 10;    
+        const breaks = Array.from({length: 11}, (_, i) => roundedMin + i * step);    
         const colorScale = chroma.scale(['pink', '#662583']).domain(breaks);
-    
-        // Return both the color scale and the domain as "breaks" for consistency
+           
         return { colorScale, breaks };
     };
 
@@ -97,7 +90,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
                         const normalizedData = normalizeGeoJSON(response.data);
                         setGeoJsonData(normalizedData);
                         setFilteredGeoJsonFeatures(normalizedData);
-                        console.log('response from supabase- normalized', normalizedData);
+                        
                     } else {
                         setGeoJsonData([]);
                     }
@@ -125,7 +118,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
                     }
                 };
             }
-            return feature;  // Return MultiPolygons unchanged
+            return feature;  
         });
     };
     
@@ -177,7 +170,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
     const renderGeoJsonLayer = () => {
         const { colorScale, breaks } = getColorScaleAndBreaks(filteredGeoJsonFeatures);
     
-        console.log("Breaks:", breaks); // Debug: Check what breaks contains
+       
         return (
             <>
             <GeoJSON

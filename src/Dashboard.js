@@ -3,7 +3,7 @@ import ObservationsTable from './ObservationsTable';
 import ObservationsChart from './ObservationsChart';
 import supabase from './supabaseClient';
 import Select from 'react-select';
-import LocalAuthorityMap from './Maptest'; // Ensure you import your map component
+import LocalAuthorityMap from './Map'; // Ensure you import your map component
 import MultiObservationsChart from './MultiObservationsChart';
 import TimeObservationsChart from './TimeObservationsChart';
 
@@ -26,7 +26,7 @@ function Dashboard({ dashboardId }) {
                 .from('dashboard_datasets')
                 .select('dashboard_id, datasets:dataset_id (id, title, original_url, published_date, owner, dataset_description, license )')
                 .eq('dashboard_id', dashboardId);
-                console.log(datasetsData);
+                
 
             if (datasetsError) {
                 console.error('Error fetching datasets', datasetsError);

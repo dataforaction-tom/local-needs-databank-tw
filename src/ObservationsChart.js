@@ -5,7 +5,7 @@ import Chart from 'chart.js/auto';
 const useResponsiveChart = (chartRef) => {
   useEffect(() => {
     const handleResize = () => {
-      // Adjust height when width is below a breakpoint, e.g., 768px for typical mobile devices
+      // Adjust height when width is below a breakpoint
       if (window.innerWidth < 768) {
         chartRef.current.style.height = '400px'; // Set a more suitable height for mobile
       } else {
@@ -39,7 +39,7 @@ const computedColorMapping = useMemo(() => {
     }
   });
   return newColorMapping;
-}, [observations, colorPalette]); // Now `colorPalette` is stable and can be a dependency
+}, [observations, colorPalette]); 
 
   useEffect(() => {
     const chartContext = chartRef.current.getContext('2d');
