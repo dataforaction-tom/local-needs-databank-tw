@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import ObservationsTable from './ObservationsTable';
 import ObservationsChart from './ObservationsChart';
-import supabase from './supabaseClient';
+import supabase from '../supabaseClient';
 import Select from 'react-select';
-import LocalAuthorityMap from './Map'; 
+import LocalAuthorityMap from './Map'; // Ensure you import your map component
 import MultiObservationsChart from './MultiObservationsChart';
 import TimeObservationsChart from './TimeObservationsChart';
 
-function TimeSeriesDashboard({ dashboardId }) {
+function Dashboard({ dashboardId }) {
     const [datasets, setDatasets] = useState([]);
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
@@ -24,8 +24,9 @@ function TimeSeriesDashboard({ dashboardId }) {
 
             const { data: datasetsData, error: datasetsError } = await supabase
                 .from('dashboard_datasets')
-                .select('dashboard_id, datasets:dataset_id (id, title)')
+                .select('dashboard_id, datasets:dataset_id (id, title, original_url, published_date, owner, dataset_description, license )')
                 .eq('dashboard_id', dashboardId);
+                
 
             if (datasetsError) {
                 console.error('Error fetching datasets', datasetsError);
@@ -35,13 +36,20 @@ function TimeSeriesDashboard({ dashboardId }) {
 
             const options = datasetsData.map(dd => ({
                 value: dd.datasets.id,
-                label: dd.datasets.title
+                label: dd.datasets.title,
+                original_url: dd.datasets.original_url,
+                dataset_description: dd.datasets.dataset_description,
+                license: dd.datasets.license,
+                published_date: dd.datasets.published_date,
+                owner: dd.datasets.owner,
+               
+
             }));
 
             setDatasets(options);
 
             if (options.length > 0) {
-                setSelectedDataset(options[0]); 
+                setSelectedDataset(options[0]);  // Set react-select option
                 fetchObservations(options[0].value);
             }
 
@@ -65,24 +73,24 @@ function TimeSeriesDashboard({ dashboardId }) {
 const fetchObservations = async (datasetId) => {
   if (!datasetId) return; // Check to ensure a dataset ID is provided
 
-  
+  // Start building the query
   let query = supabase.from('observations').select('*').eq('dataset_id', datasetId);
 
-  
+  // If a specific region is selected, add that to the query
   if (selectedRegion !== 'All') {
       query = query.eq('region', selectedRegion);
   }
 
-  
+  // Execute the query and handle the response
   const { data, error } = await query;
 
-  
+  // Handle any errors during the fetch operation
   if (error) {
       console.error('Error fetching observations', error);
       return;
   }
 
- 
+  // Update state with the fetched data
   setObservations(data);
   setFilteredObservations(data);
 };
@@ -130,6 +138,9 @@ const fetchObservations = async (datasetId) => {
                 className='w-full md:w-1/3 px-3 md:px-5 mb-2 md:mb-4'
             />
             <div className="flex flex-col md:flex-row justify-between items-center">
+                <div className="flex-grow md:flex md:flex-grow">
+                    {/* Placeholder for additional content or spacing */}
+                </div>
                 <button 
                     onClick={toggleTableVisibility}
                     className="w-full md:w-auto bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300 mt-2 md:mt-0"
@@ -144,18 +155,58 @@ const fetchObservations = async (datasetId) => {
                           title={selectedDataset ? selectedDataset.label : ''}
                           observations={observations}
                           setFilteredObservations={setFilteredObservations}
+                          license={selectedDataset ? selectedDataset.license : ''}
+                          original_url={selectedDataset ? selectedDataset.original_url : ''}
+                          published_date={selectedDataset ? selectedDataset.published_date : ''}
+                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                          owner={selectedDataset ? selectedDataset.owner : ''}
                       />
                   )}
-                </>
-            )}
+                  
+                  <ObservationsChart
+                      observations={filteredObservations}
+                      title={selectedDataset ? selectedDataset.label : ''}
+                      license={selectedDataset ? selectedDataset.license : ''}
+                          original_url={selectedDataset ? selectedDataset.original_url : ''}
+                          published_date={selectedDataset ? selectedDataset.published_date : ''}
+                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                          owner={selectedDataset ? selectedDataset.owner : ''}
+                  />
+                  
+              </>
+          )}
+          <LocalAuthorityMap
+                        selectedDataset={selectedDataset}
+                        filteredObservations={filteredObservations}
+                        title={selectedDataset ? selectedDataset.label : ''}
+                        license={selectedDataset ? selectedDataset.license : ''}
+                          original_url={selectedDataset ? selectedDataset.original_url : ''}
+                          published_date={selectedDataset ? selectedDataset.published_date : ''}
+                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                          owner={selectedDataset ? selectedDataset.owner : ''}
+                    />
+            <MultiObservationsChart
+                      observations={filteredObservations}
+                      title={selectedDataset ? selectedDataset.label : ''}
+                      license={selectedDataset ? selectedDataset.license : ''}
+                          original_url={selectedDataset ? selectedDataset.original_url : ''}
+                          published_date={selectedDataset ? selectedDataset.published_date : ''}
+                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                          owner={selectedDataset ? selectedDataset.owner : ''}
+                  />
+
             <TimeObservationsChart
-                observations={filteredObservations}
-                title={selectedDataset ? selectedDataset.label : ''}
-            />
-        </div>
-    );
-    
+                    observations={filteredObservations}
+                    title={selectedDataset ? selectedDataset.label : ''}
+                    license={selectedDataset ? selectedDataset.license : ''}
+                          original_url={selectedDataset ? selectedDataset.original_url : ''}
+                          published_date={selectedDataset ? selectedDataset.published_date : ''}
+                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                          owner={selectedDataset ? selectedDataset.owner : ''}
+                    />
+      </div>
+  );
   
 }
 
-export default TimeSeriesDashboard;
+export default Dashboard;

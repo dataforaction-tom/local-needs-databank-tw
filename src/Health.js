@@ -1,10 +1,10 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
-import Dashboard from './Dashboard';
+import Dashboard from './components/Dashboard';
 import Card from './Card';
-import LocalAuthoritiesMap from './Map';
-import TimeObservationsChart from './TimeObservationsChart';
-import TimeSeriesDashboard from './TimeSeriesDashboard';
+import LocalAuthoritiesMap from './components/Map';
+import TimeObservationsChart from './components/TimeObservationsChart';
+import TimeSeriesDashboard from './components/TimeSeriesDashboard';
 
 const Health = () => {
     const cardData = [

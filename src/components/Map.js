@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, GeoJSON, useMap  } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import supabase from './supabaseClient';
+import supabase from '../supabaseClient';
 import L from 'leaflet';
 import chroma from 'chroma-js';
 

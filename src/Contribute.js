@@ -1,5 +1,5 @@
 import React from 'react';
-import CSVUploadComponent from './CSVUploadComponent'; // adjust the path as necessary
+import CSVUploadComponent from './components/CSVUploadComponent'; // adjust the path as necessary
 
 const Contribute = () => {
   return (
