@@ -1,38 +1,25 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import Chart from 'chart.js/auto';
 
-// Custom hook to adjust chart height dynamically based on window width
 const useResponsiveChart = (chartRef) => {
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) { // Adjust breakpoint as needed
-        chartRef.current.style.height = '400px'; // Set a more suitable height for mobile
-      } else {
-        chartRef.current.style.height = '600px'; // Default height for larger screens
-      }
+      chartRef.current.style.height = window.innerWidth < 768 ? '400px' : '600px';
     };
-
     window.addEventListener('resize', handleResize);
     handleResize(); // Initialize the size on component mount
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, [chartRef]);
 };
 
 function TimeObservationsChart({ observations, title }) {
   const chartRef = useRef(null);
-  useResponsiveChart(chartRef); // Apply the responsive hook to adjust chart height
+  const [chartInstance, setChartInstance] = useState(null);
 
-  
   const [chartType, setChartType] = useState('bar');
   const [indexAxis, setIndexAxis] = useState('x');
 
-  const colorPalette = useMemo(() => {
-    return ['#662583', '#C7215D', '#881866', '#dd35a5'];
-  }, []); // Empty dependency array means this runs only once when the component mounts
-
+  const colorPalette = useMemo(() => ['#662583', '#C7215D', '#881866', '#dd35a5'], []);
   const computedColorMapping = useMemo(() => {
     const newColorMapping = {};
     observations.forEach((obs, index) => {
@@ -41,63 +28,44 @@ function TimeObservationsChart({ observations, title }) {
       }
     });
     return newColorMapping;
-  }, [observations, colorPalette]); 
-  
+  }, [observations, colorPalette]);
 
   useEffect(() => {
+    console.log("Component is mounting or updating.");
+    
     const chartContext = chartRef.current.getContext('2d');
     const years = [...new Set(observations.map(obs => new Date(obs.date).getFullYear()))].sort();
-
-    if (window.TimeObservationsChart) {
-      window.TimeObservationsChart.destroy();
+  
+    // Clear previous chart instance if it exists
+    if (chartInstance) {
+      console.log("Destroying existing chart instance.");
+      chartInstance.destroy();
     }
-
-    const datasets = createDatasets(observations, years, computedColorMapping);
-
-    window.TimeObservationsChart = new Chart(chartContext, {
+  
+    console.log("Creating new chart instance.");
+    const newChartInstance = new Chart(chartContext, {
       type: chartType,
       data: {
         labels: years,
-        datasets: datasets
+        datasets: createDatasets(observations, years, computedColorMapping)
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        indexAxis: chartType === 'bar' ? indexAxis : undefined,
-        plugins: {
-          legend: {
-            display: true
-          }
-        },
-        scales: {
-          x: {
-            display: chartType !== 'pie',
-            stacked: chartType === 'bar'
-          },
-          y: {
-            display: chartType !== 'pie',
-            stacked: chartType === 'bar',
-            beginAtZero: true
-          }
-        }
-      }
+      options: getChartOptions(chartType, indexAxis)
     });
-
+    setChartInstance(newChartInstance);
+  
     return () => {
-      if (window.TimeObservationsChart) {
-        window.TimeObservationsChart.destroy();
-      }
+      console.log("Cleaning up chart instance.");
+      newChartInstance.destroy();
     };
   }, [observations, chartType, computedColorMapping, indexAxis]);
+  
 
   function createDatasets(data, years, colorMapping) {
     const datasetMap = {};
-
     data.forEach(obs => {
       const name = obs.name;
       const value = parseInt(obs.value, 10);
       const year = new Date(obs.date).getFullYear();
-
       if (!datasetMap[name]) {
         datasetMap[name] = {
           label: name,
@@ -111,8 +79,31 @@ function TimeObservationsChart({ observations, title }) {
         datasetMap[name].data[yearIndex] = value;
       }
     });
-
     return Object.values(datasetMap);
+  }
+
+  function getChartOptions(type, axis) {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: type === 'bar' ? axis : undefined,
+      plugins: {
+        legend: {
+          display: true
+        }
+      },
+      scales: {
+        x: {
+          display: type !== 'pie',
+          stacked: type === 'bar'
+        },
+        y: {
+          display: type !== 'pie',
+          stacked: type === 'bar',
+          beginAtZero: true
+        }
+      }
+    };
   }
 
   const toggleChartType = () => {
@@ -121,9 +112,7 @@ function TimeObservationsChart({ observations, title }) {
       const nextIndex = (types.indexOf(prevType) + 1) % types.length;
       return types[nextIndex];
     });
-    if (chartType === 'bar') {
-      setIndexAxis(indexAxis === 'x' ? 'y' : 'x');
-    }
+    setIndexAxis(prevAxis => prevAxis === 'x' ? 'y' : 'x');
   };
 
   const downloadImage = () => {
@@ -143,25 +132,22 @@ function TimeObservationsChart({ observations, title }) {
   return (
     <div className='relative p-5 m-5 flex flex-col'>
       <h2 className='text-xl font-bold'>{title || 'Filtered Observations Table'}</h2>
-      
-        
-        <div style={{ position: 'relative', width: '100%', height: 'auto' }}>
-          <canvas ref={chartRef} />
-        </div>
-        <div className='flex flex-col md:flex-row justify-end mt-4 space-y-2 md:space-y-0 md:space-x-2'>
-        <button 
-              className='bg-[#662583] text-white font-medium py-2 px-4 rounded hover:bg-[#C7215D] transition-colors duration-300 text-sm'
-              onClick={toggleChartType}>
-            Toggle Chart Type
-          </button>
-          <button 
-              className='bg-[#662583] text-white font-medium py-2 px-4 rounded hover:bg-[#C7215D] transition-colors duration-300 text-sm'
-              onClick={downloadImage}>
-            Download Chart
-          </button>
-        </div>
+      <div style={{ position: 'relative', width: '100%', height: '400px' }}>
+        <canvas ref={chartRef} />
       </div>
-    
+      <div className='flex flex-col md:flex-row justify-end mt-4 space-y-2 md:space-y-0 md:space-x-2'>
+        <button 
+          className='bg-[#662583] text-white font-medium py-2 px-4 rounded hover:bg-[#C7215D] transition-colors duration-300 text-sm'
+          onClick={toggleChartType}>
+          Toggle Chart Type
+        </button>
+        <button 
+          className='bg-[#662583] text-white font-medium py-2 px-4 rounded hover:bg-[#C7215D] transition-colors duration-300 text-sm'
+          onClick={downloadImage}>
+          Download Chart
+        </button>
+      </div>
+    </div>
   );
 }
 

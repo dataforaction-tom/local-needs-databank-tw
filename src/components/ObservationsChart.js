@@ -24,6 +24,7 @@ const useResponsiveChart = (chartRef) => {
 
 function ObservationsChart({ observations, title }) {
   const chartRef = useRef(null);
+  const [chartInstance, setChartInstance] = useState(null); // State to hold the chart instance
   useResponsiveChart(chartRef); // Apply the responsive hook
   const [indexAxis, setIndexAxis] = useState('x');
 
@@ -41,43 +42,31 @@ const computedColorMapping = useMemo(() => {
   return newColorMapping;
 }, [observations, colorPalette]); 
 
-  useEffect(() => {
-    const chartContext = chartRef.current.getContext('2d');
-    const places = [...new Set(observations.map(obs => obs.place))].sort();
+useEffect(() => {
+  const chartContext = chartRef.current.getContext('2d');
+  const places = [...new Set(observations.map(obs => obs.place))].sort();
 
-    if (window.myBarChart) {
-      window.myBarChart.destroy();
-    }
+  chartInstance && chartInstance.destroy(); // Destroy existing chart before creating a new one
 
-    const datasets = createDatasets(observations, places, computedColorMapping);
-
-    window.myBarChart = new Chart(chartContext, {
-      type: 'bar',
-      data: {
-        labels: places,
-        datasets: datasets
+  const datasets = createDatasets(observations, places, computedColorMapping);
+  const newChartInstance = new Chart(chartContext, {
+    type: 'bar',
+    data: { labels: places, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis,
+      scales: {
+        x: { barPercentage: 1, categoryPercentage: 0.6 },
+        y: { beginAtZero: true }
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        indexAxis: indexAxis,
-        scales: {
-          x: {
-            barPercentage: 1,
-            categoryPercentage: 0.6
-          },
-          y: {
-            beginAtZero: true
-          }
-        },
-        plugins: {
-          legend: {
-            display: true
-          }
-        }
-      }
-    });
-  }, [observations, computedColorMapping, indexAxis]);
+      plugins: { legend: { display: true } }
+    }
+  });
+
+  setChartInstance(newChartInstance); // Save the new chart instance
+  return () => newChartInstance.destroy(); // Cleanup on component unmount
+}, [observations, computedColorMapping, indexAxis]);
 
   function createDatasets(data, places, colorMapping) {
     const datasetMap = {};
@@ -103,7 +92,7 @@ const computedColorMapping = useMemo(() => {
     return Object.values(datasetMap);
   }
 
-  const toggleChartType = () => {
+  const toggleChartAxisNew = () => {
     setIndexAxis(indexAxis === 'x' ? 'y' : 'x'); // Toggle index axis to switch chart orientation
   };
 
@@ -125,13 +114,13 @@ const computedColorMapping = useMemo(() => {
     <div className='relative p-5 m-5'>
       <h2 className='text-xl font-bold'>{title || 'Filtered Observations Table'}</h2>
       
-        <div style={{ position: 'relative', width: '100%', height: 'auto' }}>
+      <div style={{ position: 'relative', width: '100%', Height: '400px' }}>
           <canvas ref={chartRef} />
         </div>
         <div className='flex justify-end mt-4'>
         <button 
               className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
-              onClick={toggleChartType}>
+              onClick={toggleChartAxisNew}>
             Toggle Chart Orientation
           </button>
           <button 

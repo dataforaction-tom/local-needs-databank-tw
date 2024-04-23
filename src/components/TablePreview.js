@@ -81,6 +81,9 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) =
     prepareRow,
   } = tableInstance;
 
+  // Only take the first 100 rows
+  const limitedRows = rows.slice(0, 100);
+
   if (!dataValid || !columnsValid) {
     return (
       <div>
@@ -107,7 +110,7 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) =
             ))}
           </thead>
           <tbody {...getTableBodyProps()}>
-            {rows.map(row => {
+            {limitedRows.map(row => {
               prepareRow(row);
               return (
                 <tr {...row.getRowProps({
