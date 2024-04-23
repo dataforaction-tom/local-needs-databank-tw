@@ -197,15 +197,7 @@ const fetchObservations = async (datasetId) => {
                           owner={selectedDataset ? selectedDataset.owner : ''}
                   />
 
-            <TimeObservationsChart
-                    observations={filteredObservations}
-                    title={selectedDataset ? selectedDataset.label : ''}
-                    license={selectedDataset ? selectedDataset.license : ''}
-                          original_url={selectedDataset ? selectedDataset.original_url : ''}
-                          published_date={selectedDataset ? selectedDataset.published_date : ''}
-                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
-                          owner={selectedDataset ? selectedDataset.owner : ''}
-                    />
+            
       </div>
   );
   

@@ -117,7 +117,7 @@ useEffect(() => {
       <div style={{ position: 'relative', width: '100%', Height: '400px' }}>
           <canvas ref={chartRef} />
         </div>
-        <div className='flex justify-end mt-4'>
+        <div className='flex flex-col md:flex-row justify-end mt-4 space-y-2 md:space-y-0 md:space-x-2'>
         <button 
               className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
               onClick={toggleChartAxisNew}>
