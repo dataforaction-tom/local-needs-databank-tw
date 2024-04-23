@@ -90,6 +90,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
                         const normalizedData = normalizeGeoJSON(response.data);
                         setGeoJsonData(normalizedData);
                         setFilteredGeoJsonFeatures(normalizedData);
+                        console.log(normalizedData)
                         
                     } else {
                         setGeoJsonData([]);
@@ -149,7 +150,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
         let maxValue = feature.properties.observations.reduce((max, obs) => Math.max(max, obs.value), 0);
         layer.setStyle({
             fillColor: colorScale(maxValue).hex(),
-            fillOpacity: 0.9,
+            fillOpacity: 0.8,
             color: 'white',
             weight: 1
         });
