@@ -129,7 +129,7 @@ const fetchObservations = async (datasetId) => {
                 isSearchable
                 className='w-full md:w-1/3 px-3 md:px-5 mb-2 md:mb-4'
             />
-            <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex justify-end items-center md:mb-4">
                 <button 
                     onClick={toggleTableVisibility}
                     className="w-full md:w-auto bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300 mt-2 md:mt-0"
