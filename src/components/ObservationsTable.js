@@ -223,7 +223,7 @@ const yearOptions = useMemo(() => {
       <p className='text-xs font-italic'>Data made available under {license}</p>
       <p className='text-xs font-italic'>Owner: {owner}</p>
       <p className='text-xs font-italic'>Published {published_date}</p>
-      <p className='text-xs font-italic'>Original Data Available at{original_url}</p>
+      <p className='text-xs font-italic'>Original Data Available at {original_url}</p>
 
     </div>
     </div>

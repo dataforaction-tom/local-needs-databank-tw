@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ObservationsTable from './ObservationsTable';
-import ObservationsChart from './ObservationsChart';
+
 import supabase from '../supabaseClient';
 import Select from 'react-select';
-import LocalAuthorityMap from './Map'; 
-import MultiObservationsChart from './MultiObservationsChart';
+
 import TimeObservationsChart from './TimeObservationsChart';
 
 function TimeSeriesDashboard({ dashboardId }) {
@@ -24,7 +23,7 @@ function TimeSeriesDashboard({ dashboardId }) {
 
             const { data: datasetsData, error: datasetsError } = await supabase
                 .from('dashboard_datasets')
-                .select('dashboard_id, datasets:dataset_id (id, title)')
+                .select('dashboard_id, datasets:dataset_id (id, title, original_url, published_date, owner, dataset_description, license)')
                 .eq('dashboard_id', dashboardId);
 
             if (datasetsError) {
@@ -35,7 +34,12 @@ function TimeSeriesDashboard({ dashboardId }) {
 
             const options = datasetsData.map(dd => ({
                 value: dd.datasets.id,
-                label: dd.datasets.title
+                label: dd.datasets.title,               
+                original_url: dd.datasets.original_url,
+                dataset_description: dd.datasets.dataset_description,
+                license: dd.datasets.license,
+                published_date: dd.datasets.published_date,
+                owner: dd.datasets.owner,
             }));
 
             setDatasets(options);
@@ -144,6 +148,11 @@ const fetchObservations = async (datasetId) => {
                           title={selectedDataset ? selectedDataset.label : ''}
                           observations={observations}
                           setFilteredObservations={setFilteredObservations}
+                          license={selectedDataset ? selectedDataset.license : ''}
+                          original_url={selectedDataset ? selectedDataset.original_url : ''}
+                          published_date={selectedDataset ? selectedDataset.published_date : ''}
+                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                          owner={selectedDataset ? selectedDataset.owner : ''}
                       />
                   )}
                 </>
@@ -151,6 +160,11 @@ const fetchObservations = async (datasetId) => {
             <TimeObservationsChart
                 observations={filteredObservations}
                 title={selectedDataset ? selectedDataset.label : ''}
+                license={selectedDataset ? selectedDataset.license : ''}
+                          original_url={selectedDataset ? selectedDataset.original_url : ''}
+                          published_date={selectedDataset ? selectedDataset.published_date : ''}
+                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                          owner={selectedDataset ? selectedDataset.owner : ''}
             />
         </div>
     );

@@ -25,9 +25,13 @@ function TimeObservationsChart({ observations, title }) {
   const chartRef = useRef(null);
   useResponsiveChart(chartRef); // Apply the responsive hook to adjust chart height
 
-  const colorPalette = ['#662583', '#C7215D', '#881866', '#dd35a5'];
+  
   const [chartType, setChartType] = useState('bar');
   const [indexAxis, setIndexAxis] = useState('x');
+
+  const colorPalette = useMemo(() => {
+    return ['#662583', '#C7215D', '#881866', '#dd35a5'];
+  }, []); // Empty dependency array means this runs only once when the component mounts
 
   const computedColorMapping = useMemo(() => {
     const newColorMapping = {};
@@ -37,7 +41,8 @@ function TimeObservationsChart({ observations, title }) {
       }
     });
     return newColorMapping;
-  }, [observations]);
+  }, [observations, colorPalette]); 
+  
 
   useEffect(() => {
     const chartContext = chartRef.current.getContext('2d');
@@ -111,7 +116,7 @@ function TimeObservationsChart({ observations, title }) {
   }
 
   const toggleChartType = () => {
-    const types = ['bar', 'line', 'pie'];
+    const types = ['bar', 'line'];
     setChartType(prevType => {
       const nextIndex = (types.indexOf(prevType) + 1) % types.length;
       return types[nextIndex];
