@@ -36,7 +36,7 @@ function ColumnFilter({ column, onFilterChange }) {
   // Memoize options to ensure it only recalculates when filterOptions changes
   const options = useMemo(() => Array.isArray(filterOptions) ? filterOptions : [], [filterOptions]);
   
-  const multiSelectColumns = ['place', 'name', 'region'];
+  const multiSelectColumns = ['place', 'name', 'region', 'year'];
 
   useEffect(() => {
     if (id === 'region' && options.length > 0 && !userHasInteracted && !initialSetDone) {

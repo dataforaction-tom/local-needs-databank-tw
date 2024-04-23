@@ -137,13 +137,45 @@ const CSVUploadComponent = () => {
     validateMappings(headerMappings); // Re-validate with updated additional fields
   };
   
+  const convertDateToISO = (dateString) => {
+    // Check if the date is already in ISO format (YYYY-MM-DD)
+    const isoRegex = /^\d{4}-\d{2}-\d{2}$/;
+  
+    if (isoRegex.test(dateString)) {
+      console.log("Date is already in ISO format:", dateString);
+      return dateString; // Return the date as is since it's already in the expected format
+    }
+  
+    // If the date is in UK format (DD/MM/YYYY), convert it to ISO format (YYYY-MM-DD)
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+      const [day, month, year] = parts;
+      return `${year}-${month}-${day}`;
+    }
+  
+    console.error("Invalid date format:", dateString);
+    return '';  // Return an empty string or handle this case as needed
+  };
+  
 
   const handleSubmission = async () => {
     setLoading(true);
     setMessage('');
     setErrorRows([]);
+
+    
   
     console.log("Attempting to create dataset with fields:", datasetFields);
+
+    
+  // Only attempt to convert if 'publishedDate' is not empty
+  const formattedPublishedDate = datasetFields.publishedDate ? convertDateToISO(datasetFields.publishedDate) : null;
+
+  if (!formattedPublishedDate) {
+    setMessage('Invalid date format. Please ensure the date is in DD/MM/YYYY format.');
+    setLoading(false);
+    return; // Exit the function if the date is invalid
+  }
   
     // Including .select() to ensure the inserted data is returned
     const { data: datasetData, error: datasetError } = await supabase
@@ -152,7 +184,7 @@ const CSVUploadComponent = () => {
         title: datasetFields.title,
         license: datasetFields.license,
         original_url: datasetFields.originalURL,
-        published_date: datasetFields.publishedDate,
+        published_date: formattedPublishedDate,
         owner: datasetFields.owner,
         dataset_description: datasetFields.description
       })
@@ -169,9 +201,15 @@ const CSVUploadComponent = () => {
     }
   
     if (datasetData && datasetData.length > 0) {
-      const datasetId = datasetData[0].id;  // Assume 'id' is the primary key
-      const result = await submitData(data, headerMappings, additionalFields, datasetId);
-      setLoading(false);
+      const datasetId = datasetData[0].id;  
+      const formattedAdditionalFields = {
+      ...additionalFields,
+      date: additionalFields.date ? convertDateToISO(additionalFields.date) : null
+    };
+
+    // Call submitData with formatted additionalFields
+    const result = await submitData(data, headerMappings, formattedAdditionalFields, datasetId);
+    setLoading(false);
   
       if (!result.success) {
         setErrorRows(result.errorRows);
@@ -186,66 +224,78 @@ const CSVUploadComponent = () => {
   };
   
   
-const submitData = async (data, mappings, additionalFields, datasetId) => {
+  const submitData = async (data, mappings, additionalFields, datasetId) => {
+    const headers = Object.keys(data[0]);
+    const errors = [];
+    const errorRows = [];
+    const processedData = [];
   
-  const headers = Object.keys(data[0]);
-  const errors = [];
-  const errorRows = [];
-  const processedData = [];
-
-  data.forEach((row, rowIndex) => {
-    // For each row, create an entry for each "value" column selected
-    mappings.forEach((mapping, idx) => {
-      if (mapping.value !== 'Ignore' && mapping.label === 'Value') {
-        const entry = { dataset_id: datasetId }; 
-        let rowHasError = false;
-
-        // Store the header as 'name' in Supabase and the column value as 'value'
-        const value = parseFloat(row[headers[idx]]);
-        if (isNaN(value)) {
-          errors.push(`Row ${rowIndex + 1}: '${row[headers[idx]]}' is not a valid number.`);
-          if (!rowHasError) {
-            errorRows.push(rowIndex);
-            rowHasError = true;
+    data.forEach((row, rowIndex) => {
+      let rowHasError = false;
+      const entry = { dataset_id: datasetId };
+  
+      mappings.forEach((mapping, idx) => {
+        if (mapping.value !== 'Ignore') {
+          const header = headers[idx];
+          let value = row[header];
+  
+          // Convert date fields if designated as a 'date' type in the mappings
+          if (mapping.value.toLowerCase() === 'date') {
+            value = convertDateToISO(value);
+            if (value === '') {  // If conversion fails, log an error
+              errors.push(`Row ${rowIndex + 1}: Invalid date format in '${header}'.`);
+              errorRows.push(rowIndex);
+              rowHasError = true;
+              return;  // Skip further processing of this row due to error
+            }
           }
-        } else {
-          entry['name'] = headers[idx];  // Use the column header as the 'name'
-          entry['value'] = value;  // Store the number as 'value'
-
-          // Include other mapped fields
-          mappings.forEach((m, i) => {
-            if (m.value !== 'Ignore' && m.label !== 'Value') {
-              entry[m.value.toLowerCase()] = row[headers[i]];
+  
+          if (!rowHasError) {
+            // Process as a numeric value if the mapping label is 'Value'
+            if (mapping.label === 'Value') {
+              value = parseFloat(value);
+              if (isNaN(value)) {
+                errors.push(`Row ${rowIndex + 1}: '${value}' is not a valid number.`);
+                errorRows.push(rowIndex);
+                rowHasError = true;
+                return;  // Skip further processing of this row due to error
+              } else {
+                entry['name'] = header;  // Use the column header as the 'name'
+                entry['value'] = value;  // Store the number as 'value'
+              }
+            } else {
+              entry[mapping.value.toLowerCase()] = value;  // Set other types of mapped data
             }
-          });
-
-          // Add additional fields with default values if not already present
-          Object.entries(additionalFields).forEach(([key, value]) => {
-            if (value && !entry[key.toLowerCase()]) {
-              entry[key.toLowerCase()] = value;
-            }
-          });
-
-          processedData.push(entry);
+          }
         }
+      });
+  
+      // Add additional fields with default values if not already present
+      if (!rowHasError) {
+        Object.entries(additionalFields).forEach(([key, val]) => {
+          if (val && !entry[key.toLowerCase()]) {
+            entry[key.toLowerCase()] = val;
+          }
+        });
+  
+        processedData.push(entry);  // Add this entry to processedData only if no errors were flagged
       }
     });
-  });
-
-  if (errors.length > 0) {
-    return { success: false, message: `Data validation failed:\n${errors.join('\n')}`, errorRows };
-  }
-
-  // Batch insert data to Supabase
-  const { data: error } = await supabase.from('observations').insert(processedData);
-  if (error) {
-    console.error('Error uploading data: ', error);
-    return { success: false, message: 'Failed to upload data.', errorRows };
-  }
-
-  return { success: true, message: 'Data uploaded successfully.' };
-};
-
+  
+    if (errors.length > 0) {
+      return { success: false, message: `Data validation failed:\n${errors.join('\n')}`, errorRows };
+    }
+  
+    // Batch insert data to Supabase
+    const { error } = await supabase.from('observations').insert(processedData);
+    if (error) {
+      console.error('Error uploading data: ', error);
+      return { success: false, message: 'Failed to upload data.', errorRows };
+    }
+  
+    return { success: true, message: 'Data uploaded successfully.' };
+  };
+  
 
   const RequirementFeedback = ({ isComplete, field }) => {
     return (
@@ -326,7 +376,7 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
         <div className='flex flex-col space-y-4 font-semibold text-black mb-4'>
           
           <input type="text" placeholder="Place" value={additionalFields.place} onChange={(e) => handleFieldChange('place', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
-          <input type="text" placeholder="Date" value={additionalFields.date} onChange={(e) => handleFieldChange('date', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
+          <input type="date" placeholder="Date" value={additionalFields.date} onChange={(e) => handleFieldChange('date', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
           <input type="text" placeholder="Period" value={additionalFields.period} onChange={(e) => handleFieldChange('period', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
         </div>
       )}

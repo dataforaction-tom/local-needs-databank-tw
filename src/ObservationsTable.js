@@ -6,7 +6,7 @@ import { CSVLink } from 'react-csv'; // Import CSVLink
 
 
 
-function ObservationsTable({ observations, setFilteredObservations, title }) {
+function ObservationsTable({ observations, setFilteredObservations, title, license, owner, dataset_description, original_url, published_date }) {
   // Debug: Log the observations to check incoming data
   console.log("Observations data:", observations);
 
@@ -29,6 +29,12 @@ const regionOptions = useMemo(() => {
   // Create unique options from the 'name' data field
   const regions = new Set(observations.map(obs => obs.region));
   return Array.from(regions).map(region => ({ value: region, label: region }));
+}, [observations]);
+
+const yearOptions = useMemo(() => {
+  // Create unique options from the 'name' data field
+  const years = new Set(observations.map(obs => obs.year));
+  return Array.from(years).map(year => ({ value: year, label: year }));
 }, [observations]);
 
 
@@ -62,16 +68,17 @@ const regionOptions = useMemo(() => {
       Filter: ColumnFilter
     },
     {
-      Header: 'Date',
-      accessor: 'date',
-      Filter: ColumnFilter
+      Header: 'Year',
+      accessor: 'year',
+      Filter: ColumnFilter,
+      filterOptions: yearOptions
     },
     
    
     
     
     
-  ], [placeOptions, nameOptions, regionOptions]);
+  ], [placeOptions, nameOptions, regionOptions, yearOptions]);
 
   const filterTypes = useMemo(() => ({
     multiSelect: (rows, columnId, filterValues) => {
@@ -114,8 +121,45 @@ const regionOptions = useMemo(() => {
     console.log("Filtered Observations:", rows.map(row => row.original));
   }, [rows, setFilteredObservations]);
 
-  // CSV Data should be the current filtered and paged rows
-  const csvData = rows.map(row => row.original);
+
+  const getCsvData = (rows, columns, metadata) => {
+    const dataRows = rows.map(row => {
+      const newRow = {};
+      columns.forEach(column => {
+        newRow[column.Header] = row[column.accessor];
+      });
+      return newRow;
+    });
+  
+    const metadataEntries = [
+      `Dataset Description: ${metadata.dataset_description}`,
+      `License: ${metadata.license}`,
+      `Owner: ${metadata.owner}`,
+      `Published Date: ${metadata.published_date}`,
+      `Original URL: ${metadata.original_url}`
+    ];
+  
+    // Append metadata as single cell entries at the bottom
+    const dataWithMeta = [
+      ...dataRows,
+      {}, // Optional: empty row for separation
+      ...metadataEntries.map(entry => ({ "Metadata": entry }))
+    ];
+  
+    return dataWithMeta;
+  };
+  
+
+
+  const csvData = useMemo(() => getCsvData(rows.map(row => row.original), columns, {
+    dataset_description,
+    license,
+    owner,
+    published_date,
+    original_url
+  }), [rows, columns, dataset_description, license, owner, published_date, original_url]);
+  
+
 
 
   
@@ -127,6 +171,7 @@ const regionOptions = useMemo(() => {
     <div className='p-5 my-5'>
       <div className='flex flex-col md:flex-row justify-between'>
         <h2 className='text-xl font-bold'>{title || 'Filtered Observations Table'}</h2>
+        
         <p className='text-sm md:text-lg font-semibold text-slate-800'>Note - Using the filters in the table will also filter the charts and maps below</p>
       </div>
       <div style={scrollContainerStyle}>
@@ -173,6 +218,12 @@ const regionOptions = useMemo(() => {
           Download CSV
         </CSVLink>
       </div>
+      <p className='text-xs font-italic'>{dataset_description}</p>
+      <p className='text-xs font-italic'>Data made available under {license}</p>
+      <p className='text-xs font-italic'>Owner: {owner}</p>
+      <p className='text-xs font-italic'>Published {published_date}</p>
+      <p className='text-xs font-italic'>Original Data Available at{original_url}</p>
+
     </div>
   );
 }

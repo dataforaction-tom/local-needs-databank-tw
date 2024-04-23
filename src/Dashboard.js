@@ -24,8 +24,9 @@ function Dashboard({ dashboardId }) {
 
             const { data: datasetsData, error: datasetsError } = await supabase
                 .from('dashboard_datasets')
-                .select('dashboard_id, datasets:dataset_id (id, title)')
+                .select('dashboard_id, datasets:dataset_id (id, title, original_url, published_date, owner, dataset_description, license )')
                 .eq('dashboard_id', dashboardId);
+                console.log(datasetsData);
 
             if (datasetsError) {
                 console.error('Error fetching datasets', datasetsError);
@@ -35,7 +36,14 @@ function Dashboard({ dashboardId }) {
 
             const options = datasetsData.map(dd => ({
                 value: dd.datasets.id,
-                label: dd.datasets.title
+                label: dd.datasets.title,
+                original_url: dd.datasets.original_url,
+                dataset_description: dd.datasets.dataset_description,
+                license: dd.datasets.license,
+                published_date: dd.datasets.published_date,
+                owner: dd.datasets.owner,
+               
+
             }));
 
             setDatasets(options);
@@ -147,12 +155,22 @@ const fetchObservations = async (datasetId) => {
                           title={selectedDataset ? selectedDataset.label : ''}
                           observations={observations}
                           setFilteredObservations={setFilteredObservations}
+                          license={selectedDataset ? selectedDataset.license : ''}
+                          original_url={selectedDataset ? selectedDataset.original_url : ''}
+                          published_date={selectedDataset ? selectedDataset.published_date : ''}
+                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                          owner={selectedDataset ? selectedDataset.owner : ''}
                       />
                   )}
                   
                   <ObservationsChart
                       observations={filteredObservations}
                       title={selectedDataset ? selectedDataset.label : ''}
+                      license={selectedDataset ? selectedDataset.license : ''}
+                          original_url={selectedDataset ? selectedDataset.original_url : ''}
+                          published_date={selectedDataset ? selectedDataset.published_date : ''}
+                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                          owner={selectedDataset ? selectedDataset.owner : ''}
                   />
                   
               </>
@@ -161,15 +179,30 @@ const fetchObservations = async (datasetId) => {
                         selectedDataset={selectedDataset}
                         filteredObservations={filteredObservations}
                         title={selectedDataset ? selectedDataset.label : ''}
+                        license={selectedDataset ? selectedDataset.license : ''}
+                          original_url={selectedDataset ? selectedDataset.original_url : ''}
+                          published_date={selectedDataset ? selectedDataset.published_date : ''}
+                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                          owner={selectedDataset ? selectedDataset.owner : ''}
                     />
             <MultiObservationsChart
                       observations={filteredObservations}
                       title={selectedDataset ? selectedDataset.label : ''}
+                      license={selectedDataset ? selectedDataset.license : ''}
+                          original_url={selectedDataset ? selectedDataset.original_url : ''}
+                          published_date={selectedDataset ? selectedDataset.published_date : ''}
+                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                          owner={selectedDataset ? selectedDataset.owner : ''}
                   />
 
             <TimeObservationsChart
                     observations={filteredObservations}
                     title={selectedDataset ? selectedDataset.label : ''}
+                    license={selectedDataset ? selectedDataset.license : ''}
+                          original_url={selectedDataset ? selectedDataset.original_url : ''}
+                          published_date={selectedDataset ? selectedDataset.published_date : ''}
+                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                          owner={selectedDataset ? selectedDataset.owner : ''}
                     />
       </div>
   );
