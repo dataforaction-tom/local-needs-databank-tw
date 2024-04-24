@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Card from './Card';
 import LocalAuthoritiesMap from './components/Map';
+import SingleChartDashboard from './components/SingleChartDashboard';
 
 import TimeSeriesDashboard from './components/TimeSeriesDashboard';
 
@@ -46,8 +47,9 @@ const Health = () => {
           
         </div>
         <TimeSeriesDashboard dashboardId={4} />
-        <LocalAuthoritiesMap />
+        <SingleChartDashboard dashboardId={7} />
         <Dashboard dashboardId={5} />
+        
         </div>
       );
     };

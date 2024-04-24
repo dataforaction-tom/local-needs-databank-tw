@@ -6,7 +6,7 @@ import LocalAuthoritiesMap from './components/Map';
 
 import TimeSeriesDashboard from './components/TimeSeriesDashboard';
 
-const Health = () => {
+const Advice = () => {
     const cardData = [
         {
           title: 'Spend on Health and Social Care',
@@ -46,9 +46,9 @@ const Health = () => {
           
         </div>
         <Dashboard dashboardId={2} />
-        <LocalAuthoritiesMap />
+        <LocalAuthoritiesMap dashboardId={4} />
         </div>
       );
     };
 
-export default Health;
+export default Advice;

@@ -4,7 +4,7 @@ import Dashboard from './components/Dashboard';
 import Card from './Card';
 import LocalAuthoritiesMap from './components/Map';
 
-const Health = () => {
+const Context = () => {
     const cardData = [
         {
           title: 'Spend on Health and Social Care',
@@ -48,4 +48,4 @@ const Health = () => {
       );
     };
 
-export default Health;
+export default Context;
