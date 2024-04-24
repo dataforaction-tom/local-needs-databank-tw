@@ -11,6 +11,9 @@ import Advice from './Advice'
 import Charity from './Charity';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
 
 Chart.register(ChartDataLabels);
 Chart.defaults.plugins.datalabels.display = false;
@@ -18,6 +21,7 @@ Chart.defaults.plugins.datalabels.display = false;
 
 function App() {
   return (  
+    <QueryClientProvider client={queryClient}>
     <FilterProvider>
     <Router>
       
@@ -39,6 +43,7 @@ function App() {
 
     </Router>
     </FilterProvider>
+    </QueryClientProvider>
   );
 }
 

@@ -56,6 +56,7 @@ const Charity = () => {
         <TimeSeriesDashboard dashboardId={11} />
         
         <CategoryChartDashboard dashboardId={12} />
+        <Dashboard dashboardId={13} />
         
         </div>
       );
