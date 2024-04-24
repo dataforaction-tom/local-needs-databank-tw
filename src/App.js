@@ -9,6 +9,12 @@ import Context from './Context'
 import { FilterProvider } from './components/FilterContext';
 import Advice from './Advice'
 import Charity from './Charity';
+import Chart from 'chart.js/auto';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
+Chart.register(ChartDataLabels);
+Chart.defaults.plugins.datalabels.display = false;
+
 
 function App() {
   return (  

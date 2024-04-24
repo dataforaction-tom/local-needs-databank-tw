@@ -5,6 +5,8 @@ import Card from './Card';
 import LocalAuthoritiesMap from './components/Map';
 
 import TimeSeriesDashboard from './components/TimeSeriesDashboard';
+import SingleChartDashboard from './components/SingleChartDashboard';
+import CategoryChartDashboard from './components/CategoryChartDashboard';
 
 const Charity = () => {
     const cardData = [
@@ -52,6 +54,9 @@ const Charity = () => {
         <LocalAuthoritiesMap dashboardId={4} />
         <TimeSeriesDashboard dashboardId={10} />
         <TimeSeriesDashboard dashboardId={11} />
+        
+        <CategoryChartDashboard dashboardId={12} />
+        
         </div>
       );
     };

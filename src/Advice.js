@@ -30,6 +30,8 @@ const Advice = () => {
 
       const backgroundColor = '#881866'; // Example color
 
+      
+
       return (
         <div>
         <div className="">
