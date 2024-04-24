@@ -41,6 +41,7 @@ function TimeSeriesDashboard({ dashboardId }) {
                 published_date: dd.datasets.published_date,
                 owner: dd.datasets.owner,
             }));
+            
 
             setDatasets(options);
 
@@ -79,6 +80,7 @@ const fetchObservations = async (datasetId) => {
 
   
   const { data, error } = await query;
+  
 
   
   if (error) {

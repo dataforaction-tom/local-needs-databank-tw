@@ -7,21 +7,21 @@ import LocalAuthoritiesMap from './components/Map';
 const Context = () => {
     const cardData = [
         {
-          title: 'Spend on Health and Social Care',
-          value: '£28.3m',
-          description: 'Total Spend on Adult Social Care in England 2022-23',
+          title: 'Title',
+          value: 'Value',
+          description: 'Description',
           
         },
         {
-          title: 'Grants to Voluntary Organisations',
-          value: '£200k',
-          description: 'Grants to Voluntary Organisations via LA for Health and Social Care',
+          title: 'Title',
+          value: 'Value',
+          description: 'Description',
           
         },
         {
-          title: 'Requests for Support',
-          value: '611k',
-          description: 'Number of requests for support received from new clients 18-64 2022/23',
+          title: 'Title',
+          value: 'Value',
+          description: 'Description',
           
         },
       ];

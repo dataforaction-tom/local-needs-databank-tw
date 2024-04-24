@@ -50,6 +50,8 @@ const Charity = () => {
         </div>
         <Dashboard dashboardId={9} />
         <LocalAuthoritiesMap dashboardId={4} />
+        <TimeSeriesDashboard dashboardId={10} />
+        <TimeSeriesDashboard dashboardId={11} />
         </div>
       );
     };
