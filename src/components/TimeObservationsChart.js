@@ -16,7 +16,7 @@ function TimeObservationsChart({ observations, title }) {
   const chartRef = useRef(null);
   const [chartInstance, setChartInstance] = useState(null);
 
-  const [chartType, setChartType] = useState('bar');
+  const [chartType, setChartType] = useState('line');
   const [indexAxis, setIndexAxis] = useState('x');
 
   const colorPalette = useMemo(() => ['#662583', '#C7215D', '#881866', '#dd35a5'], []);
