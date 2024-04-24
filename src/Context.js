@@ -43,8 +43,7 @@ const Health = () => {
           </div>
           
         </div>
-        <Dashboard dashboardId={2} />
-        <LocalAuthoritiesMap />
+        <h1 className='font-bold text-4xl text-center'> Dashboard under construction</h1>
         </div>
       );
     };
