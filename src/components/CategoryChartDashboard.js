@@ -130,16 +130,7 @@ const fetchObservations = async (datasetId) => {
 
       return (
         <div className="bg-slate-50 p-3 md:p-5 m-3 md:m-5">
-            <h3 className='text-base md:text-lg font-bold px-3 md:px-5'>Select your dataset from here. You can explore this in the table, chart(s) and map below</h3>
-            <Select
-                value={selectedDataset}
-                onChange={handleDatasetChange}
-                options={datasets}
-                placeholder="Select a Dataset"
-                isClearable
-                isSearchable
-                className='w-full md:w-1/3 px-3 md:px-5 mb-2 md:mb-4'
-            />
+            
             <div className="flex flex-col md:flex-row justify-between items-center">
                 <div className="flex-grow md:flex md:flex-grow">
                     {/* Placeholder for additional content or spacing */}
