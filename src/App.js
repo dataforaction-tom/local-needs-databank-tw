@@ -8,6 +8,7 @@ import ErrorBoundary from './ErrorBoundary'; // Ensure this is correctly importe
 import Context from './Context'
 import { FilterProvider } from './components/FilterContext';
 import Advice from './Advice'
+import Charity from './Charity';
 
 function App() {
   return (  
@@ -23,6 +24,7 @@ function App() {
             <Route path="/advice" element={<Advice />} />
             <Route path="/contribute" element={<Contribute />} />
             <Route path="/context" element={<Context />} />
+            <Route path="/charity" element={<Charity />} />
             {/* Define other routes corresponding to navItems in your Navigation component */}
           </Routes>
         </ErrorBoundary>

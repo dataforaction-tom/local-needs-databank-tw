@@ -6,29 +6,29 @@ import LocalAuthoritiesMap from './components/Map';
 
 import TimeSeriesDashboard from './components/TimeSeriesDashboard';
 
-const Advice = () => {
+const Charity = () => {
     const cardData = [
         {
-          title: 'Number of food parcels',
-          value: '2.98m',
-          description: 'Distributed by Trussell Trust',
+          title: 'Number of Charities',
+          value: '163,959',
+          description: 'In the UK in 20/21',
           
         },
         {
-          title: 'Unique clients',
-          value: '1.66m',
-          description: 'Supported by Citizens Advice network',
+          title: 'Number of employees',
+          value: '961,855',
+          description: 'In the UK charity sector 20/21',
           
         },
         {
-          title: 'Children supported',
-          value: '5780',
-          description: 'By Buttle Uk in 2022/23',
+          title: 'Number of months',
+          value: '6.9',
+          description: 'An average UK charity can operate on their reserves',
           
         },
       ];
 
-      const backgroundColor = '#881866'; // Example color
+      const backgroundColor = '#C7215D'; // Example color
 
       return (
         <div>
@@ -48,10 +48,10 @@ const Advice = () => {
           </div>
           
         </div>
-        <Dashboard dashboardId={2} />
+        <Dashboard dashboardId={9} />
         <LocalAuthoritiesMap dashboardId={4} />
         </div>
       );
     };
 
-export default Advice;
+export default Charity;
