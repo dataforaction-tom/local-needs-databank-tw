@@ -11,7 +11,7 @@ const Navigation = () => {
     { name: 'Advice and support', path: '/advice' },
     { name: 'Context', path: '/context' },
     { name: 'Charity sector', path: '/charity' },
-    { name: 'Explore', path: '/explore' },
+    
     { name: 'Contribute', path: '/contribute'}
   ];
 
