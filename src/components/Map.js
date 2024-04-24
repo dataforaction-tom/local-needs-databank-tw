@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import supabase from '../supabaseClient';
 import L from 'leaflet';
 import chroma from 'chroma-js';
+import localForage from 'localforage';
 
 function getColor(value, classes, colorScale) {
     // Find the index of the class that the value falls into
@@ -82,28 +83,44 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
 
     useEffect(() => {
         const fetchGeoJsonData = async () => {
-            if (selectedDataset && selectedDataset.value) {
+            const datasetId = selectedDataset && selectedDataset.value;
+            if (datasetId) {
                 setLoading(true);
+                const cacheKey = `geojson-${datasetId}`;
+    
+                // Check cache first
+                const cachedData = await localForage.getItem(cacheKey);
+                if (cachedData) {
+                    console.log('Loading GeoJSON from cache');
+                    setGeoJsonData(cachedData);
+                    setFilteredGeoJsonFeatures(cachedData);
+                    setLoading(false);
+                    return;
+                }
+    
                 try {
-                    const response = await supabase.rpc('new_get_enriched_geojson_data', { p_dataset_id: parseInt(selectedDataset.value, 10) });
+                    const response = await supabase.rpc('new_get_enriched_geojson_data', { p_dataset_id: parseInt(datasetId, 10) });
                     if (!response.error && response.data) {
                         const normalizedData = normalizeGeoJSON(response.data);
                         setGeoJsonData(normalizedData);
                         setFilteredGeoJsonFeatures(normalizedData);
-                        console.log(normalizedData)
-                        
+                        console.log('Data fetched and normalized:', normalizedData);
+    
+                        // Save to cache
+                        await localForage.setItem(cacheKey, normalizedData);
                     } else {
                         setGeoJsonData([]);
+                        setFilteredGeoJsonFeatures([]);
                     }
                 } catch (error) {
                     console.error('Error fetching GeoJSON:', error);
                     setGeoJsonData([]);
+                    setFilteredGeoJsonFeatures([]);
                 }
                 setLoading(false);
             }
         };
-        
-
+    
         fetchGeoJsonData();
     }, [selectedDataset]);
 
@@ -192,7 +209,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
     if (loading) {
         return <div></div>;
     }
-
+    if (geoJsonData.length > 0 && filteredGeoJsonFeatures.length > 0) {
     return (
         <div>
             <h2 className='text-2xl font-bold text-center mt-10'>{title || 'Observation Charts'}</h2>
@@ -211,6 +228,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
         </MapContainer>
         </div>
     );
+}
 }
 
 export default LocalAuthorityMap;

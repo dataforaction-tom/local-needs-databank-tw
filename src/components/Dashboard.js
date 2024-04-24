@@ -1,11 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import ObservationsTable from './ObservationsTable';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+
+
 import ObservationsChart from './ObservationsChart';
 import supabase from '../supabaseClient';
-import Select from 'react-select';
-import LocalAuthorityMap from './Map'; // Ensure you import your map component
+
 import MultiObservationsChart from './MultiObservationsChart';
-import TimeObservationsChart from './TimeObservationsChart';
+import localForage from 'localforage';
+
+const ObservationsTable = React.lazy(() =>import('./ObservationsTable'));
+const LocalAuthorityMap = React.lazy(() =>import('./Map'));
+
+localForage.config({
+    name: 'localneedsdatabank',
+    storeName: 'dashboardData',
+    description: 'Used to cache dashboard data and observations locally'
+});
 
 function Dashboard({ dashboardId }) {
     const [datasets, setDatasets] = useState([]);
@@ -21,81 +30,91 @@ function Dashboard({ dashboardId }) {
     useEffect(() => {
         async function fetchData() {
             setLoading(true);
-
-            const { data: datasetsData, error: datasetsError } = await supabase
-                .from('dashboard_datasets')
-                .select('dashboard_id, datasets:dataset_id (id, title, original_url, published_date, owner, dataset_description, license )')
-                .eq('dashboard_id', dashboardId);
-                
-
-            if (datasetsError) {
-                console.error('Error fetching datasets', datasetsError);
-                setLoading(false);
-                return;
+    
+            // Attempt to load datasets from cache
+            const cachedDatasets = await localForage.getItem(`datasets-${dashboardId}`);
+            if (cachedDatasets) {
+                setDatasets(cachedDatasets);
+                if (cachedDatasets.length > 0) {
+                    setSelectedDataset(cachedDatasets[0]);  // Set react-select option
+                    fetchObservations(cachedDatasets[0].value);
+                }
+            } else {
+                // Fetch datasets from Supabase if not in cache
+                const { data: datasetsData, error: datasetsError } = await supabase
+                    .from('dashboard_datasets')
+                    .select('dashboard_id, datasets:dataset_id (id, title, original_url, published_date, owner, dataset_description, license )')
+                    .eq('dashboard_id', dashboardId);
+    
+                if (datasetsError) {
+                    console.error('Error fetching datasets', datasetsError);
+                    setLoading(false);
+                    return;
+                }
+    
+                const options = datasetsData.map(dd => ({
+                    value: dd.datasets.id,
+                    label: dd.datasets.title,
+                    original_url: dd.datasets.original_url,
+                    dataset_description: dd.datasets.dataset_description,
+                    license: dd.datasets.license,
+                    published_date: dd.datasets.published_date,
+                    owner: dd.datasets.owner
+                }));
+    
+                setDatasets(options);
+                localForage.setItem(`datasets-${dashboardId}`, options);  // Cache the data
+    
+                if (options.length > 0) {
+                    setSelectedDataset(options[0]);  // Set react-select option
+                    fetchObservations(options[0].value);
+                }
             }
-
-            const options = datasetsData.map(dd => ({
-                value: dd.datasets.id,
-                label: dd.datasets.title,
-                original_url: dd.datasets.original_url,
-                dataset_description: dd.datasets.dataset_description,
-                license: dd.datasets.license,
-                published_date: dd.datasets.published_date,
-                owner: dd.datasets.owner,
-               
-
-            }));
-
-            setDatasets(options);
-
-            if (options.length > 0) {
-                setSelectedDataset(options[0]);  // Set react-select option
-                fetchObservations(options[0].value);
-            }
-
+    
+            // Regions may not need caching if they don't change often, but you can cache them similarly if needed
             const { data: regionsData, error: regionsError } = await supabase
                 .from('observations')
                 .select('region', { distinct: true });
-
+    
             if (regionsError) {
                 console.error('Error fetching regions', regionsError);
             } else {
                 setRegions(['All', ...new Set(regionsData.map(r => r.region))]);
             }
-
+    
             setLoading(false);
         }
-
+    
         fetchData();
     }, [dashboardId]);
+    
 
-    // Function to fetch observations based on the dataset ID
-const fetchObservations = async (datasetId) => {
-  if (!datasetId) return; // Check to ensure a dataset ID is provided
-
-  // Start building the query
-  let query = supabase.from('observations').select('*').eq('dataset_id', datasetId);
-  console.log(query)
-
-  // If a specific region is selected, add that to the query
-  if (selectedRegion !== 'All') {
-      query = query.eq('region', selectedRegion);
-  }
-
-  // Execute the query and handle the response
-  const { data, error } = await query;
-  console.log(data)
-
-  // Handle any errors during the fetch operation
-  if (error) {
-      console.error('Error fetching observations', error);
-      return;
-  }
-
-  // Update state with the fetched data
-  setObservations(data);
-  setFilteredObservations(data);
-};
+    const fetchObservations = async (datasetId) => {
+        if (!datasetId) return;
+    
+        const cachedObservations = await localForage.getItem(`observations-${datasetId}`);
+        if (cachedObservations) {
+            setObservations(cachedObservations);
+            setFilteredObservations(cachedObservations);
+        } else {
+            // Fetch observations from Supabase if not in cache
+            let query = supabase.from('observations').select('*').eq('dataset_id', datasetId);
+            if (selectedRegion !== 'All') {
+                query = query.eq('region', selectedRegion);
+            }
+    
+            const { data, error } = await query;
+    
+            if (error) {
+                console.error('Error fetching observations', error);
+                return;
+            }
+    
+            setObservations(data);
+            setFilteredObservations(data);
+            localForage.setItem(`observations-${datasetId}`, data);  // Cache the data
+        }
+    };
 
     const handleDatasetChange = (selectedOption) => {
         setSelectedDataset(selectedOption);
@@ -128,6 +147,7 @@ const fetchObservations = async (datasetId) => {
     
 
       return (
+        <Suspense fallback={<div>Loading...</div>}>
         <div className="bg-slate-50 p-3 md:p-5 m-3 md:m-5">
            
             <div className="flex flex-col md:flex-row justify-between items-center">
@@ -190,6 +210,7 @@ const fetchObservations = async (datasetId) => {
 
             
       </div>
+      </Suspense>
   );
   
 }

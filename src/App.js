@@ -12,6 +12,7 @@ import Charity from './Charity';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import Explore from './Explore';
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ function App() {
             <Route path="/contribute" element={<Contribute />} />
             <Route path="/context" element={<Context />} />
             <Route path="/charity" element={<Charity />} />
+            <Route path="/explore" element={<Explore />} />
             {/* Define other routes corresponding to navItems in your Navigation component */}
           </Routes>
         </ErrorBoundary>
