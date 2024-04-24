@@ -38,22 +38,7 @@ function ColumnFilter({ column, onFilterChange }) {
   
   const multiSelectColumns = ['place', 'name', 'region', 'year'];
 
-  useEffect(() => {
-    if (id === 'region' && options.length > 0 && !userHasInteracted && !initialSetDone) {
-      const timer = setTimeout(() => {
-        if (!userHasInteracted && options.length > 1) { // Additional check here
-          const initialOption = [options[0].value];
-          setFilter(initialOption);
-          if (onFilterChange) {
-            onFilterChange(id, initialOption);
-          }
-          setInitialSetDone(true);
-        }
-      }, 500); // Delay to account for data load
-  
-      return () => clearTimeout(timer); // Cleanup timer
-    }
-  }, [id, options, onFilterChange, userHasInteracted, initialSetDone, setFilter]);
+ 
 
   const handleChange = (value) => {
     setUserHasInteracted(true);
