@@ -269,7 +269,7 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
   
   
   const calculateCompletionPercentage = () => {
-    const totalFields = 4; // Total number of required fields
+    const totalFields = 3; // Total number of required fields
     const filledFields = Object.values(completionStatus).filter(status => status).length;
     return (filledFields / totalFields) * 100;
   };
@@ -277,7 +277,13 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
   return (
     <div>
       <ToastContainer />
-    <div className='p-4'>
+      <div className="grid grid-cols-3 gap-4 items-center bg-slate-50">
+      
+        <div className="col-span-1 justify-center">
+        
+            <p className='text-xl font-bold'>To get started read our guidance or drop in a csv to the right</p>
+        </div>
+        <div className="col-span-2 space-y-4">
       <div
         className='border-dashed border-4 border-gray-400 bg-purple-100 py-12 flex justify-center items-center cursor-pointer my-10'
         style={{ position: 'relative' }} // Ensure this div is positioned relatively
@@ -292,11 +298,12 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
         />
         <p>Drag and drop your CSV file here, or click to select files</p>
       </div>
+      </div>
 
       {/* Display error or success messages */}
       {message && <p className='font-semibold text-xl text-red-500'>{message}</p>}
 
-      <div className='flex flex-col space-y-4 font-semibold text-black mb-4 bg-gray-100 p-6 rounded-lg'>
+      <div className='flex flex-col space-y-4 font-semibold text-black mb-4  p-6 rounded-lg'>
       {data.length > 0 && (
         <>
         <h2 className='font-bold text-2xl'> Please enter the Metadata for your dataset here</h2>
@@ -372,7 +379,7 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
 
 
 {data.length > 0 && (
-  <div className='flex flex-col space-y-4 font-semibold text-black mb-4 bg-gray-100 p-6 rounded-lg'>
+  <div className='flex flex-col space-y-4 font-semibold text-black mb-4 bg-slate-100 p-6 rounded-lg'>
       <p>Important - If you do not have a particular column in your data, you can use the input fields below to add to your data. PLEASE BE AWARE This will add the value you enter to EVERY row of your data.</p>
       <p>For example, if you add Newcastle in the Place field, every row in your data will show as having been in Newcastle.</p>
       <p>Click below to show these fields</p>
@@ -391,7 +398,7 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
   </div>
 )}
       </div>
-      <div className='my-5'>
+      <div className='my-5 bg-slate-100'>
       {data.length > 0 && columns.length > 0 && (
         <TablePreview
           data={data}
@@ -404,6 +411,8 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
       
       
       </div>
+      {data.length > 0 && columns.length > 0 && (
+        <>
       <p className='my-5 text-lg font-bold'>All submissions require a Place, Date and Value. You can view which of these you have provided or indicated below. At 100% you have all the required fields</p>
       <div className="w-full bg-gray-300">
       <div className="bg-[#662583] text-xs font-medium text-blue-100 text-center p-0.5 leading-none" style={{ width: `${calculateCompletionPercentage()}%` }}> {calculateCompletionPercentage()}% Complete</div>
@@ -412,8 +421,11 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
       {Object.keys(completionStatus).map(key => (
         <RequirementFeedback key={key} isComplete={completionStatus[key]} field={key.charAt(0).toUpperCase() + key.slice(1)} />
       ))}
-        
       </div>
+      </>
+      )}
+        
+      
       <div className='flex flex-row gap-4'>
       {isValid && !loading && (
         <button className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300' onClick={handleSubmission}>
