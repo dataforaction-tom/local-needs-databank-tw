@@ -296,40 +296,100 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
       {/* Display error or success messages */}
       {message && <p className='font-semibold text-xl text-red-500'>{message}</p>}
 
-      <div className='flex flex-col space-y-4 font-semibold text-black mb-4'>
-        <input type="text" placeholder="Dataset Title" value={datasetFields.title} onChange={(e) => setDatasetFields({...datasetFields, title: e.target.value})} className="p-2 border placeholder-black placeholder-italic" />
-         <Select
+      <div className='flex flex-col space-y-4 font-semibold text-black mb-4 bg-gray-100 p-6 rounded-lg'>
+      {data.length > 0 && (
+        <>
+        <h2 className='font-bold text-2xl'> Please enter the Metadata for your dataset here</h2>
+        <p className=''>By this we mean any information about your dataset, like a name, where you might be able to find the original data, when it was published etc. You don't have to give this information, but it will help us other users.</p>
+    <input 
+        type="text" 
+        placeholder="Dataset Title" 
+        value={datasetFields.title} 
+        onChange={(e) => setDatasetFields({...datasetFields, title: e.target.value})} 
+        className="p-3 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    />
+    <Select
         value={licenseOptions.find(option => option.value === datasetFields.license)}
         onChange={handleSelectChange}
         options={licenseOptions}
         className="basic-single"
         classNamePrefix="select"
-      />
-        <input type="text" placeholder="Original URL" value={datasetFields.originalURL} onChange={(e) => setDatasetFields({...datasetFields, originalURL: e.target.value})} className="p-2 border placeholder-black placeholder-italic" />
-        <input type="date" placeholder="Published Date" value={datasetFields.publishedDate} onChange={(e) => setDatasetFields({...datasetFields, publishedDate: e.target.value})} className="p-2 border placeholder-black placeholder-italic" />
-        <input type="text" placeholder="Owner" value={datasetFields.owner} onChange={(e) => setDatasetFields({...datasetFields, owner: e.target.value})} className="p-2 border placeholder-black placeholder-italic" />
-        <input type="text" placeholder="Dataset Description" value={datasetFields.description} onChange={(e) => setDatasetFields({...datasetFields, description: e.target.value})} className="p-2 border placeholder-black placeholder-italic" />
-      </div>
+        styles={{
+            control: (provided) => ({
+                ...provided,
+                minHeight: '44px',
+                boxShadow: 'none',
+                borderColor: '#d1d5db',
+                '&:hover': {
+                    borderColor: '#bbc1e1'
+                },
+                '&:focus': {
+                    borderColor: '#2563eb'
+                }
+            }),
+            option: (provided, state) => ({
+                ...provided,
+                color: state.isSelected ? 'white' : 'gray',
+                backgroundColor: state.isSelected ? '#2563eb' : 'white',
+                '&:hover': {
+                    backgroundColor: '#ebf4ff'
+                }
+            }),
+        }}
+    />
+    <input 
+        type="text" 
+        placeholder="Original URL" 
+        value={datasetFields.originalURL} 
+        onChange={(e) => setDatasetFields({...datasetFields, originalURL: e.target.value})} 
+        className="p-3 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    />
+    <input 
+        type="date" 
+        placeholder="Published Date" 
+        value={datasetFields.publishedDate} 
+        onChange={(e) => setDatasetFields({...datasetFields, publishedDate: e.target.value})} 
+        className="p-3 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    />
+    <input 
+        type="text" 
+        placeholder="Owner" 
+        value={datasetFields.owner} 
+        onChange={(e) => setDatasetFields({...datasetFields, owner: e.target.value})} 
+        className="p-3 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    />
+    <input 
+        type="text" 
+        placeholder="Dataset Description" 
+        value={datasetFields.description} 
+        onChange={(e) => setDatasetFields({...datasetFields, description: e.target.value})} 
+        className="p-3 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    
+    />
+     </>
+      )}
+</div>
 
 
-      <div className='flex flex-col space-y-4 font-semibold text-black'>
-      <p>If you do not have a particular column in your data, you can use the input fields below to add to your data. PLEASE BE AWARE This will add the value you enter to EVERY row of your data.</p>
+{data.length > 0 && (
+  <div className='flex flex-col space-y-4 font-semibold text-black mb-4 bg-gray-100 p-6 rounded-lg'>
+      <p>Important - If you do not have a particular column in your data, you can use the input fields below to add to your data. PLEASE BE AWARE This will add the value you enter to EVERY row of your data.</p>
       <p>For example, if you add Newcastle in the Place field, every row in your data will show as having been in Newcastle.</p>
       <p>Click below to show these fields</p>
       <div className='flex items-center justify-center'>
         <button onClick={toggleFields} className="bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300 w-1/3 my-1">
-        {showFields ? 'Hide Additional Fields' : 'Show Additional Fields'}
-      </button>
+          {showFields ? 'Hide Additional Fields' : 'Show Additional Fields'}
+        </button>
       </div>
-
       {showFields && (
-        <div className='flex flex-col space-y-4 font-semibold text-black mb-4'>
-          
+        <div className='flex flex-col space-y-4'>
           <input type="text" placeholder="Place" value={additionalFields.place} onChange={(e) => handleFieldChange('place', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
           <input type="text" placeholder="Date" value={additionalFields.date} onChange={(e) => handleFieldChange('date', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
           <input type="text" placeholder="Period" value={additionalFields.period} onChange={(e) => handleFieldChange('period', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
         </div>
       )}
+  </div>
+)}
       </div>
       <div className='my-5'>
       {data.length > 0 && columns.length > 0 && (
@@ -341,8 +401,10 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
           errorRows={errorRows}
         />
       )}
+      
+      
       </div>
-      <p className='my-5 text-lg font-bold'>All submissions require Name, Place, Date and Value. You can view which of these you have provided or indicated below. At 100% you have all the required fields</p>
+      <p className='my-5 text-lg font-bold'>All submissions require a Place, Date and Value. You can view which of these you have provided or indicated below. At 100% you have all the required fields</p>
       <div className="w-full bg-gray-300">
       <div className="bg-[#662583] text-xs font-medium text-blue-100 text-center p-0.5 leading-none" style={{ width: `${calculateCompletionPercentage()}%` }}> {calculateCompletionPercentage()}% Complete</div>
       </div>
@@ -363,7 +425,7 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
       {loading && <p>Submitting data...</p>}
       
     </div>
-    </div>
+    
   );
 };
 

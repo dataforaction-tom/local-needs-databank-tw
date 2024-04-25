@@ -13,6 +13,7 @@ import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Explore from './Explore';
+import LandingPage from './LandingPage';
 
 const queryClient = new QueryClient();
 
@@ -30,7 +31,7 @@ function App() {
       <div className="App">
         <ErrorBoundary>
           <Routes>
-            <Route path="/" element={<Dashboard dashboardId={1} />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/health" element={<Health />} />
             <Route path="/advice" element={<Advice />} />
             <Route path="/contribute" element={<Contribute />} />

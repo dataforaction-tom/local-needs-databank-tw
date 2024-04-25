@@ -122,12 +122,18 @@ const Explore = () => {
     return (
         
         <div className="px-4 sm:px-6 lg:px-8">
-            <div className=''>
-
+            
+            <div className="w-9/10 mx-auto bg-gray-100 p-6">
+            <div className='text-2xl font-bold my-2'>
+            <h2>Local Needs Databank Explorer</h2>
 
             </div>
+    <div className="grid grid-cols-3 gap-4">
+        <div className="col-span-1">
+            <p>Here you can explore the data within the Local Needs Databank in your own way. Selecting datasets from the select keys to the right with render charts based on that dataset for you.</p>
+        </div>
+        <div className="col-span-2 space-y-4">
             <Select
-                
                 options={placeDatasets}
                 onChange={setSelectedPlace}
                 value={selectedPlace}
@@ -151,30 +157,41 @@ const Explore = () => {
                 isClearable={true}
                 styles={customStyles}
             />
+        </div>
+    </div>
+    <div className="mt-6 grid grid-cols-3 gap-4 b">
+        <div className="col-span-1">
+            <p>Here you can get all data in the Local Needs Databank related to a particular local authority area. Some charts may render also, but please be aware that the data may be at different scales. However you can still use the table to filter out any observations you don't want in your chart or data</p>
+        </div>
+        <div className="col-span-2 space-y-4">
             <Select
                 options={localAuthorities}
                 onChange={handleSelectLA}
                 value={selectedLA}
                 placeholder="Select a Local Authority"
                 isClearable={true}
+                styles={customStyles}
             />
-            {loading ? (
-                <p>Loading observations...</p>
-            ) : (
-                <>
-                <ObservationsTable
-                    observations={observations}
-                    setFilteredObservations={setFilteredObservations}
-                    title={selectedLA ? `Observations for ${selectedLA.label}` : 'Select a Local Authority'}
-                />
-                <ObservationsChart
-                        observations={filteredObservations}
+        </div>
+    </div>
+</div>
 
-                        title="Detailed Observations"
-                    />
-                </>
-                
-            )}
+
+{loading ? (
+        <p>Loading observations...</p>
+    ) : selectedLA && (  // Render components only when selectedLA is truthy
+        <>
+            <ObservationsTable
+                observations={observations}
+                setFilteredObservations={setFilteredObservations}
+                title={`Observations for ${selectedLA.label}`}  // Assuming selectedLA has a label property
+            />
+            <ObservationsChart
+                observations={filteredObservations}
+                title="Detailed Observations"
+            />
+        </>
+    )}
             {selectedPlace && <AllDashboard placeDataset={selectedPlace} />}
             {selectedTime && <AllDashboard timeDataset={selectedTime} />}
             {selectedSingle && <AllDashboard singleDataset={selectedSingle} />}

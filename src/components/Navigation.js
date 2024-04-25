@@ -9,7 +9,7 @@ const Navigation = () => {
   const navItems = [
     { name: 'Health & Social care', path: '/health' },
     { name: 'Advice and support', path: '/advice' },
-    { name: 'Context', path: '/context' },
+   
     { name: 'Charity sector', path: '/charity' },
     { name: 'Data Explorer', path: '/explore'},
     
