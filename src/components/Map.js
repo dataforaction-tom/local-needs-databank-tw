@@ -176,7 +176,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
         if (feature.properties.observations.length > 0) {
             popupContent += `<div><strong>Observations:</strong><ul>`;
             feature.properties.observations.forEach(obs => {
-                popupContent += `<li>${obs.name}: ${obs.value}</li>`;
+                popupContent += `<li>${obs.name} (${obs.year}): ${obs.value}</li>`;
             });
             popupContent += `</ul></div>`;
         } else {
@@ -191,6 +191,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
        
         return (
             <>
+            
             <GeoJSON
                 data={filteredGeoJsonFeatures}
                 onEachFeature={(feature, layer) => onEachFeature(feature, layer, colorScale)}
