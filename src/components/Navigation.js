@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
+import { FaRegHospital, FaHandsHelping, FaBookOpen, FaChartBar, FaPlusCircle } from 'react-icons/fa';
 
 const Navigation = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
-    { name: 'Health & Social care', path: '/health' },
-    { name: 'Advice and support', path: '/advice' },
-   
-    { name: 'Charity sector', path: '/charity' },
-    { name: 'Data Explorer', path: '/explore'},
-    
-    { name: 'Contribute', path: '/contribute'}
+    { name: 'Health & Social care', path: '/health', icon: <FaRegHospital className="mr-1" /> },
+    { name: 'Advice and support', path: '/advice', icon: <FaHandsHelping className="mr-1" /> },
+    { name: 'Charity sector', path: '/charity', icon: <FaBookOpen className="mr-1" /> },
+    { name: 'Data Explorer', path: '/explore', icon: <FaChartBar className="mr-1" /> },
+    { name: 'Contribute', path: '/contribute', icon: <FaPlusCircle className="mr-1" /> }
   ];
 
   return (
@@ -32,14 +31,14 @@ const Navigation = () => {
             <li key={index} className="w-full text-center border-b-2 border-white md:border-b-0 md:border-r-2">
               <NavLink
                 to={item.path}
-                className={`block py-3 text-white transition-colors duration-300 text-lg font-bold ${
+                className={`flex items-center justify-center py-3 text-white transition-colors duration-300 text-lg font-bold ${
                   location.pathname === item.path
                     ? 'bg-[#C7215D]'
                     : 'hover:bg-[#C7215D]'
                 }`}
                 onClick={() => setIsOpen(false)}  // Close the menu on click
               >
-                {item.name}
+                {item.icon}{item.name}
               </NavLink>
             </li>
           ))}
@@ -50,4 +49,3 @@ const Navigation = () => {
 };
 
 export default Navigation;
-
