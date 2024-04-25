@@ -4,7 +4,7 @@ import Dashboard from './components/Dashboard';
 import Card from './Card';
 import LocalAuthoritiesMap from './components/Map';
 import SingleChartDashboard from './components/SingleChartDashboard';
-
+import { FaRegHospital } from 'react-icons/fa';
 import TimeSeriesDashboard from './components/TimeSeriesDashboard';
 
 const Health = () => {
@@ -32,6 +32,10 @@ const Health = () => {
       return (
         <div>
         <div className="">
+        <div className="text-sm font-bold text-gray-800 mt-2 mb-3 flex items-end flex justify-end mr-5">
+                <FaRegHospital className="text-[#662583] mr-2" size="2em" />
+                Health and Social Care Dashboard
+            </div>
           
           <div className="flex flex-row justify-between flex-wrap -mx-2 p-5 text-center">
             {cardData.map((card, index) => (

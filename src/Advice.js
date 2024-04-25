@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Card from './Card';
 import LocalAuthoritiesMap from './components/Map';
+import { FaRegHospital, FaHandsHelping, FaBookOpen, FaChartBar, FaPlusCircle } from 'react-icons/fa';
 
 import TimeSeriesDashboard from './components/TimeSeriesDashboard';
 
@@ -35,6 +36,10 @@ const Advice = () => {
       return (
         <div>
         <div className="">
+        <div className="text-sm font-bold text-gray-800 mt-2 mb-3 flex items-end flex justify-end mr-5">
+                <FaHandsHelping className="text-[#662583] mr-2" size="2em" />
+                Advice and Support Dashboard
+            </div>
           
           <div className="flex flex-row justify-between flex-wrap -mx-2 p-5 text-center">
             {cardData.map((card, index) => (
@@ -51,7 +56,7 @@ const Advice = () => {
           
         </div>
         <Dashboard dashboardId={2} />
-        <LocalAuthoritiesMap dashboardId={4} />
+        
         <Dashboard dashboardId={14} />
 
         </div>
