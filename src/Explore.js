@@ -190,7 +190,7 @@ const Explore = () => {
 
 {loading ? (
         <p>Loading observations...</p>
-    ) : selectedLAs && (  // Render components only when selectedLA is truthy
+    ) : selectedLAs.length > 0 && (  // Render components only when selectedLA is truthy
         <>
             <ObservationsTable
                 observations={observations}
