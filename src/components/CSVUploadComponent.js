@@ -5,6 +5,7 @@ import supabase from '../supabaseClient';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Select from 'react-select';
+import { parse, isValid, formatISO } from 'date-fns';
 
 
 
@@ -13,6 +14,8 @@ const CSVUploadComponent = () => {
   const [columns, setColumns] = useState([]);
   const [showFields, setShowFields] = useState(false); // State to control the visibility of input fields
   const [headerMappings, setHeaderMappings] = useState([]);
+  const [isFormValid, setIsFormValid] = useState(false);
+
   const [additionalFields, setAdditionalFields] = useState({
     name: '',
     place: '',
@@ -35,7 +38,7 @@ const CSVUploadComponent = () => {
     ];
   
   const [errorRows, setErrorRows] = useState([]);
-  const [isValid, setIsValid] = useState(false);
+  
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [completionStatus, setCompletionStatus] = useState({
@@ -48,6 +51,31 @@ const CSVUploadComponent = () => {
   const toggleFields = () => {
     setShowFields(!showFields); // Toggle the state to show or hide fields
   };
+
+  function parseDate(input) {
+    const formats = [
+      'dd/MM/yyyy', // UK date format
+      'MM/dd/yyyy', // US date format
+      'yyyy-MM-dd', // ISO format (just in case it's already correct)
+    ];
+  
+    console.log(`Parsing date: ${input}`); // Log the input
+  
+    for (let format of formats) {
+      const parsedDate = parse(input, format, new Date());
+      console.log(`Trying format ${format}:`, parsedDate); // Log each attempt
+  
+      if (isValid(parsedDate)) {
+        const isoDate = formatISO(parsedDate, { representation: 'date' });
+        console.log(`Valid date found: ${isoDate}`); // Log the successful conversion
+        return isoDate; // Return the date in ISO format if valid
+      }
+    }
+  
+    console.log('No valid date format found, returning null.');
+    return null; // Return null if no valid date is found
+  }
+  
 
   const handleDragOver = (e) => {
     e.preventDefault(); // Prevent default behavior (Prevent file from being opened)
@@ -68,13 +96,12 @@ const CSVUploadComponent = () => {
   };
 
   const handleFileDrop = (file) => {
-    // Check if the file type is CSV
     if (file.type !== "text/csv" && !file.name.endsWith('.csv')) {
       setMessage('Error: The file must be a CSV file.');
       toast.error('The file must be a CSV file.');
       return;
     }
-
+  
     Papa.parse(file, {
       complete: (results) => {
         if (results.errors.length > 0) {
@@ -82,7 +109,7 @@ const CSVUploadComponent = () => {
           toast.error('Error parsing CSV: ' + results.errors.map(e => e.message).join(', '));
           return;
         }
-
+  
         if (Array.isArray(results.data) && results.data.length > 0) {
           // Check for headers
           if (!results.meta.fields || results.meta.fields.length === 0) {
@@ -90,12 +117,31 @@ const CSVUploadComponent = () => {
             toast.error('CSV does not contain headers.');
             return;
           }
-
+  
           const headers = results.meta.fields;
           setData(results.data);
           setColumns(headers);
           const initialMappings = headers.map(header => ({ value: 'Ignore', label: 'Ignore' }));
           setHeaderMappings(initialMappings);
+  
+          const dataWithDatesProcessed = results.data.map((row, index) => {
+            const newRow = { ...row };
+            headerMappings.forEach(mapping => {
+              if (mapping.value === 'Date') { // Assuming 'Date' is a targeted field for date handling
+                const parsedDate = parseDate(row[mapping.label]);
+                if (parsedDate) {
+                  newRow[mapping.label] = parsedDate;
+                } else {
+                  // Record error if date is not parsable
+                  setErrorRows(prev => [...prev, index + 1]); // Keep track of rows with errors
+                  newRow[mapping.label] = 'Invalid date'; // Optional: Mark as invalid in the data
+                }
+              }
+            });
+            return newRow;
+          });
+  
+          setData(dataWithDatesProcessed);
         } else {
           setMessage('Error in CSV format: No data or incorrect format.');
           toast.error('Error in CSV format: No data or incorrect format.');
@@ -119,7 +165,7 @@ const CSVUploadComponent = () => {
     });
   
     setCompletionStatus(newCompletionStatus);
-    setIsValid(Object.values(newCompletionStatus).every(status => status)); // All fields must be complete
+    setIsFormValid(Object.values(newCompletionStatus).every(status => status)); // All fields must be complete
   };
   
 
@@ -158,8 +204,7 @@ const CSVUploadComponent = () => {
       })
       .select();
   
-    console.log("Dataset creation response data:", datasetData);
-    console.log("Dataset creation error:", datasetError);
+   
   
     if (datasetError) {
       console.error("Failed to create dataset record:", datasetError);
@@ -192,10 +237,22 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
   const errors = [];
   const errorRows = [];
   const processedData = [];
+  const rowHasError = [];
 
   data.forEach((row, rowIndex) => {
     // For each row, create an entry for each "value" column selected
     mappings.forEach((mapping, idx) => {
+      if (mapping.value === 'Date'){
+        const formattedDate = parseDate(row[headers[idx]]);
+        if (formattedDate) {
+          row[headers[idx]] = formattedDate;  // Ensure dates are reformatted
+        } else {
+          console.error(`Invalid date at row ${rowIndex + 1}: ${row[headers[idx]]}`);
+          errors.push(`Row ${rowIndex + 1}: Invalid date format '${row[headers[idx]]}'.`);
+          rowHasError = true;
+        }
+      
+      }
       if (mapping.value !== 'Ignore' && mapping.label === 'Value') {
         const entry = { dataset_id: datasetId }; 
         let rowHasError = false;
