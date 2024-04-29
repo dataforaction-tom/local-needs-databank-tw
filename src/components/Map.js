@@ -91,7 +91,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
                 // Check cache first
                 const cachedData = await localForage.getItem(cacheKey);
                 if (cachedData) {
-                    console.log('Loading GeoJSON from cache');
+                    
                     setGeoJsonData(cachedData);
                     setFilteredGeoJsonFeatures(cachedData);
                     setLoading(false);
@@ -99,12 +99,13 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
                 }
     
                 try {
-                    const response = await supabase.rpc('new_get_enriched_geojson_data', { p_dataset_id: parseInt(datasetId, 10) });
+                    const response = await supabase.rpc('get_features_geojson', { p_dataset_id: parseInt(datasetId, 10) });
                     if (!response.error && response.data) {
-                        const normalizedData = normalizeGeoJSON(response.data);
-                        setGeoJsonData(normalizedData);
-                        setFilteredGeoJsonFeatures(normalizedData);
-                        console.log('Data fetched and normalized:', normalizedData);
+                        const normalizedData = response.data;
+                        setGeoJsonData(response.data);
+                        setFilteredGeoJsonFeatures(response.data);
+                        console.log('response data', response.data)
+                        
     
                         // Save to cache
                         await localForage.setItem(cacheKey, normalizedData);
@@ -124,27 +125,13 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
         fetchGeoJsonData();
     }, [selectedDataset]);
 
-    const normalizeGeoJSON = (data) => {
-        return data.map(feature => {
-            if (feature.geometry.type === "Polygon") {
-                // Convert Polygon to MultiPolygon format
-                return {
-                    ...feature,
-                    geometry: {
-                        type: "MultiPolygon",
-                        coordinates: [feature.geometry.coordinates]  // Add an extra array wrap
-                    }
-                };
-            }
-            return feature;  
-        });
-    };
+   
     
 
     useEffect(() => {
         if (geoJsonData.length > 0) {
             const features = geoJsonData.filter(feature =>
-                filteredObservations.some(obs => obs.place === feature.properties.name)
+                filteredObservations.some(obs => obs.place === feature.properties.lad22nm)
             );
             setFilteredGeoJsonFeatures(features);
         }
@@ -172,7 +159,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
             weight: 1
         });
 
-        let popupContent = `<div><strong>Name:</strong> ${feature.properties.name}</div>`;
+        let popupContent = `<div><strong>Name:</strong> ${feature.properties.lad22nm}</div>`;
         if (feature.properties.observations.length > 0) {
             popupContent += `<div><strong>Observations:</strong><ul>`;
             feature.properties.observations.forEach(obs => {
