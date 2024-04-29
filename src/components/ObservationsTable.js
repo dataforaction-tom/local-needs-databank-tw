@@ -9,7 +9,11 @@ import { CSVLink } from 'react-csv';
 function ObservationsTable({ observations, setFilteredObservations, title, license, owner, dataset_description, original_url, published_date }) {
   
 
-  const [allFilters] = useState([]); // State to control filters
+  
+  const [selectedRegion, setSelectedRegion] = useState(null);
+  const [allFilters, setAllFilters] = useState([]);
+
+
 
   const placeOptions = useMemo(() => {
     // Create unique options from the 'place' data field
@@ -35,6 +39,19 @@ const yearOptions = useMemo(() => {
   const years = new Set(observations.map(obs => obs.year));
   return Array.from(years).map(year => ({ value: year, label: year }));
 }, [observations]);
+
+useEffect(() => {
+  console.log("regionOptions:", regionOptions); // Check what region options are available
+  if (selectedRegion === null) {
+    const nonNullRegions = regionOptions.filter(option => option.value !== null);
+    console.log("nonNullRegions:", nonNullRegions); // Check filtered non-null regions
+    if (nonNullRegions.length > 0) {
+      setSelectedRegion(nonNullRegions[0].value);
+      console.log("Auto-selected region:", nonNullRegions[0].value); // Log which region was selected
+    }
+  }
+}, [regionOptions]);
+
 
 
 
@@ -81,13 +98,19 @@ const yearOptions = useMemo(() => {
 
   const filterTypes = useMemo(() => ({
     multiSelect: (rows, columnId, filterValues) => {
-      
       if (filterValues.length === 0) return rows;
-      const filteredRows = rows.filter(row => filterValues.includes(row.values[columnId]));
-      
-      return filteredRows;
+      return rows.filter(row => filterValues.includes(row.values[columnId]));
     }
   }), []);
+  
+  // Ensure filter setup uses selectedRegion as part of its criteria
+  useEffect(() => {
+    const newFilters = [
+      ...allFilters,
+      { id: 'region', value: selectedRegion }
+    ];
+    setAllFilters(newFilters);
+  }, [selectedRegion]);
   
 
   const {

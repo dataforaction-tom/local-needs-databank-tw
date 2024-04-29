@@ -33,12 +33,21 @@ function ColumnFilter({ column, onFilterChange }) {
   const [initialSetDone, setInitialSetDone] = useState(false);
   const [userHasInteracted, setUserHasInteracted] = useState(false);
 
-  // Memoize options to ensure it only recalculates when filterOptions changes
   const options = useMemo(() => Array.isArray(filterOptions) ? filterOptions : [], [filterOptions]);
-  
-  const multiSelectColumns = ['place', 'name', 'region', 'year'];
 
- 
+  useEffect(() => {
+    if (id === 'region' && !initialSetDone && !userHasInteracted) {
+      const nonNullOptions = options.filter(option => option.value != null);
+      if (nonNullOptions.length > 0) {
+        const values = [nonNullOptions[0].value];
+        setFilter(values);
+        if (onFilterChange) {
+          onFilterChange(id, values);
+        }
+        setInitialSetDone(true);
+      }
+    }
+  }, [id, options, initialSetDone, userHasInteracted, setFilter, onFilterChange]);
 
   const handleChange = (value) => {
     setUserHasInteracted(true);
@@ -51,39 +60,18 @@ function ColumnFilter({ column, onFilterChange }) {
 
   const selectedValues = options.filter(option => filterValue.includes(option.value));
 
-  if (multiSelectColumns.includes(id)) {
-    return (
-      <Select
-        isMulti
-        value={selectedValues}
-        onChange={handleChange}
-        options={options}
-        className="text-sm w-full"
-        styles={customStyles} 
-        isDisabled={options.length === 0} // Disable if no options available
-        placeholder={options.length > 0 ? "Select..." : "No options available"}
-      />
-    );
-  } else {
-    return (
-      <span>
-        Search: {' '}
-        <input
-          value={filterValue || ''}
-          onChange={e => {
-            setUserHasInteracted(true);
-            const newVal = e.target.value || undefined;
-            setFilter(newVal);
-            if (onFilterChange) {
-              onFilterChange(id, newVal ? [newVal] : []);
-            }
-          }}
-          placeholder="Filter..."
-          style={{ fontSize: '1rem', margin: '0', padding: '3px' }}
-        />
-      </span>
-    );
-  }
+  return (
+    <Select
+      isMulti
+      value={selectedValues}
+      onChange={handleChange}
+      options={options}
+      className="text-sm w-full"
+      styles={customStyles} 
+      isDisabled={options.length === 0}
+      placeholder={options.length > 0 ? "Select..." : "No options available"}
+    />
+  );
 }
 
 export default ColumnFilter;
