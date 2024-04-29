@@ -40,7 +40,7 @@ const Explore = () => {
     const [timeDatasets, setTimeDatasets] = useState([]);
     const [singleDatasets, setSingleDatasets] = useState([]);
     const [localAuthorities, setLocalAuthorities] = useState([]);
-    const [selectedLA, setSelectedLA] = useState(null);
+    const [selectedLAs, setSelectedLAs] = useState([]);
     const [selectedPlace, setSelectedPlace] = useState(null);
     const [selectedTime, setSelectedTime] = useState(null);
     const [selectedSingle, setSelectedSingle] = useState(null);
@@ -85,28 +85,33 @@ const Explore = () => {
             setLocalAuthorities(data.map(la => ({ value: la.la_name, label: la.la_name })));
         }
     
-        async function fetchObservationsForLA(la_name) {
+        async function fetchObservationsForLAs(localAuthorities) {
             setLoading(true);
-            const { data, error } = await supabase
-                .rpc('get_observations_by_place', { place_name: la_name });
-            if (error) {
-                console.error('Error fetching observations for place', la_name, error);
-                setLoading(false);
-                return;
+            try {
+                const observations = await Promise.all(localAuthorities.map(la =>
+                    supabase.rpc('get_observations_by_place', { place_name: la.value })
+                ));
+        
+                // Flatten the array of arrays into a single array of observations
+                const mergedObservations = observations.reduce((acc, current) => acc.concat(current.data), []);
+                setObservations(mergedObservations);
+            } catch (error) {
+                console.error('Error fetching observations for places', error);
             }
-            setObservations(data);
             setLoading(false);
         }
         
-    
-        const handleSelectLA = (selectedOption) => {
-            setSelectedLA(selectedOption);
-            if (selectedOption) {
-                fetchObservationsForLA(selectedOption.value);
+        // Update effect to trigger on selectedLAs changes
+        useEffect(() => {
+            if (selectedLAs.length > 0) {
+                fetchObservationsForLAs(selectedLAs);
             } else {
                 setObservations([]);
             }
-        };
+        }, [selectedLAs]);
+        
+    
+       
         
 
     // Helper function to map dataset properties
@@ -169,14 +174,15 @@ const Explore = () => {
             <p>Here you can get all data in the Local Needs Databank related to a particular local authority area. Some charts may render also, but please be aware that the data may be at different scales. However you can still use the table to filter out any observations you don't want in your chart or data</p>
         </div>
         <div className="col-span-2 space-y-4">
-            <Select
+                    <Select
                 options={localAuthorities}
-                onChange={handleSelectLA}
-                value={selectedLA}
-                placeholder="Select a Local Authority"
+                onChange={setSelectedLAs}
+                value={selectedLAs}
+                placeholder="Select Local Authorities"
                 isClearable={true}
+                isMulti={true}  // Enable multi-selection
                 styles={customStyles}
-            />
+                />
         </div>
     </div>
 </div>
@@ -184,12 +190,12 @@ const Explore = () => {
 
 {loading ? (
         <p>Loading observations...</p>
-    ) : selectedLA && (  // Render components only when selectedLA is truthy
+    ) : selectedLAs && (  // Render components only when selectedLA is truthy
         <>
             <ObservationsTable
                 observations={observations}
                 setFilteredObservations={setFilteredObservations}
-                title={`Observations for ${selectedLA.label}`}  // Assuming selectedLA has a label property
+                title={`Observations for ${selectedLAs.map(la => la.label).join(", ")}`}
             />
             <ObservationsChart
                 observations={filteredObservations}
