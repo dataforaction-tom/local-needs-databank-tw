@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ObservationsTable from './ObservationsTable';
 import ObservationsChart from './ObservationsChart';
 import supabase from '../supabaseClient';
-import Select from 'react-select';
-import LocalAuthorityMap from './Map'; // Ensure you import your map component
-import MultiObservationsChart from './MultiObservationsChart';
-import TimeObservationsChart from './TimeObservationsChart';
+
 
 function SingleChartDashboard({ dashboardId }) {
     const [datasets, setDatasets] = useState([]);
@@ -16,7 +13,7 @@ function SingleChartDashboard({ dashboardId }) {
     const [selectedDataset, setSelectedDataset] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isTableVisible, setIsTableVisible] = useState(false);
-
+    const [valueType, setValueType] = useState('value'); // Default to 'value'
 
     useEffect(() => {
         async function fetchData() {
@@ -75,7 +72,7 @@ const fetchObservations = async (datasetId) => {
 
   // Start building the query
   let query = supabase.from('observations').select('*').eq('dataset_id', datasetId);
-  console.log(query)
+  
 
   // If a specific region is selected, add that to the query
   if (selectedRegion !== 'All') {
@@ -84,7 +81,7 @@ const fetchObservations = async (datasetId) => {
 
   // Execute the query and handle the response
   const { data, error } = await query;
-  console.log(data)
+ 
 
   // Handle any errors during the fetch operation
   if (error) {
@@ -135,6 +132,12 @@ const fetchObservations = async (datasetId) => {
                     {/* Placeholder for additional content or spacing */}
                 </div>
                 <button 
+                    onClick={() => setValueType(valueType === 'value' ? 'per_population_value' : 'value')}
+                    className="w-full md:w-auto bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300 mt-2 md:mt-0"
+                    >
+                    {valueType === 'value' ? 'Switch to Per Population Value' : 'Switch to Value'}
+                    </button>
+                <button 
                     onClick={toggleTableVisibility}
                     className="w-full md:w-auto bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300 mt-2 md:mt-0"
                 >
@@ -146,6 +149,7 @@ const fetchObservations = async (datasetId) => {
                   {isTableVisible && (
                       <ObservationsTable
                           title={selectedDataset ? selectedDataset.label : ''}
+                          valueType={valueType}
                           observations={observations}
                           setFilteredObservations={setFilteredObservations}
                           license={selectedDataset ? selectedDataset.license : ''}
@@ -158,6 +162,7 @@ const fetchObservations = async (datasetId) => {
                   
                   <ObservationsChart
                       observations={filteredObservations}
+                      valueType={valueType}
                       title={selectedDataset ? selectedDataset.label : ''}
                       license={selectedDataset ? selectedDataset.license : ''}
                           original_url={selectedDataset ? selectedDataset.original_url : ''}

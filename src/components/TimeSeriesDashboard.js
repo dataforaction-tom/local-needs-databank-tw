@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ObservationsTable from './ObservationsTable';
 
 import supabase from '../supabaseClient';
-import Select from 'react-select';
+
 
 import TimeObservationsChart from './TimeObservationsChart';
 
@@ -93,19 +93,9 @@ const fetchObservations = async (datasetId) => {
   setFilteredObservations(data);
 };
 
-    const handleDatasetChange = (selectedOption) => {
-        setSelectedDataset(selectedOption);
-        if (selectedOption) {
-            fetchObservations(selectedOption.value);
-        } else {
-            setObservations([]);
-            setFilteredObservations([]);
-        }
-    };
+   
 
-    const handleRegionChange = (e) => {
-        setSelectedRegion(e.target.value);
-    };
+  
 
     const toggleTableVisibility = () => {
         if (typeof setIsTableVisible !== 'function') {

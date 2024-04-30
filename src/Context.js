@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Card from './Card';
 import LocalAuthoritiesMap from './components/Map';
+import Map2 from './components/Map2';
 
 const Context = () => {
     const cardData = [
@@ -44,7 +45,9 @@ const Context = () => {
           
         </div>
         <h1 className='font-bold text-4xl text-center'> Dashboard under construction</h1>
+        <Map2 datasetId={55} />
         </div>
+        
       );
     };
 

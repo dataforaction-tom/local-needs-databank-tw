@@ -22,7 +22,7 @@ const useResponsiveChart = (chartRef) => {
   }, [chartRef]);
 };
 
-function ObservationsChart({ observations, title }) {
+function ObservationsChart({ observations, title, valueType }) {
   const chartRef = useRef(null);
   const [chartInstance, setChartInstance] = useState(null); // State to hold the chart instance
   useResponsiveChart(chartRef); // Apply the responsive hook
@@ -48,7 +48,7 @@ useEffect(() => {
 
   chartInstance && chartInstance.destroy(); // Destroy existing chart before creating a new one
 
-  const datasets = createDatasets(observations, places, computedColorMapping);
+  const datasets = createDatasets(observations, places, computedColorMapping, valueType);
   const newChartInstance = new Chart(chartContext, {
     type: 'bar',
     data: { labels: places, datasets },
@@ -66,14 +66,14 @@ useEffect(() => {
 
   setChartInstance(newChartInstance); // Save the new chart instance
   return () => newChartInstance.destroy(); // Cleanup on component unmount
-}, [observations, computedColorMapping, indexAxis]);
+}, [observations, computedColorMapping, indexAxis, valueType]);
 
-  function createDatasets(data, places, colorMapping) {
+  function createDatasets(data, places, colorMapping, valueType) {
     const datasetMap = {};
 
     data.forEach(obs => {
       const name = obs.name;
-      const value = parseInt(obs.value, 10);
+      const value = parseInt(obs[valueType], 10);
 
       if (!datasetMap[name]) {
         datasetMap[name] = {

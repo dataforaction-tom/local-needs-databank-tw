@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import ObservationsTable from './ObservationsTable';
 import ObservationsChart from './ObservationsChart';
-import LocalAuthorityMap from './Map'; // Ensure correct path
+import LocalAuthorityMap from './Map'; 
 import TimeObservationsChart from './TimeObservationsChart';
-import Select from 'react-select';
-import supabase from '../supabaseClient'; // Ensure correct path
+
+import supabase from '../supabaseClient'; 
 
 function AllDashboard({ placeDataset, timeDataset, singleDataset }) {
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isTableVisible, setIsTableVisible] = useState(true);
+    const [valueType, setValueType] = useState('value'); // Default to 'value'
 
     // Determine active dataset based on what is passed
     const activeDataset = placeDataset || timeDataset || singleDataset;
@@ -44,6 +45,12 @@ function AllDashboard({ placeDataset, timeDataset, singleDataset }) {
     return (
         <div className="bg-slate-50 p-3 md:p-5 m-3 md:m-5">
             <div className="flex flex-col md:flex-row justify-between items-center">
+            <button 
+                    onClick={() => setValueType(valueType === 'value' ? 'per_population_value' : 'value')}
+                    className="w-full md:w-auto bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300 mt-2 md:mt-0"
+                    >
+                    {valueType === 'value' ? 'Switch to Per Population Value' : 'Switch to Value'}
+                    </button>
                 <button
                     onClick={toggleTableVisibility}
                     className="bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300 mt-2 md:mt-0"
@@ -57,6 +64,7 @@ function AllDashboard({ placeDataset, timeDataset, singleDataset }) {
                     {isTableVisible && (
                         <ObservationsTable
                             observations={observations}
+                            valueType={valueType}
                             setFilteredObservations={setFilteredObservations}
                             title={activeDataset.label}
                             license={activeDataset.license}

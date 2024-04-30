@@ -6,7 +6,7 @@ import { CSVLink } from 'react-csv';
 
 
 
-function ObservationsTable({ observations, setFilteredObservations, title, license, owner, dataset_description, original_url, published_date }) {
+function ObservationsTable({ observations, setFilteredObservations, title, license, owner, dataset_description, original_url, published_date, population, valueType }) {
   
 
   
@@ -53,7 +53,8 @@ useEffect(() => {
 }, [regionOptions]);
 
 
-
+console.log(valueType);
+console.log(observations)
 
 
   const columns = useMemo(() => [
@@ -79,8 +80,8 @@ useEffect(() => {
       filterOptions: regionOptions
     },
     {
-      Header: 'Value',
-      accessor: 'value',
+      Header: valueType === 'value' ? 'Value' : 'Per Population Value',
+      accessor: valueType,
       Filter: ColumnFilter
     },
     {
@@ -94,7 +95,7 @@ useEffect(() => {
     
     
     
-  ], [placeOptions, nameOptions, regionOptions, yearOptions]);
+  ], [placeOptions, nameOptions, regionOptions, yearOptions, valueType]);
 
   const filterTypes = useMemo(() => ({
     multiSelect: (rows, columnId, filterValues) => {
@@ -157,8 +158,11 @@ useEffect(() => {
       `License: ${metadata.license}`,
       `Owner: ${metadata.owner}`,
       `Published Date: ${metadata.published_date}`,
-      `Original URL: ${metadata.original_url}`
+      `Original URL: ${metadata.original_url}`,
+      `Population Factor: ${metadata.population}`,
+      
     ];
+    console.log(metadataEntries)
   
     // Append metadata as single cell entries at the bottom
     const dataWithMeta = [
@@ -177,8 +181,9 @@ useEffect(() => {
     license,
     owner,
     published_date,
-    original_url
-  }), [rows, columns, dataset_description, license, owner, published_date, original_url]);
+    original_url, 
+    population,
+  }), [rows, columns, dataset_description, license, owner, published_date, original_url, population]);
   
 
 
@@ -212,6 +217,8 @@ useEffect(() => {
           </thead>
           <tbody {...getTableBodyProps()} className="divide-y divide-gray-200">
             {rows.map((row, index) => {
+              
+
               prepareRow(row);
               return (
                 <tr {...row.getRowProps()} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}`}>

@@ -9,13 +9,13 @@ export const FilterProvider = ({ children }) => {
     const [userHasInteracted, setUserHasInteracted] = useState({});
 
     const updateFilter = (filterId, filterValue, userInteraction = false) => {
-        console.log(`Updating filter for ${filterId}: `, filterValue);
+        
         setFilters(prevFilters => {
             const newFilters = {
                 ...prevFilters,
                 [filterId]: filterValue
             };
-            console.log(`New filters state: `, newFilters);
+            
             return newFilters;
         });
         if (userInteraction) {
@@ -24,7 +24,7 @@ export const FilterProvider = ({ children }) => {
                     ...prev,
                     [filterId]: true
                 };
-                console.log(`User interaction updated for ${filterId}: `, newUserInteractions);
+                
                 return newUserInteractions;
             });
         }

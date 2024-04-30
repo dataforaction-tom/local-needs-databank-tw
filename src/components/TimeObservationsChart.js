@@ -31,18 +31,18 @@ function TimeObservationsChart({ observations, title }) {
   }, [observations, colorPalette]);
 
   useEffect(() => {
-    console.log("Component is mounting or updating.");
+   
     
     const chartContext = chartRef.current.getContext('2d');
     const years = [...new Set(observations.map(obs => new Date(obs.date).getFullYear()))].sort();
   
     // Clear previous chart instance if it exists
     if (chartInstance) {
-      console.log("Destroying existing chart instance.");
+     
       chartInstance.destroy();
     }
   
-    console.log("Creating new chart instance.");
+    
     const newChartInstance = new Chart(chartContext, {
       type: chartType,
       data: {
@@ -54,7 +54,7 @@ function TimeObservationsChart({ observations, title }) {
     setChartInstance(newChartInstance);
   
     return () => {
-      console.log("Cleaning up chart instance.");
+      
       newChartInstance.destroy();
     };
   }, [observations, chartType, computedColorMapping, indexAxis]);

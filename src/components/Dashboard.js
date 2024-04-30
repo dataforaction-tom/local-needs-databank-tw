@@ -7,6 +7,7 @@ import supabase from '../supabaseClient';
 import MultiObservationsChart from './MultiObservationsChart';
 import localForage from 'localforage';
 
+
 const ObservationsTable = React.lazy(() =>import('./ObservationsTable'));
 const LocalAuthorityMap = React.lazy(() =>import('./Map'));
 
@@ -16,7 +17,7 @@ localForage.config({
     description: 'Used to cache dashboard data and observations locally'
 });
 
-function Dashboard({ dashboardId }) {
+function Dashboard({ dashboardId, datasetId }) {
     const [datasets, setDatasets] = useState([]);
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
@@ -25,6 +26,7 @@ function Dashboard({ dashboardId }) {
     const [selectedDataset, setSelectedDataset] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isTableVisible, setIsTableVisible] = useState(true);
+    const [valueType, setValueType] = useState('value'); // Default to 'value'
 
 
     useEffect(() => {
@@ -43,7 +45,7 @@ function Dashboard({ dashboardId }) {
                 // Fetch datasets from Supabase if not in cache
                 const { data: datasetsData, error: datasetsError } = await supabase
                     .from('dashboard_datasets')
-                    .select('dashboard_id, datasets:dataset_id (id, title, original_url, published_date, owner, dataset_description, license )')
+                    .select('dashboard_id, datasets:dataset_id (id, title, original_url, published_date, owner, dataset_description, license, population_factor )')
                     .eq('dashboard_id', dashboardId);
     
                 if (datasetsError) {
@@ -59,10 +61,15 @@ function Dashboard({ dashboardId }) {
                     dataset_description: dd.datasets.dataset_description,
                     license: dd.datasets.license,
                     published_date: dd.datasets.published_date,
-                    owner: dd.datasets.owner
+                    owner: dd.datasets.owner,
+                    datasetId: dd.datasets.id,
+                    population: dd.datasets.population_factor,
+                    
                 }));
     
                 setDatasets(options);
+                console.log(options);
+                
                 localForage.setItem(`datasets-${dashboardId}`, options);  // Cache the data
     
                 if (options.length > 0) {
@@ -155,6 +162,12 @@ function Dashboard({ dashboardId }) {
                     {/* Placeholder for additional content or spacing */}
                 </div>
                 <button 
+                    onClick={() => setValueType(valueType === 'value' ? 'per_population_value' : 'value')}
+                    className="w-full md:w-auto bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300 mt-2 md:mt-0"
+                    >
+                    {valueType === 'value' ? 'Switch to Per Population Value' : 'Switch to Value'}
+                    </button>
+                <button 
                     onClick={toggleTableVisibility}
                     className="w-full md:w-auto bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300 mt-2 md:mt-0"
                 >
@@ -167,29 +180,35 @@ function Dashboard({ dashboardId }) {
                       <ObservationsTable
                           title={selectedDataset ? selectedDataset.label : ''}
                           observations={observations}
+                          valueType={valueType}
                           setFilteredObservations={setFilteredObservations}
                           license={selectedDataset ? selectedDataset.license : ''}
                           original_url={selectedDataset ? selectedDataset.original_url : ''}
                           published_date={selectedDataset ? selectedDataset.published_date : ''}
                           dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                           owner={selectedDataset ? selectedDataset.owner : ''}
+                          population={selectedDataset ? selectedDataset.population_factor : ''}
+
                       />
                   )}
                   
                   <ObservationsChart
                       observations={filteredObservations}
+                      valueType={valueType}
                       title={selectedDataset ? selectedDataset.label : ''}
                       license={selectedDataset ? selectedDataset.license : ''}
                           original_url={selectedDataset ? selectedDataset.original_url : ''}
                           published_date={selectedDataset ? selectedDataset.published_date : ''}
                           dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                           owner={selectedDataset ? selectedDataset.owner : ''}
+                          population={selectedDataset ? selectedDataset.population_factor : ''}
                   />
                   
               </>
           )}
           <LocalAuthorityMap
                         selectedDataset={selectedDataset}
+                        valueType={valueType}
                         filteredObservations={filteredObservations}
                         title={selectedDataset ? selectedDataset.label : ''}
                         license={selectedDataset ? selectedDataset.license : ''}
@@ -197,16 +216,20 @@ function Dashboard({ dashboardId }) {
                           published_date={selectedDataset ? selectedDataset.published_date : ''}
                           dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                           owner={selectedDataset ? selectedDataset.owner : ''}
+                          population={selectedDataset ? selectedDataset.population_factor : ''}
                     />
             <MultiObservationsChart
                       observations={filteredObservations}
+                      valueType={valueType}
                       title={selectedDataset ? selectedDataset.label : ''}
                       license={selectedDataset ? selectedDataset.license : ''}
                           original_url={selectedDataset ? selectedDataset.original_url : ''}
                           published_date={selectedDataset ? selectedDataset.published_date : ''}
                           dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                           owner={selectedDataset ? selectedDataset.owner : ''}
+                          population={selectedDataset ? selectedDataset.population_factor : ''}
                   />
+
 
             
       </div>

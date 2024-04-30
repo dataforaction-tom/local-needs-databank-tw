@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ObservationsTable from './ObservationsTable';
-import ObservationsChart from './ObservationsChart';
+
 import supabase from '../supabaseClient';
-import Select from 'react-select';
-import LocalAuthorityMap from './Map'; // Ensure you import your map component
-import MultiObservationsChart from './MultiObservationsChart';
-import TimeObservationsChart from './TimeObservationsChart';
+
 import CategoryObservationChart from './CategoryChart';
 
 function CategoryChartDashboard({ dashboardId }) {
@@ -76,7 +73,7 @@ const fetchObservations = async (datasetId) => {
 
   // Start building the query
   let query = supabase.from('observations').select('*').eq('dataset_id', datasetId);
-  console.log(query)
+ 
 
   // If a specific region is selected, add that to the query
   if (selectedRegion !== 'All') {
@@ -85,7 +82,7 @@ const fetchObservations = async (datasetId) => {
 
   // Execute the query and handle the response
   const { data, error } = await query;
-  console.log(data)
+  
 
   // Handle any errors during the fetch operation
   if (error) {
@@ -133,7 +130,7 @@ const fetchObservations = async (datasetId) => {
             
             <div className="flex flex-col md:flex-row justify-between items-center">
                 <div className="flex-grow md:flex md:flex-grow">
-                    {/* Placeholder for additional content or spacing */}
+                    
                 </div>
                 <button 
                     onClick={toggleTableVisibility}

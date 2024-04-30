@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Chart from 'chart.js/auto';
 
-function SingleObservationChart({ data, name, title, startColorIndex, colorPalette }) {
+function SingleObservationChart({ data, name, title, startColorIndex, colorPalette, valueType }) {
   const chartRef = useRef(null);
 
   const [chartType, setChartType] = useState('bar');
@@ -26,7 +26,7 @@ function SingleObservationChart({ data, name, title, startColorIndex, colorPalet
     const dataByYear = data.reduce((acc, d) => {
       const year = new Date(d.date).getFullYear();
       acc[year] = acc[year] || {};
-      acc[year][d.place] = (acc[year][d.place] || 0) + parseInt(d.value, 10);
+      acc[year][d.place] = (acc[year][d.place] || 0) + parseInt(d[valueType], 10);
       return acc;
     }, {});
 
@@ -87,7 +87,7 @@ function SingleObservationChart({ data, name, title, startColorIndex, colorPalet
         window[`chart_${name}`].destroy();
       }
     };
-  }, [data, chartType, indexAxis, startColorIndex, colorPalette, name]);
+  }, [data, chartType, indexAxis, startColorIndex, colorPalette, name, valueType]);
 
   const toggleChartType = () => {
     const types = ['bar', 'line', 'pie'];

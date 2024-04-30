@@ -15,6 +15,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Explore from './Explore';
 import LandingPage from './LandingPage';
 
+
 const queryClient = new QueryClient();
 
 Chart.register(ChartDataLabels);
