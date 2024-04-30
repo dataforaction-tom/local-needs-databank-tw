@@ -103,7 +103,7 @@ const CSVUploadComponent = () => {
     }
   
     Papa.parse(file, {
-      complete: (results) => {
+      complete: async (results) => {
         if (results.errors.length > 0) {
           setMessage('Error parsing CSV: ' + results.errors.map(e => e.message).join(', '));
           toast.error('Error parsing CSV: ' + results.errors.map(e => e.message).join(', '));
@@ -124,22 +124,15 @@ const CSVUploadComponent = () => {
           const initialMappings = headers.map(header => ({ value: 'Ignore', label: 'Ignore' }));
           setHeaderMappings(initialMappings);
   
-          const dataWithDatesProcessed = results.data.map((row, index) => {
+          const dataWithDatesProcessed = await Promise.all(results.data.map(async (row) => {
             const newRow = { ...row };
-            headerMappings.forEach(mapping => {
-              if (mapping.value === 'Date') { // Assuming 'Date' is a targeted field for date handling
-                const parsedDate = parseDate(row[mapping.label]);
-                if (parsedDate) {
-                  newRow[mapping.label] = parsedDate;
-                } else {
-                  // Record error if date is not parsable
-                  setErrorRows(prev => [...prev, index + 1]); // Keep track of rows with errors
-                  newRow[mapping.label] = 'Invalid date'; // Optional: Mark as invalid in the data
-                }
+            for (const header of results.meta.fields) {
+              if (header === 'Date') { // Adjust according to your specific logic
+                newRow[header] = await parseDate(row[header]) || 'Invalid date';
               }
-            });
+            }
             return newRow;
-          });
+          }));
   
           setData(dataWithDatesProcessed);
         } else {
