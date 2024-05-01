@@ -164,17 +164,10 @@ const CSVUploadComponent = () => {
 
   const handleMappingChange = (index, option) => {
     const newMappings = [...headerMappings];
-    // Here, we check if the user is mapping a column as 'Place'
-    if (option.value === 'Place') {
-        // Update mapping to target 'place_upload' instead of 'place'
-        newMappings[index] = { ...option, value: 'Place', label: 'Place' };
-    } else {
-        newMappings[index] = option;
-    }
+    newMappings[index] = option;
     setHeaderMappings(newMappings);
     validateMappings(newMappings); // Validate whenever mappings change
-};
-
+  };
   
 
   const handleFieldChange = (field, value) => {
@@ -231,79 +224,77 @@ const CSVUploadComponent = () => {
   };
   
   
-  const submitData = async (data, mappings, additionalFields, datasetId) => {
-    const headers = Object.keys(data[0]);
-    const errors = [];
-    const errorRows = [];
-    const processedData = [];
+const submitData = async (data, mappings, additionalFields, datasetId) => {
+  
+  const headers = Object.keys(data[0]);
+  const errors = [];
+  const errorRows = [];
+  const processedData = [];
+  const rowHasError = [];
 
-    let rowHasError = false;  // This should be declared inside the forEach loop if it is meant to reset per row.
-
-    data.forEach((row, rowIndex) => {
-        const entry = { dataset_id: datasetId }; // Start building the entry for the database
-        rowHasError = false;  // Correctly reset rowHasError for each row
-        let placeMapped = false;
-
-        mappings.forEach((mapping, idx) => {
-            if (mapping.value === 'Date') {
-                const formattedDate = parseDate(row[headers[idx]]);
-                if (formattedDate) {
-                    entry['date'] = formattedDate;  // Ensure dates are reformatted
-                } else {
-                    console.error(`Invalid date at row ${rowIndex + 1}: ${row[headers[idx]]}`);
-                    errors.push(`Row ${rowIndex + 1}: Invalid date format '${row[headers[idx]]}'.`);
-                    rowHasError = true;
-                }
-            } else if (mapping.value !== 'Ignore' && mapping.label === 'Value') {
-                const value = parseFloat(row[headers[idx]]);
-                if (isNaN(value)) {
-                    errors.push(`Row ${rowIndex + 1}: '${row[headers[idx]]}' is not a valid number.`);
-                    if (!rowHasError) {
-                        errorRows.push(rowIndex);
-                        rowHasError = true;
-                    }
-                } else {
-                    entry['name'] = headers[idx];  // Use the column header as the 'name'
-                    entry['value'] = value;  // Store the number as 'value'
-                }
-            } else if (mapping.label === 'Place' && mapping.value !== 'Ignore') {
-                entry['place_upload'] = row[headers[idx]];  // Map place column to place_upload
-            } else if (mapping.value !== 'Ignore') {
-                entry[mapping.value.toLowerCase()] = row[headers[idx]];  // Map other fields directly
-            }
-        });
-
-        // Add the additional place if not mapped from CSV
-        if (!placeMapped && additionalFields.place) {
-          entry['place_upload'] = additionalFields.place;
-      }
-
-        // Add other additional fields
-        Object.entries(additionalFields).forEach(([key, value]) => {
-            if (key !== 'place' && value && !entry[key.toLowerCase()]) {
-                entry[key.toLowerCase()] = value;
-            }
-        });
-
-        if (!rowHasError) {
-            processedData.push(entry);
+  data.forEach((row, rowIndex) => {
+    // For each row, create an entry for each "value" column selected
+    mappings.forEach((mapping, idx) => {
+      if (mapping.value === 'Date'){
+        const formattedDate = parseDate(row[headers[idx]]);
+        if (formattedDate) {
+          row[headers[idx]] = formattedDate;  // Ensure dates are reformatted
+        } else {
+          console.error(`Invalid date at row ${rowIndex + 1}: ${row[headers[idx]]}`);
+          errors.push(`Row ${rowIndex + 1}: Invalid date format '${row[headers[idx]]}'.`);
+          rowHasError = true;
         }
+      
+      }
+      if (mapping.value !== 'Ignore' && mapping.label === 'Value') {
+        const entry = { dataset_id: datasetId }; 
+        let rowHasError = false;
+
+        // Store the header as 'name' in Supabase and the column value as 'value'
+        const value = parseFloat(row[headers[idx]]);
+        if (isNaN(value)) {
+          errors.push(`Row ${rowIndex + 1}: '${row[headers[idx]]}' is not a valid number.`);
+          if (!rowHasError) {
+            errorRows.push(rowIndex);
+            rowHasError = true;
+          }
+        } else {
+          entry['name'] = headers[idx];  // Use the column header as the 'name'
+          entry['value'] = value;  // Store the number as 'value'
+
+          // Include other mapped fields
+          mappings.forEach((m, i) => {
+            if (m.value !== 'Ignore' && m.label !== 'Value') {
+              entry[m.value.toLowerCase()] = row[headers[i]];
+            }
+          });
+
+          // Add additional fields with default values if not already present
+          Object.entries(additionalFields).forEach(([key, value]) => {
+            if (value && !entry[key.toLowerCase()]) {
+              entry[key.toLowerCase()] = value;
+            }
+          });
+
+          processedData.push(entry);
+        }
+      }
     });
+  });
 
-    if (errors.length > 0) {
-        return { success: false, message: `Data validation failed:\n${errors.join('\n')}`, errorRows };
-    }
+  if (errors.length > 0) {
+    return { success: false, message: `Data validation failed:\n${errors.join('\n')}`, errorRows };
+  }
 
-    // Batch insert data to Supabase
-    const { error } = await supabase.from('observations').insert(processedData);
-    if (error) {
-        console.error('Error uploading data: ', error);
-        return { success: false, message: 'Failed to upload data.', errorRows };
-    }
+  // Batch insert data to Supabase
+  const { data: error } = await supabase.from('observations').insert(processedData);
+  if (error) {
+    console.error('Error uploading data: ', error);
+    return { success: false, message: 'Failed to upload data.', errorRows };
+  }
 
-    return { success: true, message: 'Data uploaded successfully.' };
+  return { success: true, message: 'Data uploaded successfully.' };
 };
-
 
 
   const RequirementFeedback = ({ isComplete, field }) => {
