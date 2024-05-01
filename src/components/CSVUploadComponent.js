@@ -265,7 +265,12 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
           // Include other mapped fields
           mappings.forEach((m, i) => {
             if (m.value !== 'Ignore' && m.label !== 'Value') {
+              if (m.value === 'Place') {
+                entry['place_upload'] = row[headers[i]];
+              }
+              else {
               entry[m.value.toLowerCase()] = row[headers[i]];
+              }
             }
           });
 
@@ -477,7 +482,7 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
         
       
       <div className='flex flex-row gap-4'>
-      {isValid && !loading && (
+      {isFormValid && !loading && (
         <button className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300' onClick={handleSubmission}>
           Submit Data
         </button>
