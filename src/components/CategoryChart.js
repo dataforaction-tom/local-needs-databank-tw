@@ -33,7 +33,7 @@ function CategoryObservationChart({ observations, title, colorPalette, name }) {
     const datasets = [{
       label: title,
       data: labels.map(label => {
-        const total = observations.filter(d => d.name === label).reduce((sum, item) => sum + parseInt(item.value, 10), 0);
+        const total = observations.filter(d => d.name === label).reduce((sum, item) => sum + parseFloat(item.value), 0);
         return total;
       }),
       backgroundColor: singleColor,

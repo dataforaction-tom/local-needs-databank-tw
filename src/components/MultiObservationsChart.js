@@ -1,7 +1,7 @@
 import React from 'react';
 import SingleObservationChart from './SingleObservationChart';
 
-function MultiObservationsChart({ observations, title }) {
+function MultiObservationsChart({ observations, title, defaultChartType }) {
   // Group data by observation name
   const groupByObservation = observations.reduce((acc, curr) => {
     acc[curr.name] = acc[curr.name] || [];
@@ -22,6 +22,7 @@ function MultiObservationsChart({ observations, title }) {
           name={name} 
           startColorIndex={index % colorPalette.length} 
           colorPalette={colorPalette} 
+          defaultChartType={defaultChartType}
         />
       ))}
     </div>

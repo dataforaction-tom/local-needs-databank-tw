@@ -52,7 +52,7 @@ const Health = () => {
         </div>
         <TimeSeriesDashboard dashboardId={4} />
         <SingleChartDashboard dashboardId={7} />
-        <Dashboard dashboardId={5} />
+        <Dashboard dashboardId={5} defaultChartType='line'  />
         <TimeSeriesDashboard dashboardId={8} />
         
         </div>

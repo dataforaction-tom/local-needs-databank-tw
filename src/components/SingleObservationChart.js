@@ -1,10 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Chart from 'chart.js/auto';
 
-function SingleObservationChart({ data, name, title, startColorIndex, colorPalette }) {
+function SingleObservationChart({ data, name, title, startColorIndex, colorPalette, defaultChartType = 'bar' }) {
   const chartRef = useRef(null);
 
-  const [chartType, setChartType] = useState('bar');
+  const [chartType, setChartType] = useState(defaultChartType);
   const [indexAxis, setIndexAxis] = useState('x');
 
   useEffect(() => {
@@ -26,7 +26,7 @@ function SingleObservationChart({ data, name, title, startColorIndex, colorPalet
     const dataByYear = data.reduce((acc, d) => {
       const year = new Date(d.date).getFullYear();
       acc[year] = acc[year] || {};
-      acc[year][d.place] = (acc[year][d.place] || 0) + parseInt(d.value, 10);
+      acc[year][d.place] = (acc[year][d.place] || 0) + parseFloat(d.value);
       return acc;
     }, {});
 

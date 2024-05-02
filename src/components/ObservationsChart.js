@@ -73,7 +73,7 @@ useEffect(() => {
 
     data.forEach(obs => {
       const name = obs.name;
-      const value = parseInt(obs.value, 10);
+      const value = parseFloat(obs.value);
 
       if (!datasetMap[name]) {
         datasetMap[name] = {

@@ -16,7 +16,7 @@ localForage.config({
     description: 'Used to cache dashboard data and observations locally'
 });
 
-function Dashboard({ dashboardId }) {
+function Dashboard({ dashboardId, defaultChartType }) {
     const [datasets, setDatasets] = useState([]);
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
@@ -179,6 +179,7 @@ function Dashboard({ dashboardId }) {
                   <ObservationsChart
                       observations={filteredObservations}
                       title={selectedDataset ? selectedDataset.label : ''}
+                      
                       license={selectedDataset ? selectedDataset.license : ''}
                           original_url={selectedDataset ? selectedDataset.original_url : ''}
                           published_date={selectedDataset ? selectedDataset.published_date : ''}
@@ -206,6 +207,7 @@ function Dashboard({ dashboardId }) {
                           published_date={selectedDataset ? selectedDataset.published_date : ''}
                           dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                           owner={selectedDataset ? selectedDataset.owner : ''}
+                          defaultChartType={defaultChartType}
                   />
 
             
