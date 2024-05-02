@@ -56,10 +56,13 @@ useEffect(() => {
 
 
 
-  const columns = useMemo(() => [
+  const columns = useMemo(() => {
+    const showDatasetColumn = observations.some(obs => obs.datasetTitle);
+
+    const baseColumns = [
     {
       Header: 'Observation',
-      accessor: 'name', // accessor is the "key" in the data
+      accessor: 'name', 
       Filter: ColumnFilter,
       filter: 'multiSelect', 
       filterOptions: nameOptions 
@@ -89,12 +92,25 @@ useEffect(() => {
       Filter: ColumnFilter,
       filterOptions: yearOptions
     },
+  ];
+  if (showDatasetColumn){
+    baseColumns.push({
+    
+      Header: 'DataSet',
+      accessor: 'datasetTitle', 
+      id: 'title', 
+      disableFilters: true, 
+    });
+  }
+
+  return baseColumns;
+}, [observations, placeOptions, nameOptions, regionOptions, yearOptions, title]);
     
    
     
     
     
-  ], [placeOptions, nameOptions, regionOptions, yearOptions]);
+   
 
   const filterTypes = useMemo(() => ({
     multiSelect: (rows, columnId, filterValues) => {

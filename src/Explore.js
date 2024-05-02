@@ -63,6 +63,7 @@ const Explore = () => {
                 console.error('Error fetching datasets', error);
                 return;
             }
+            console.log(data)
 
             // Filter data into separate arrays based on type
             const place = data.filter(ds => ds.type === 'place');
@@ -88,18 +89,51 @@ const Explore = () => {
         async function fetchObservationsForLAs(localAuthorities) {
             setLoading(true);
             try {
-                const observations = await Promise.all(localAuthorities.map(la =>
+                const observationsResults = await Promise.all(localAuthorities.map(la =>
                     supabase.rpc('get_observations_by_place', { place_name: la.value })
                 ));
         
                 // Flatten the array of arrays into a single array of observations
-                const mergedObservations = observations.reduce((acc, current) => acc.concat(current.data), []);
-                setObservations(mergedObservations);
+                const mergedObservations = observationsResults.reduce((acc, current) => acc.concat(current.data), []);
+        
+                // Extract unique dataset IDs from these observations
+                const datasetIds = [...new Set(mergedObservations.map(obs => obs.dataset_id))];
+        
+                // Fetch dataset titles for these IDs
+                const datasetTitles = await fetchDatasetTitles(datasetIds);
+        
+                // Enhance observations with dataset titles
+                const observationsWithTitles = mergedObservations.map(obs => ({
+                    ...obs,
+                    datasetTitle: datasetTitles[obs.dataset_id] || "Unknown Dataset"
+                }));
+        
+                setObservations(observationsWithTitles);
+                setFilteredObservations(observationsWithTitles);  // Set filtered observations similarly, if needed immediately
             } catch (error) {
                 console.error('Error fetching observations for places', error);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         }
+        
+        async function fetchDatasetTitles(datasetIds) {
+            const { data, error } = await supabase
+                .from('datasets')
+                .select('id, title')
+                .in('id', datasetIds);
+        
+            if (error) {
+                console.error('Error fetching dataset titles', error);
+                return {};
+            }
+        
+            return data.reduce((acc, dataset) => {
+                acc[dataset.id] = dataset.title;
+                return acc;
+            }, {});
+        }
+        
         
         // Update effect to trigger on selectedLAs changes
         useEffect(() => {
@@ -114,17 +148,22 @@ const Explore = () => {
        
         
 
-    // Helper function to map dataset properties
-    const mapDatasets = (datasets) => datasets.map(ds => ({
-        value: ds.id,
-        label: ds.title,
-        originalUrl: ds.original_url,
-        publishedDate: ds.published_date,
-        owner: ds.owner,
-        description: ds.dataset_description,
-        license: ds.license
-    }));
-
+        const mapDatasets = (datasets) => datasets.map(ds => {
+            const mappedData = {
+                value: ds.id,
+                label: ds.title,
+                originalUrl: ds.original_url,
+                publishedDate: ds.published_date,
+                owner: ds.owner,
+                description: ds.dataset_description,
+                license: ds.license,
+                title: ds.title
+            };
+            console.log(mappedData);  // Log each mapped dataset to check the structure and data
+            return mappedData;
+        });
+        
+    
     return (
         
         <div className="px-4 sm:px-6 lg:px-8">
@@ -195,7 +234,7 @@ const Explore = () => {
             <ObservationsTable
                 observations={observations}
                 setFilteredObservations={setFilteredObservations}
-                title={`Observations for ${selectedLAs.map(la => la.label).join(", ")}`}
+                
             />
             <ObservationsChart
                 observations={filteredObservations}
