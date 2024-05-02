@@ -58,7 +58,7 @@ useEffect(() => {
 
   const columns = useMemo(() => [
     {
-      Header: 'Name',
+      Header: 'Observation',
       accessor: 'name', // accessor is the "key" in the data
       Filter: ColumnFilter,
       filter: 'multiSelect', 
