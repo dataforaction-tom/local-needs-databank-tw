@@ -16,7 +16,7 @@ function CategoryChartDashboard({ dashboardId }) {
     const [selectedRegion, setSelectedRegion] = useState('All');
     const [selectedDataset, setSelectedDataset] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [isTableVisible, setIsTableVisible] = useState(false);
+    const [isTableVisible, setIsTableVisible] = useState(true);
 
 
     useEffect(() => {

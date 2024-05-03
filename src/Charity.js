@@ -5,9 +5,9 @@ import Card from './Card';
 import LocalAuthoritiesMap from './components/Map';
 
 import TimeSeriesDashboard from './components/TimeSeriesDashboard';
-import SingleChartDashboard from './components/SingleChartDashboard';
+
 import CategoryChartDashboard from './components/CategoryChartDashboard';
-import { FaRegHospital, FaHandsHelping, FaBookOpen, FaChartBar, FaPlusCircle } from 'react-icons/fa';
+import {  FaBookOpen } from 'react-icons/fa';
 
 const Charity = () => {
     const cardData = [
@@ -36,7 +36,7 @@ const Charity = () => {
       return (
         <div>
         <div className="">
-        <div className="text-sm font-bold text-gray-800 mt-2 mb-3 flex items-end flex justify-end mr-5">
+        <div className="text-sm font-bold text-gray-800 mt-2 mb-3 flex items-end flex justify-end mr-5 mt-5">
                 <FaBookOpen className="text-[#662583] mr-2" size="2em" />
                 Charity Sector Dashboard
             </div>

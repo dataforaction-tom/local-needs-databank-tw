@@ -5,7 +5,7 @@ import { FaRegHospital, FaHandsHelping, FaBookOpen, FaChartBar, FaPlusCircle } f
 const Contribute = () => {
   return (
     <div className="px-4 sm:px-6 lg:px-8">
-      <div className="text-sm font-bold text-gray-800 mt-2 mb-3 flex items-end flex justify-end mr-5">
+      <div className="text-sm font-bold text-gray-800 mt-2 mb-3 flex items-end flex justify-end mr-5 mt-5">
                 <FaPlusCircle className="text-[#662583] mr-2" size="2em" />
                 Contribute Dashboard
             </div>

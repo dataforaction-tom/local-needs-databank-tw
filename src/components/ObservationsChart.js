@@ -58,7 +58,7 @@ useEffect(() => {
       indexAxis,
       scales: {
         x: { barPercentage: 1, categoryPercentage: 0.6 },
-        y: { beginAtZero: true }
+        y: { beginAtZero: false }
       },
       plugins: { legend: { display: true } }
     }

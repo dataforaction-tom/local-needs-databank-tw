@@ -2,10 +2,10 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Card from './Card';
-import LocalAuthoritiesMap from './components/Map';
-import { FaRegHospital, FaHandsHelping, FaBookOpen, FaChartBar, FaPlusCircle } from 'react-icons/fa';
 
-import TimeSeriesDashboard from './components/TimeSeriesDashboard';
+import {  FaHandsHelping } from 'react-icons/fa';
+
+
 
 const Advice = () => {
     const cardData = [
@@ -36,7 +36,7 @@ const Advice = () => {
       return (
         <div>
         <div className="">
-        <div className="text-sm font-bold text-gray-800 mt-2 mb-3 flex items-end flex justify-end mr-5">
+        <div className="text-sm font-bold text-gray-800 mt-2 mb-3 flex items-end flex justify-end mr-5 mt-5">
                 <FaHandsHelping className="text-[#662583] mr-2" size="2em" />
                 Advice and Support Dashboard
             </div>

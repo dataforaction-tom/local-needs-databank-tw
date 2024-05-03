@@ -4,7 +4,8 @@ import supabase from './supabaseClient'; // Ensure the correct path
 import AllDashboard from './components/AllDashboard';
 import ObservationsTable from './components/ObservationsTable';
 import ObservationsChart from './components/ObservationsChart';
-import { FaRegHospital, FaHandsHelping, FaBookOpen, FaChartBar, FaPlusCircle } from 'react-icons/fa';
+import LocalAuthorityMap from './components/Map';
+import { FaChartBar } from 'react-icons/fa';
 
 const customStyles = {
     control: (base, state) => ({
@@ -167,7 +168,7 @@ const Explore = () => {
     return (
         
         <div className="px-4 sm:px-6 lg:px-8">
-            <div className="text-sm font-bold text-gray-800 mt-2 mb-3 flex items-end flex justify-end mr-5">
+            <div className="text-sm font-bold text-gray-800 mt-2 mb-3 flex items-end flex justify-end mr-5 mt-5">
                 <FaChartBar className="text-[#662583] mr-2" size="2em" />
                 Data Explorer Dashboard
             </div>
@@ -240,6 +241,10 @@ const Explore = () => {
                 observations={filteredObservations}
                 title="Detailed Observations"
             />
+            <LocalAuthorityMap
+           
+            filteredObservations={filteredObservations}
+        />
         </>
     )}
             {selectedPlace && <AllDashboard placeDataset={selectedPlace} />}
