@@ -6,7 +6,7 @@ import Select from 'react-select';
 
 import TimeObservationsChart from './TimeObservationsChart';
 
-function TimeSeriesDashboard({ dashboardId }) {
+function TimeSeriesDashboard({ dashboardId, defaultChartType }) {
     const [datasets, setDatasets] = useState([]);
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
@@ -158,6 +158,7 @@ const fetchObservations = async (datasetId) => {
                           published_date={selectedDataset ? selectedDataset.published_date : ''}
                           dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                           owner={selectedDataset ? selectedDataset.owner : ''}
+                          defaultChartType={defaultChartType}
             />
         </div>
     );

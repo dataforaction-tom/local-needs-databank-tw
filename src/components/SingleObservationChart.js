@@ -90,7 +90,7 @@ function SingleObservationChart({ data, name, title, startColorIndex, colorPalet
   }, [data, chartType, indexAxis, startColorIndex, colorPalette, name]);
 
   const toggleChartType = () => {
-    const types = ['bar', 'line', 'pie'];
+    const types = ['bar', 'line'];
     setChartType(prevType => {
       const nextIndex = (types.indexOf(prevType) + 1) % types.length;
       return types[nextIndex];

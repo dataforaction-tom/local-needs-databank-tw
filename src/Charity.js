@@ -58,7 +58,7 @@ const Charity = () => {
         <Dashboard dashboardId={9} />
         <LocalAuthoritiesMap dashboardId={4} />
         <TimeSeriesDashboard dashboardId={10} />
-        <TimeSeriesDashboard dashboardId={11} />
+        <TimeSeriesDashboard dashboardId={11} defaultChartType='pie' />
         
         <CategoryChartDashboard dashboardId={12} />
         <Dashboard dashboardId={13} />

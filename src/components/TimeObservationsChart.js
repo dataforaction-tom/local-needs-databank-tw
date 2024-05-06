@@ -12,11 +12,11 @@ const useResponsiveChart = (chartRef) => {
   }, [chartRef]);
 };
 
-function TimeObservationsChart({ observations, title }) {
+function TimeObservationsChart({ observations, title, defaultChartType='line' }) {
   const chartRef = useRef(null);
   const [chartInstance, setChartInstance] = useState(null);
 
-  const [chartType, setChartType] = useState('line');
+  const [chartType, setChartType] = useState(defaultChartType);
   const [indexAxis, setIndexAxis] = useState('x');
 
   const colorPalette = useMemo(() => ['#662583', '#C7215D', '#881866', '#dd35a5'], []);
@@ -35,6 +35,7 @@ function TimeObservationsChart({ observations, title }) {
     
     const chartContext = chartRef.current.getContext('2d');
     const years = [...new Set(observations.map(obs => new Date(obs.date).getFullYear()))].sort();
+    const mostRecentYear = years[0]; // Most recent year
   
     // Clear previous chart instance if it exists
     if (chartInstance) {
@@ -43,11 +44,14 @@ function TimeObservationsChart({ observations, title }) {
     }
   
     console.log("Creating new chart instance.");
+   
+  const datasets = createDatasets(observations, years, computedColorMapping, mostRecentYear, chartType);
+  const labels = chartType === 'pie' ? datasets[0].labels : years;
     const newChartInstance = new Chart(chartContext, {
       type: chartType,
       data: {
-        labels: years,
-        datasets: createDatasets(observations, years, computedColorMapping)
+        labels: labels,
+        datasets: datasets
       },
       options: getChartOptions(chartType, indexAxis)
     });
@@ -60,27 +64,47 @@ function TimeObservationsChart({ observations, title }) {
   }, [observations, chartType, computedColorMapping, indexAxis]);
   
 
-  function createDatasets(data, years, colorMapping) {
+  function createDatasets(data, years, colorMapping, mostRecentYear, type) {
     const datasetMap = {};
     data.forEach(obs => {
       const name = obs.name;
       const value = parseInt(obs.value, 10);
       const year = new Date(obs.date).getFullYear();
+  
       if (!datasetMap[name]) {
         datasetMap[name] = {
           label: name,
-          data: Array(years.length).fill(0),
+          data: type === 'pie' ? [0] : Array(years.length).fill(0),
           backgroundColor: colorMapping[name],
           borderColor: colorMapping[name]
         };
       }
+  
       const yearIndex = years.indexOf(year);
       if (yearIndex !== -1) {
-        datasetMap[name].data[yearIndex] = value;
+        if (type === 'pie' && year === mostRecentYear) {
+          datasetMap[name].data[0] += value;  // Aggregate values for the most recent year
+        } else if (type !== 'pie') {
+          datasetMap[name].data[yearIndex] = value;
+        }
       }
     });
-    return Object.values(datasetMap);
+  
+    let datasets = Object.values(datasetMap);
+    if (type === 'pie') {
+      return [{
+        data: datasets.map(ds => ds.data[0]),
+        backgroundColor: datasets.map(ds => ds.backgroundColor),
+        borderColor: datasets.map(ds => ds.borderColor),
+        labels: datasets.map(ds => ds.label)  // Labels for each pie segment
+      }];
+    } else {
+      return datasets;
+    }
   }
+  
+  
+  
 
   function getChartOptions(type, axis) {
     return {
@@ -107,7 +131,7 @@ function TimeObservationsChart({ observations, title }) {
   }
 
   const toggleChartType = () => {
-    const types = ['bar', 'line'];
+    const types = ['bar', 'line', 'pie'];
     setChartType(prevType => {
       const nextIndex = (types.indexOf(prevType) + 1) % types.length;
       return types[nextIndex];
