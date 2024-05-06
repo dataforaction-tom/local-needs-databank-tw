@@ -144,7 +144,11 @@ function Dashboard({ dashboardId, defaultChartType }) {
         setIsTableVisible(!isTableVisible);
       };
       
-    
+      function hasMultipleUniqueNames(observations) {
+        const uniqueNames = new Set(observations.map(obs => obs.name));
+        return uniqueNames.size > 1;
+      }
+      
 
       return (
         <Suspense fallback={<div>Loading...</div>}>
@@ -152,7 +156,7 @@ function Dashboard({ dashboardId, defaultChartType }) {
            
             <div className="flex flex-col md:flex-row justify-between items-center">
                 <div className="flex-grow md:flex md:flex-grow">
-                    {/* Placeholder for additional content or spacing */}
+                    
                 </div>
                 <button 
                     onClick={toggleTableVisibility}
@@ -199,17 +203,20 @@ function Dashboard({ dashboardId, defaultChartType }) {
                           dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                           owner={selectedDataset ? selectedDataset.owner : ''}
                     />
+            {
+          hasMultipleUniqueNames(filteredObservations) && (
             <MultiObservationsChart
-                      observations={filteredObservations}
-                      title={selectedDataset ? selectedDataset.label : ''}
-                      license={selectedDataset ? selectedDataset.license : ''}
-                          original_url={selectedDataset ? selectedDataset.original_url : ''}
-                          published_date={selectedDataset ? selectedDataset.published_date : ''}
-                          dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
-                          owner={selectedDataset ? selectedDataset.owner : ''}
-                          defaultChartType={defaultChartType}
-                  />
-
+              observations={filteredObservations}
+              title={selectedDataset ? selectedDataset.label : ''}
+              license={selectedDataset ? selectedDataset.license : ''}
+              original_url={selectedDataset ? selectedDataset.original_url : ''}
+              published_date={selectedDataset ? selectedDataset.published_date : ''}
+              dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+              owner={selectedDataset ? selectedDataset.owner : ''}
+              defaultChartType={defaultChartType}
+            />
+          )
+        }
             
       </div>
       </Suspense>

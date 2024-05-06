@@ -4,6 +4,8 @@ import Dashboard from './components/Dashboard';
 import Card from './Card';
 
 import {  FaHandsHelping } from 'react-icons/fa';
+import SingleChartDashboard from './components/SingleChartDashboard';
+import LocalAuthorityMap from './components/Map';
 
 
 
@@ -55,6 +57,8 @@ const Advice = () => {
           </div>
           
         </div>
+        <Dashboard dashboardId={15} />
+        
         <Dashboard dashboardId={2} />
         
         <Dashboard dashboardId={14} />
