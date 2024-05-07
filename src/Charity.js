@@ -59,9 +59,12 @@ const Charity = () => {
         <LocalAuthoritiesMap dashboardId={4} />
         <TimeSeriesDashboard dashboardId={10} />
         <div className='flex flex-col md:flex-row justify-center items-center gap-4'>
+        <div className='w-full md:w-1/2 p-2'>
         <TimeSeriesDashboard dashboardId={11} />
-        
+        </div>
+        <div className='w-full md:w-1/2 p-2'>
         <TimeSeriesDashboard dashboardId={11} defaultChartType='pie' />
+        </div>
         </div>
         <CategoryChartDashboard dashboardId={12} />
         <Dashboard dashboardId={13} />
