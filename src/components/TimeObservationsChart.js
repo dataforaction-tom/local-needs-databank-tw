@@ -19,7 +19,7 @@ function TimeObservationsChart({ observations, title, defaultChartType='line' })
   const [chartType, setChartType] = useState(defaultChartType);
   const [indexAxis, setIndexAxis] = useState('x');
 
-  const colorPalette = useMemo(() => ['#662583', '#C7215D', '#881866', '#dd35a5'], []);
+  const colorPalette = useMemo(() => ['#662583', '#C7215D', '#881866', '#dd35a5', '#F26F21', '#EE4023'], []);
   const computedColorMapping = useMemo(() => {
     const newColorMapping = {};
     observations.forEach((obs, index) => {
