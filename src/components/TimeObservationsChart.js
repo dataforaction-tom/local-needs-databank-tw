@@ -68,7 +68,7 @@ function TimeObservationsChart({ observations, title, defaultChartType='line' })
     const datasetMap = {};
     data.forEach(obs => {
       const name = obs.name;
-      const value = parseInt(obs.value, 10);
+      const value = parseFloat(obs.value, 10);
       const year = new Date(obs.date).getFullYear();
   
       if (!datasetMap[name]) {

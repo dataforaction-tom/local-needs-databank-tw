@@ -29,7 +29,7 @@ function ObservationsChart({ observations, title }) {
   const [indexAxis, setIndexAxis] = useState('x');
 
  const colorPalette = useMemo(() => {
-  return ['#662583', '#C7215D', '#881866', '#dd35a5'];
+  return ['#662583', '#C7215D', '#881866', '#dd35a5', '#EE4023'];
 }, []); // Empty dependency array means this runs only once when the component mounts
 
 const computedColorMapping = useMemo(() => {
