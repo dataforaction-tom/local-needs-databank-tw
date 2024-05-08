@@ -53,7 +53,7 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows }) =
               { value: 'Date', label: 'Date' },
               { value: 'Period', label: 'Period' },
               { value: 'Value', label: 'Value' },
-              { value: 'Name', label: 'Name' },
+              
               { value: 'Ignore', label: 'Ignore' }
             ]}
             value={mappings[idx]}

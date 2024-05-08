@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ObservationsTable from './ObservationsTable';
 
 import supabase from '../supabaseClient';
-import Select from 'react-select';
+
 
 import TimeObservationsChart from './TimeObservationsChart';
 
@@ -27,7 +27,7 @@ function TimeSeriesDashboard({ dashboardId, defaultChartType }) {
                 .eq('dashboard_id', dashboardId);
 
             if (datasetsError) {
-                console.error('Error fetching datasets', datasetsError);
+                
                 setLoading(false);
                 return;
             }
@@ -55,7 +55,7 @@ function TimeSeriesDashboard({ dashboardId, defaultChartType }) {
                 .select('region', { distinct: true });
 
             if (regionsError) {
-                console.error('Error fetching regions', regionsError);
+                
             } else {
                 setRegions(['All', ...new Set(regionsData.map(r => r.region))]);
             }
@@ -84,7 +84,7 @@ const fetchObservations = async (datasetId) => {
 
   
   if (error) {
-      console.error('Error fetching observations', error);
+      
       return;
   }
 
@@ -109,12 +109,12 @@ const fetchObservations = async (datasetId) => {
 
     const toggleTableVisibility = () => {
         if (typeof setIsTableVisible !== 'function') {
-          console.error("setState function 'setIsTableVisible' is not available.");
+          
           return;
         }
       
         if (typeof isTableVisible !== 'boolean') {
-          console.error("Invalid state: 'isTableVisible' is not a boolean.");
+          
           return;
         }
       
