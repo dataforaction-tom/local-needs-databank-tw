@@ -68,6 +68,7 @@ const Charity = () => {
         </div>
         <CategoryChartDashboard dashboardId={12} />
         <Dashboard dashboardId={13} />
+        <Dashboard dashboardId={16} />
         
         </div>
       );
