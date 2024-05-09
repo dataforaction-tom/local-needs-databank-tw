@@ -4,8 +4,7 @@ import Dashboard from './components/Dashboard';
 import Card from './Card';
 
 import {  FaHandsHelping } from 'react-icons/fa';
-import SingleChartDashboard from './components/SingleChartDashboard';
-import LocalAuthorityMap from './components/Map';
+
 
 
 

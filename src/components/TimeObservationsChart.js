@@ -31,7 +31,7 @@ function TimeObservationsChart({ observations, title, defaultChartType='line' })
   }, [observations, colorPalette]);
 
   useEffect(() => {
-    console.log("Component is mounting or updating.");
+    
     
     const chartContext = chartRef.current.getContext('2d');
     const years = [...new Set(observations.map(obs => new Date(obs.date).getFullYear()))].sort();
@@ -39,11 +39,11 @@ function TimeObservationsChart({ observations, title, defaultChartType='line' })
   
     // Clear previous chart instance if it exists
     if (chartInstance) {
-      console.log("Destroying existing chart instance.");
+      
       chartInstance.destroy();
     }
   
-    console.log("Creating new chart instance.");
+    
    
   const datasets = createDatasets(observations, years, computedColorMapping, mostRecentYear, chartType);
   const labels = chartType === 'pie' ? datasets[0].labels : years;
@@ -58,7 +58,7 @@ function TimeObservationsChart({ observations, title, defaultChartType='line' })
     setChartInstance(newChartInstance);
   
     return () => {
-      console.log("Cleaning up chart instance.");
+      
       newChartInstance.destroy();
     };
   }, [observations, chartType, computedColorMapping, indexAxis]);
@@ -149,7 +149,7 @@ function TimeObservationsChart({ observations, title, defaultChartType='line' })
       link.click();
       document.body.removeChild(link);
     } else {
-      console.error('Error: Chart reference is not available.');
+      
     }
   };
 
