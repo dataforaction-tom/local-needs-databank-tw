@@ -1,6 +1,6 @@
 import React from 'react';
-import CSVUploadComponent from './components/CSVUploadComponent'; // adjust the path as necessary
-import { FaRegHospital, FaHandsHelping, FaBookOpen, FaChartBar, FaPlusCircle } from 'react-icons/fa';
+import CSVUploadComponent from './components/CSVUploadComponent'; 
+import { FaPlusCircle } from 'react-icons/fa';
 
 const Contribute = () => {
   return (
@@ -17,7 +17,10 @@ const Contribute = () => {
             <p>Welcome to the Local Needs Databank contribution page. Here you can contribute data to the databank using this tool following our data standard. </p>
             <p>By contributing to the Databank you are sharing your data and observations openly.</p>
             <p>We have tried to make this process as easy and flexible as possible, allowing you to tell use which of you columns match our data structure.</p>
+            <div className='mt-5'><p>To view our draft interim data standard please go <a href='https://dataforaction.notion.site/Draft-data-standard-cd8662fe721b4552a91427969dbb7824' title="Local Needs Databank Draft Data Standard" class="text-pink-500 font-bold" target="_blank">here</a></p></div>
+            <div className='mt-5'><p>To view additional details about what we are looking for from data contributors please click <a href='https://dataforaction.notion.site/NPC-local-Needs-Databank-upload-tool-documentation-1c00226fab2e4894a6826573ae10af1e' title="Additional details for data contributors" class="text-pink-500 font-bold" target="_blank">here</a></p></div>
             </div>
+            
             </div>
         <div className="bg-gray-100">
           <CSVUploadComponent />
