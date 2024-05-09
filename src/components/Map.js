@@ -104,7 +104,7 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
                         const normalizedData = response.data;
                         setGeoJsonData(response.data);
                         setFilteredGeoJsonFeatures(response.data);
-                        console.log('response data', response.data)
+                       
                         
     
                         // Save to cache

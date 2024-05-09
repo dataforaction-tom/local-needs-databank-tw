@@ -30,7 +30,7 @@ function CategoryChartDashboard({ dashboardId }) {
                 
 
             if (datasetsError) {
-                console.error('Error fetching datasets', datasetsError);
+                
                 setLoading(false);
                 return;
             }
@@ -76,7 +76,7 @@ const fetchObservations = async (datasetId) => {
 
   // Start building the query
   let query = supabase.from('observations').select('*').eq('dataset_id', datasetId);
-  console.log(query)
+  
 
   // If a specific region is selected, add that to the query
   if (selectedRegion !== 'All') {
@@ -85,7 +85,7 @@ const fetchObservations = async (datasetId) => {
 
   // Execute the query and handle the response
   const { data, error } = await query;
-  console.log(data)
+  
 
   // Handle any errors during the fetch operation
   if (error) {

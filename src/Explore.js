@@ -64,7 +64,7 @@ const Explore = () => {
                 console.error('Error fetching datasets', error);
                 return;
             }
-            console.log(data)
+            
 
             // Filter data into separate arrays based on type
             const place = data.filter(ds => ds.type === 'place');
@@ -160,7 +160,7 @@ const Explore = () => {
                 license: ds.license,
                 title: ds.title
             };
-            console.log(mappedData);  // Log each mapped dataset to check the structure and data
+            
             return mappedData;
         });
         
