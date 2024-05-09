@@ -17,6 +17,10 @@ const Contribute = () => {
             <p>Welcome to the Local Needs Databank contribution page. Here you can contribute data to the databank using this tool following our data standard. </p>
             <p>By contributing to the Databank you are sharing your data and observations openly.</p>
             <p>We have tried to make this process as easy and flexible as possible, allowing you to tell use which of you columns match our data structure.</p>
+            <br></br>
+            <p className='font-bold text-red-500'>While we are in the beta testing phase we are assigning authentication for uploads. Please get in touch if you want to contribute data and we will provide you with authentication</p>
+            <br></br>
+            <p>You can still test the general functionality without an authentication code, so feel free to drop in a csv, it won't go anywhere</p>
             </div>
             </div>
         <div className="bg-gray-100">
