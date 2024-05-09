@@ -14,6 +14,7 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Explore from './Explore';
 import LandingPage from './LandingPage';
+import { Analytics } from "@vercel/analytics/react"
 
 const queryClient = new QueryClient();
 
@@ -26,8 +27,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
     <FilterProvider>
     <Router>
-      
-      <Navigation /> {/* This will render the navigation bar */}
+    <Analytics/>
+      <Navigation /> 
       <div className="App">
         <ErrorBoundary>
           <Routes>
@@ -38,7 +39,7 @@ function App() {
             <Route path="/context" element={<Context />} />
             <Route path="/charity" element={<Charity />} />
             <Route path="/explore" element={<Explore />} />
-            {/* Define other routes corresponding to navItems in your Navigation component */}
+            
           </Routes>
         </ErrorBoundary>
       </div>
