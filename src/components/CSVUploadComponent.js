@@ -17,7 +17,7 @@ const CSVUploadComponent = () => {
   const [isFormValid, setIsFormValid] = useState(false);
 
   const [additionalFields, setAdditionalFields] = useState({
-    
+    name: '',
     place: '',
     date: '',
     period: ''
@@ -34,9 +34,7 @@ const CSVUploadComponent = () => {
     const licenseOptions = [
       { value: 'CC BY', label: 'CC BY' },
       { value: 'CC BY-SA', label: 'CC BY-SA' },
-      { value: 'CC0', label: 'CC0' },
-      { value: 'OGL', label: 'OGL'},
-      { value: 'With permission', label: 'With permission'}
+      { value: 'CC0', label: 'CC0' }
     ];
   
   const [errorRows, setErrorRows] = useState([]);
@@ -61,20 +59,20 @@ const CSVUploadComponent = () => {
       'yyyy-MM-dd', // ISO format (just in case it's already correct)
     ];
   
-    
+    console.log(`Parsing date: ${input}`); // Log the input
   
     for (let format of formats) {
       const parsedDate = parse(input, format, new Date());
-      
+      console.log(`Trying format ${format}:`, parsedDate); // Log each attempt
   
       if (isValid(parsedDate)) {
         const isoDate = formatISO(parsedDate, { representation: 'date' });
-        
+        console.log(`Valid date found: ${isoDate}`); // Log the successful conversion
         return isoDate; // Return the date in ISO format if valid
       }
     }
   
-    
+    console.log('No valid date format found, returning null.');
     return null; // Return null if no valid date is found
   }
   
@@ -202,7 +200,7 @@ const CSVUploadComponent = () => {
    
   
     if (datasetError) {
-     
+      console.error("Failed to create dataset record:", datasetError);
       setMessage(`Failed to create dataset record: ${datasetError.message}`);
       setLoading(false);
       return;

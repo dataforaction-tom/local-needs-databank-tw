@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState,} from 'react';
-import { useTable, useFilters, useGlobalFilter, useSortBy } from 'react-table';
+import { useTable, useFilters, useGlobalFilter, useSortBy, usePagination } from 'react-table';
 import ColumnFilter from './ColumnFilter'; 
 import { CSVLink } from 'react-csv'; 
 
@@ -41,13 +41,13 @@ const yearOptions = useMemo(() => {
 }, [observations]);
 
 useEffect(() => {
-  
+  console.log("regionOptions:", regionOptions); // Check what region options are available
   if (selectedRegion === null) {
     const nonNullRegions = regionOptions.filter(option => option.value !== null);
-    
+    console.log("nonNullRegions:", nonNullRegions); // Check filtered non-null regions
     if (nonNullRegions.length > 0) {
       setSelectedRegion(nonNullRegions[0].value);
-     
+      console.log("Auto-selected region:", nonNullRegions[0].value); // Log which region was selected
     }
   }
 }, [regionOptions]);
