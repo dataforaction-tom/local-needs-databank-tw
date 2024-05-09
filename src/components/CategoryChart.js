@@ -9,7 +9,7 @@ function CategoryObservationChart({ observations, title, colorPalette, name }) {
   const chartRef = useRef(null);
   const [chartType, setChartType] = useState('bar'); // Default to 'bar' chart type
   const [indexAxis, setIndexAxis] = useState('y'); // Default to 'x' as the index axis
-  
+  console.log("Received data:", observations); // Check what data looks like when it's received
 
   
 

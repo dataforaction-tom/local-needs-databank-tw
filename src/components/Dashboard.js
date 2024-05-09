@@ -47,7 +47,7 @@ function Dashboard({ dashboardId, defaultChartType }) {
                     .eq('dashboard_id', dashboardId);
     
                 if (datasetsError) {
-                    
+                    console.error('Error fetching datasets', datasetsError);
                     setLoading(false);
                     return;
                 }
@@ -77,7 +77,7 @@ function Dashboard({ dashboardId, defaultChartType }) {
                 .select('region', { distinct: true });
     
             if (regionsError) {
-                
+                console.error('Error fetching regions', regionsError);
             } else {
                 setRegions(['All', ...new Set(regionsData.map(r => r.region))]);
             }
@@ -106,7 +106,7 @@ function Dashboard({ dashboardId, defaultChartType }) {
             const { data, error } = await query;
     
             if (error) {
-                
+                console.error('Error fetching observations', error);
                 return;
             }
     
@@ -132,12 +132,12 @@ function Dashboard({ dashboardId, defaultChartType }) {
 
     const toggleTableVisibility = () => {
         if (typeof setIsTableVisible !== 'function') {
-          
+          console.error("setState function 'setIsTableVisible' is not available.");
           return;
         }
       
         if (typeof isTableVisible !== 'boolean') {
-          
+          console.error("Invalid state: 'isTableVisible' is not a boolean.");
           return;
         }
       
