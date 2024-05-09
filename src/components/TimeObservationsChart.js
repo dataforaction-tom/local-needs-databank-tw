@@ -124,7 +124,7 @@ function TimeObservationsChart({ observations, title, defaultChartType='line' })
         y: {
           display: type !== 'pie',
           stacked: type === 'bar',
-          beginAtZero: true
+          beginAtZero: false,
         }
       }
     };

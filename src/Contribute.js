@@ -21,8 +21,8 @@ const Contribute = () => {
             <p className='font-bold text-red-500'>While we are in the beta testing phase we are assigning authentication for uploads. Please get in touch if you want to contribute data and we will provide you with authentication</p>
             <br></br>
             <p>You can still test the general functionality without an authentication code, so feel free to drop in a csv, it won't go anywhere</p>
-            <div className='mt-5'><p>To view our draft interim data standard please go <a href='https://dataforaction.notion.site/Draft-data-standard-cd8662fe721b4552a91427969dbb7824' title="Local Needs Databank Draft Data Standard" class="text-pink-500 font-bold" target="_blank">here</a></p></div>
-            <div className='mt-5'><p>To view additional details about what we are looking for from data contributors please click <a href='https://dataforaction.notion.site/NPC-local-Needs-Databank-upload-tool-documentation-1c00226fab2e4894a6826573ae10af1e' title="Additional details for data contributors" class="text-pink-500 font-bold" target="_blank">here</a></p></div>
+            <div className='mt-5'><p>To view our draft interim data standard please go <a href='https://dataforaction.notion.site/Draft-data-standard-cd8662fe721b4552a91427969dbb7824' title="Local Needs Databank Draft Data Standard" className="text-pink-500 font-bold" rel="noreferrer" target="_blank">here</a></p></div>
+            <div className='mt-5'><p>To view additional details about what we are looking for from data contributors please click <a href='https://dataforaction.notion.site/NPC-local-Needs-Databank-upload-tool-documentation-1c00226fab2e4894a6826573ae10af1e' title="Additional details for data contributors" className="text-pink-500 font-bold" rel="noreferrer" target="_blank">here</a></p></div>
             </div>
             
             </div>
