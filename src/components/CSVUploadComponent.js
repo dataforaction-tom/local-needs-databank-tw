@@ -34,7 +34,10 @@ const CSVUploadComponent = () => {
     const licenseOptions = [
       { value: 'CC BY', label: 'CC BY' },
       { value: 'CC BY-SA', label: 'CC BY-SA' },
-      { value: 'CC0', label: 'CC0' }
+      { value: 'CC0', label: 'CC0' },
+      { value: 'Creative Commons Attribution 4.0 International License', label: 'Creative Commons Attribution 4.0 International License'},
+      { value: 'with permission', label: 'with permission'},
+      { value: 'Open Government Licence v3.0', label: 'Open Government Licence v3.0'}
     ];
   
   const [errorRows, setErrorRows] = useState([]);
