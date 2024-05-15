@@ -58,10 +58,12 @@ const Advice = () => {
           
         </div>
         <Dashboard dashboardId={15} />
+
+        <Dashboard dashboardId={14} />
         
         <Dashboard dashboardId={2} />
         
-        <Dashboard dashboardId={14} />
+        
 
         </div>
       );
