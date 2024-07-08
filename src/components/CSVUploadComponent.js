@@ -28,8 +28,9 @@ const CSVUploadComponent = () => {
     originalURL: '',
     publishedDate: '',
     owner: '',
-    description: ''
-  });
+    description: '',
+    geographic_level: '',
+      });
     // Options for the License select field
     const licenseOptions = [
       { value: 'CC BY', label: 'CC BY' },
@@ -38,6 +39,25 @@ const CSVUploadComponent = () => {
       { value: 'Creative Commons Attribution 4.0 International License', label: 'Creative Commons Attribution 4.0 International License'},
       { value: 'with permission', label: 'with permission'},
       { value: 'Open Government Licence v3.0', label: 'Open Government Licence v3.0'}
+    ];
+
+    const geographicLevelOptions = [
+
+      { value: 'single LA', label: 'single LA'},
+      { value: 'multiple LA', label: 'multiple LA'},
+      { value: 'region', label: 'region'},
+      { value: 'England only partial', label: 'England only partial'},
+      { value: 'Wales only partial', label: 'Wales only partial'},
+      { value: 'Scotland only partial', label: 'Scotland only partial'},
+      { value: 'NI only partial', label: 'NI only partial'},
+      { value: 'England only full', label: 'England only full'},
+      { value: 'Wales only full', label: 'Wales only full'},
+      { value: 'Scotland only full', label: 'Scotland only full'},
+      { value: 'NI only full', label: 'NI only full'},
+      { value: 'England & Wales', label: 'England & Wales'},
+      { value: 'GB', label: 'GB'},
+      { value: 'UK', label: 'UK'},
+
     ];
   
   const [errorRows, setErrorRows] = useState([]);
@@ -94,9 +114,15 @@ const CSVUploadComponent = () => {
   };
 
    // Handler for changes in the select field
-   const handleSelectChange = (selectedOption) => {
+   const handleLicenseChange = (selectedOption) => {
     setDatasetFields({...datasetFields, license: selectedOption.value});
+    
   };
+
+    // Handler for changes in the geographic level select field
+    const handleGeographicLevelChange = (selectedOption) => {
+      setDatasetFields({ ...datasetFields, geographic_level: selectedOption.value });
+    };
 
   const handleFileDrop = (file) => {
     if (file.type !== "text/csv" && !file.name.endsWith('.csv')) {
@@ -145,9 +171,20 @@ const CSVUploadComponent = () => {
       },
       header: true,
       dynamicTyping: true,
-      skipEmptyLines: true
+      skipEmptyLines: true,
+      transform: (value, header) => {
+        if (typeof value === 'string' && value.includes(',')) {
+          // Remove commas from numeric values and convert to a number
+          const cleanedValue = parseFloat(value.replace(/,/g, ''));
+          if (!isNaN(cleanedValue)) {
+            return cleanedValue;
+          }
+        }
+        return value;
+      }
     });
   };
+  
 
   
 
@@ -196,7 +233,9 @@ const CSVUploadComponent = () => {
         original_url: datasetFields.originalURL,
         published_date: datasetFields.publishedDate,
         owner: datasetFields.owner,
-        dataset_description: datasetFields.description
+        dataset_description: datasetFields.description,
+        geographic_level: datasetFields.geographic_level
+
       })
       .select();
   
@@ -374,8 +413,39 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
         className="p-3 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
     />
     <Select
+        value={geographicLevelOptions.find(option => option.value === datasetFields.geographic_level)}
+        placeholder="Geographic level" 
+        onChange={handleGeographicLevelChange}
+        options={geographicLevelOptions}
+        className="basic-single"
+        classNamePrefix="select"
+        styles={{
+            control: (provided) => ({
+                ...provided,
+                minHeight: '44px',
+                boxShadow: 'none',
+                borderColor: '#d1d5db',
+                '&:hover': {
+                    borderColor: '#bbc1e1'
+                },
+                '&:focus': {
+                    borderColor: '#2563eb'
+                }
+            }),
+            option: (provided, state) => ({
+                ...provided,
+                color: state.isSelected ? 'white' : 'gray',
+                backgroundColor: state.isSelected ? '#2563eb' : 'white',
+                '&:hover': {
+                    backgroundColor: '#ebf4ff'
+                }
+            }),
+        }}
+    />
+    <Select
         value={licenseOptions.find(option => option.value === datasetFields.license)}
-        onChange={handleSelectChange}
+        placeholder="License" 
+        onChange={handleLicenseChange}
         options={licenseOptions}
         className="basic-single"
         classNamePrefix="select"
@@ -425,7 +495,7 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
     />
     <input 
         type="text" 
-        placeholder="Dataset Description" 
+        placeholder="Dataset Description - please include as much information about who or what the dataset relates to or excludes, i.e. females only" 
         value={datasetFields.description} 
         onChange={(e) => setDatasetFields({...datasetFields, description: e.target.value})} 
         className="p-3 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -449,7 +519,7 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
       {showFields && (
         <div className='flex flex-col space-y-4'>
           <input type="text" placeholder="Place" value={additionalFields.place} onChange={(e) => handleFieldChange('place', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
-          <input type="text" placeholder="Date" value={additionalFields.date} onChange={(e) => handleFieldChange('date', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
+          <input type="date" placeholder="Date" value={additionalFields.date} onChange={(e) => handleFieldChange('date', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
           <input type="text" placeholder="Period" value={additionalFields.period} onChange={(e) => handleFieldChange('period', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
         </div>
       )}
