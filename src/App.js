@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import Navigation from './components/Navigation';
 import Health from './Health';
+import Youth from './Youth';
 import Contribute from './Contribute';
 import ErrorBoundary from './ErrorBoundary'; // Ensure this is correctly imported
 import Context from './Context'
@@ -39,6 +40,7 @@ function App() {
             <Route path="/context" element={<Context />} />
             <Route path="/charity" element={<Charity />} />
             <Route path="/explore" element={<Explore />} />
+            <Route path="/youth" element={<Youth />} />
             
           </Routes>
         </ErrorBoundary>

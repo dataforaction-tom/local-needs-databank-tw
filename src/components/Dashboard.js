@@ -9,6 +9,7 @@ import localForage from 'localforage';
 
 const ObservationsTable = React.lazy(() =>import('./ObservationsTable'));
 const LocalAuthorityMap = React.lazy(() =>import('./Map'));
+const LocalAuthorityMap23 = React.lazy(() =>import('./Map23'));
 
 localForage.config({
     name: 'localneedsdatabank',
@@ -193,7 +194,9 @@ function Dashboard({ dashboardId, defaultChartType }) {
                   
               </>
           )}
-          <LocalAuthorityMap
+          
+
+<LocalAuthorityMap23
                         selectedDataset={selectedDataset}
                         filteredObservations={filteredObservations}
                         title={selectedDataset ? selectedDataset.label : ''}
@@ -203,6 +206,8 @@ function Dashboard({ dashboardId, defaultChartType }) {
                           dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                           owner={selectedDataset ? selectedDataset.owner : ''}
                     />
+
+
             {
           hasMultipleUniqueNames(filteredObservations) && (
             <MultiObservationsChart
