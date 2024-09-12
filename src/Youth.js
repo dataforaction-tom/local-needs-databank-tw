@@ -28,11 +28,13 @@ const Youth = () => {
         },
       ];
 
+      const backgroundColor = '#EE4023';
+
       return (
         <div>
         <div className="">
         <div className="text-sm font-bold text-gray-800 mt-2 mb-3 flex items-end flex justify-end mr-5 mt-5">
-                <MdOutlineSportsGymnastics className="text-[#662583] mr-2" size="2em" />
+                <MdOutlineSportsGymnastics className="text-[#EE4023] mr-2" size="2em" />
                 Youth Dashboard
             </div>
           
@@ -43,6 +45,7 @@ const Youth = () => {
                   title={card.title}
                   description={card.description}
                   value={card.value}
+                  backgroundColor={backgroundColor}
                 />
               </div>
             ))}
@@ -52,6 +55,11 @@ const Youth = () => {
       
        
         <Dashboard dashboardId={18} 
+        defaultChartType='line' 
+        startColor="orange"  // Custom starting color
+        endColor="#662583"    />
+
+<Dashboard dashboardId={19} 
         defaultChartType='line' 
         startColor="orange"  // Custom starting color
         endColor="#662583"    />
