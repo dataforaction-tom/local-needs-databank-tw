@@ -51,7 +51,10 @@ const Youth = () => {
         </div>
       
        
-        <Dashboard dashboardId={18} defaultChartType='line'  />
+        <Dashboard dashboardId={18} 
+        defaultChartType='line' 
+        startColor="orange"  // Custom starting color
+        endColor="#662583"    />
         
         
         

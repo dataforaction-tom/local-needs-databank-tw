@@ -18,7 +18,7 @@ function getColor(value, classes, colorScale) {
 function Legend({ colorScale, breaks }) {
     const map = useMap();
 
-    React.useEffect(() => {
+    useEffect(() => {
         const legend = L.control({ position: 'bottomright' });
 
         legend.onAdd = function () {
@@ -29,6 +29,7 @@ function Legend({ colorScale, breaks }) {
             div.style.borderRadius = '5px';
             div.style.fontSize = '14px';
 
+            // Generate legend items based on the breaks
             for (let i = 0; i < breaks.length - 1; i++) {
                 const from = breaks[i];
                 const to = breaks[i + 1];
@@ -50,23 +51,27 @@ function Legend({ colorScale, breaks }) {
     return null;
 }
 
-function LocalAuthorityMap23({ selectedDataset, filteredObservations, title }) {
+function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, startColor = 'pink', endColor = '#662583' }) {
     const [geoJsonData, setGeoJsonData] = useState([]);
     const [filteredGeoJsonFeatures, setFilteredGeoJsonFeatures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [map, setMap] = useState(null);
 
-    const getColorScaleAndBreaks = (data) => {
-        const values = data.flatMap(feature => feature.properties.observations.map(obs => obs.value));
+    // Function to recalculate color scale and breaks based on filtered observations
+    const getColorScaleAndBreaks = (observations) => {
+        if (observations.length === 0) return { colorScale: chroma.scale([startColor, endColor]), breaks: [] };
+
+        const values = observations.map(obs => obs.value);
         const min = Math.min(...values);
         const max = Math.max(...values);
 
+        // Ensure breaks are recalculated based on the min/max of filtered observations
         const roundedMin = Math.floor(min / 10) * 10;
         const roundedMax = Math.ceil(max / 10) * 10;
-        const range = roundedMax - roundedMin;
-        const step = range / 10;
+        const step = (roundedMax - roundedMin) / 10;
         const breaks = Array.from({ length: 11 }, (_, i) => roundedMin + i * step);
-        const colorScale = chroma.scale(['pink', '#662583']).domain(breaks);
+
+        const colorScale = chroma.scale([startColor, endColor]).domain(breaks);
 
         return { colorScale, breaks };
     };
@@ -80,10 +85,7 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title }) {
 
                 try {
                     const response = await supabase.rpc('build_map', { p_dataset_id: parseInt(datasetId, 10) });
-                    console.log('RPC response:', response);
-
                     if (!response.error && response.data) {
-                        console.log('Data returned from RPC:', response.data);
                         setGeoJsonData(response.data);
                         setFilteredGeoJsonFeatures(response.data);
                     } else {
@@ -127,36 +129,48 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title }) {
         }
     }, [filteredGeoJsonFeatures, map]);
 
-    const onEachFeature = (feature, layer, colorScale) => {
-        let maxValue = feature.properties.observations.reduce((max, obs) => Math.max(max, obs.value), 0);
+    function onEachFeature(feature, layer, filteredObservations, colorScale) {
+        // Get the place code from the feature
+        const placeCode = feature.properties.name;
+    
+        // Find matching observations in filteredObservations
+        const matchingObservations = filteredObservations.filter(obs => obs.place_code === placeCode);
+    
+        // Get the maximum observation value for the filtered observations
+        const maxValue = matchingObservations.reduce((max, obs) => Math.max(max, obs.value), 0);
+    
+        // Set the style for the feature based on the maximum value
         layer.setStyle({
             fillColor: colorScale(maxValue).hex(),
             fillOpacity: 0.8,
             color: 'white',
             weight: 1
         });
-
+    
+        // Create popup content, only displaying observations from filteredObservations
         let popupContent = `<div><strong>Name:</strong> ${feature.properties.place_name}</div>`;
-        if (feature.properties.observations.length > 0) {
+        if (matchingObservations.length > 0) {
             popupContent += `<div><strong>Observations:</strong><ul>`;
-            feature.properties.observations.forEach(obs => {
+            matchingObservations.forEach(obs => {
                 popupContent += `<li>${obs.name} (${obs.year}): ${obs.value}</li>`;
             });
             popupContent += `</ul></div>`;
         } else {
             popupContent += `<div>No observations available.</div>`;
         }
+    
         layer.bindPopup(popupContent);
-    };
+    }
+    
 
     const renderGeoJsonLayer = () => {
-        const { colorScale, breaks } = getColorScaleAndBreaks(filteredGeoJsonFeatures);
-
+        const { colorScale, breaks } = getColorScaleAndBreaks(filteredObservations); // Dynamically calculate color scale and breaks
+    
         return (
             <>
                 <GeoJSON
                     data={filteredGeoJsonFeatures}
-                    onEachFeature={(feature, layer) => onEachFeature(feature, layer, colorScale)}
+                    onEachFeature={(feature, layer) => onEachFeature(feature, layer, filteredObservations, colorScale)} // Pass filteredObservations here
                     style={(feature) => ({
                         color: 'white',
                         fillColor: colorScale(feature.properties.observations.reduce((max, obs) => Math.max(max, obs.value), 0)).hex(),
@@ -164,10 +178,11 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title }) {
                         fillOpacity: 0.9
                     })}
                 />
-                <Legend colorScale={colorScale} breaks={breaks} />
+                <Legend colorScale={colorScale} breaks={breaks} /> {/* Pass dynamically calculated values to legend */}
             </>
         );
     };
+    
 
     if (loading) {
         return <div></div>;
