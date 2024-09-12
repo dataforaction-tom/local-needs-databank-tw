@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import supabase from '../supabaseClient';
 import L from 'leaflet';
 import chroma from 'chroma-js';
+import * as d3 from 'd3'; // Import D3.js
 
 function getColor(value, classes, colorScale) {
     for (let i = 0; i < classes.length - 1; i++) {
@@ -65,11 +66,8 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         const min = Math.min(...values);
         const max = Math.max(...values);
 
-        // Ensure breaks are recalculated based on the min/max of filtered observations
-        const roundedMin = Math.floor(min / 10) * 10;
-        const roundedMax = Math.ceil(max / 10) * 10;
-        const step = (roundedMax - roundedMin) / 10;
-        const breaks = Array.from({ length: 11 }, (_, i) => roundedMin + i * step);
+        // Use D3.js to generate exactly 10 human-readable breaks
+        const breaks = d3.ticks(min, max, 10);
 
         const colorScale = chroma.scale([startColor, endColor]).domain(breaks);
 
@@ -120,7 +118,7 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
     useEffect(() => {
         if (map && filteredGeoJsonFeatures.length > 0) {
             const geoJsonLayer = L.geoJSON(filteredGeoJsonFeatures, {
-                onEachFeature: (feature, layer) => onEachFeature(feature, layer)
+                onEachFeature: (feature, layer) => onEachFeature(feature, layer, filteredObservations, getColorScaleAndBreaks(filteredObservations).colorScale)
             }).addTo(map);
             const bounds = geoJsonLayer.getBounds();
             map.fitBounds(bounds, { padding: [50, 50] });
@@ -130,24 +128,17 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
     }, [filteredGeoJsonFeatures, map]);
 
     function onEachFeature(feature, layer, filteredObservations, colorScale) {
-        // Get the place code from the feature
         const placeCode = feature.properties.name;
-    
-        // Find matching observations in filteredObservations
         const matchingObservations = filteredObservations.filter(obs => obs.place_code === placeCode);
-    
-        // Get the maximum observation value for the filtered observations
         const maxValue = matchingObservations.reduce((max, obs) => Math.max(max, obs.value), 0);
-    
-        // Set the style for the feature based on the maximum value
+
         layer.setStyle({
             fillColor: colorScale(maxValue).hex(),
             fillOpacity: 0.8,
             color: 'white',
             weight: 1
         });
-    
-        // Create popup content, only displaying observations from filteredObservations
+
         let popupContent = `<div><strong>Name:</strong> ${feature.properties.place_name}</div>`;
         if (matchingObservations.length > 0) {
             popupContent += `<div><strong>Observations:</strong><ul>`;
@@ -158,19 +149,18 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         } else {
             popupContent += `<div>No observations available.</div>`;
         }
-    
+
         layer.bindPopup(popupContent);
     }
-    
 
     const renderGeoJsonLayer = () => {
-        const { colorScale, breaks } = getColorScaleAndBreaks(filteredObservations); // Dynamically calculate color scale and breaks
-    
+        const { colorScale, breaks } = getColorScaleAndBreaks(filteredObservations);
+
         return (
             <>
                 <GeoJSON
                     data={filteredGeoJsonFeatures}
-                    onEachFeature={(feature, layer) => onEachFeature(feature, layer, filteredObservations, colorScale)} // Pass filteredObservations here
+                    onEachFeature={(feature, layer) => onEachFeature(feature, layer, filteredObservations, colorScale)}
                     style={(feature) => ({
                         color: 'white',
                         fillColor: colorScale(feature.properties.observations.reduce((max, obs) => Math.max(max, obs.value), 0)).hex(),
@@ -178,14 +168,13 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
                         fillOpacity: 0.9
                     })}
                 />
-                <Legend colorScale={colorScale} breaks={breaks} /> {/* Pass dynamically calculated values to legend */}
+                <Legend colorScale={colorScale} breaks={breaks} />
             </>
         );
     };
-    
 
     if (loading) {
-        return <div></div>;
+        return <div>Loading...</div>;
     }
 
     if (geoJsonData.length > 0 && filteredGeoJsonFeatures.length > 0) {
@@ -208,6 +197,8 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
             </div>
         );
     }
+
+    return <div>No data available</div>;
 }
 
 export default LocalAuthorityMap23;
