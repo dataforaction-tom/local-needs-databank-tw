@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import ObservationsTable from './ObservationsTable';
 import ObservationsChart from './ObservationsChart';
 import LocalAuthorityMap from './Map'; // Ensure correct path
+
 import TimeObservationsChart from './TimeObservationsChart';
 import Select from 'react-select';
 import supabase from '../supabaseClient'; // Ensure correct path
+import LocalAuthorityMap23 from './Map23';
 
 function AllDashboard({ placeDataset, timeDataset, singleDataset }) {
     const [observations, setObservations] = useState([]);
@@ -71,7 +73,7 @@ function AllDashboard({ placeDataset, timeDataset, singleDataset }) {
                     {placeDataset && (
                         <>
                             <ObservationsChart observations={filteredObservations} title={placeDataset.label} />
-                            <LocalAuthorityMap selectedDataset={placeDataset} filteredObservations={filteredObservations} title={placeDataset.label} />
+                            <LocalAuthorityMap23 selectedDataset={placeDataset} filteredObservations={filteredObservations} title={placeDataset.label} />
                         </>
                     )}
 

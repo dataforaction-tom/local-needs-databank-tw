@@ -77,34 +77,47 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
     useEffect(() => {
         const fetchGeoJsonData = async () => {
             const datasetId = selectedDataset && selectedDataset.value;
+            const limit = 100;  // Number of results per page
+            let offset = 0;  // Initial offset
+            let hasMoreData = true;
+            let allData = [];
+    
             if (datasetId) {
                 setLoading(true);
                 console.log(`Fetching GeoJSON data for dataset ID: ${datasetId}`);
-
-                try {
-                    const response = await supabase.rpc('build_map', { p_dataset_id: parseInt(datasetId, 10) });
-                    if (!response.error && response.data) {
-                        setGeoJsonData(response.data);
-                        setFilteredGeoJsonFeatures(response.data);
-                    } else {
-                        console.error('RPC error or no data returned:', response.error);
-                        setGeoJsonData([]);
-                        setFilteredGeoJsonFeatures([]);
+    
+                while (hasMoreData) {
+                    try {
+                        const response = await supabase.rpc('build_map', {
+                            p_dataset_id: parseInt(datasetId, 10),
+                            p_limit: limit,
+                            p_offset: offset
+                        });
+    
+                        if (!response.error && response.data.length > 0) {
+                            // Add the data to the full dataset
+                            allData = [...allData, ...response.data];
+                            offset += limit;  // Move to the next batch
+                        } else {
+                            hasMoreData = false;  // Stop fetching if no data is returned
+                        }
+                    } catch (error) {
+                        console.error('Error during RPC call:', error);
+                        hasMoreData = false;  // Stop fetching if there is an error
                     }
-                } catch (error) {
-                    console.error('Error during RPC call:', error);
-                    setGeoJsonData([]);
-                    setFilteredGeoJsonFeatures([]);
                 }
-
+    
+                setGeoJsonData(allData);
+                setFilteredGeoJsonFeatures(allData);
                 setLoading(false);
             } else {
                 console.log('No dataset selected');
             }
         };
-
+    
         fetchGeoJsonData();
     }, [selectedDataset]);
+    
 
     useEffect(() => {
         if (geoJsonData.length > 0) {
