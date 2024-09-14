@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet'; // Add useMap
+import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import supabase from '../supabaseClient';
 import L from 'leaflet';
 import chroma from 'chroma-js';
 import * as d3 from 'd3';
 
-
+// Helper function to calculate color based on the value
 function getColor(value, classes, colorScale) {
     for (let i = 0; i < classes.length - 1; i++) {
         if (value >= classes[i] && value < classes[i + 1]) {
@@ -17,6 +17,7 @@ function getColor(value, classes, colorScale) {
     return colorScale(classes[classes.length - 1]).hex();
 }
 
+// Legend component for color scale
 function Legend({ colorScale, breaks }) {
     const map = useMap();
 
@@ -31,6 +32,7 @@ function Legend({ colorScale, breaks }) {
             div.style.borderRadius = '5px';
             div.style.fontSize = '14px';
 
+            // Generate legend items based on the breaks
             for (let i = 0; i < breaks.length - 1; i++) {
                 const from = breaks[i];
                 const to = breaks[i + 1];
@@ -52,12 +54,14 @@ function Legend({ colorScale, breaks }) {
     return null;
 }
 
+// Main map component
 function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, startColor = 'pink', endColor = '#662583' }) {
     const [geoJsonData, setGeoJsonData] = useState([]);
     const [filteredGeoJsonFeatures, setFilteredGeoJsonFeatures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [map, setMap] = useState(null);
 
+    // Function to recalculate color scale and breaks based on filtered observations
     const getColorScaleAndBreaks = (observations) => {
         if (observations.length === 0) return { colorScale: chroma.scale([startColor, endColor]), breaks: [] };
 
@@ -65,22 +69,27 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         const min = Math.min(...values);
         const max = Math.max(...values);
 
+        // Use D3.js to generate exactly 10 human-readable breaks
         const breaks = d3.ticks(min, max, 10);
+
         const colorScale = chroma.scale([startColor, endColor]).domain(breaks);
 
         return { colorScale, breaks };
     };
 
+    // Fetch GeoJSON data from Supabase using RPC
     useEffect(() => {
         const fetchGeoJsonData = async () => {
             const datasetId = selectedDataset && selectedDataset.value;
-            const limit = 100;
-            let offset = 0;
+            const limit = 100;  // Number of results per page
+            let offset = 0;  // Initial offset
             let hasMoreData = true;
             let allData = [];
-
+    
             if (datasetId) {
                 setLoading(true);
+                console.log(`Fetching GeoJSON data for dataset ID: ${datasetId}`);
+    
                 while (hasMoreData) {
                     try {
                         const response = await supabase.rpc('build_map', {
@@ -88,28 +97,32 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
                             p_limit: limit,
                             p_offset: offset
                         });
-
+    
                         if (!response.error && response.data.length > 0) {
                             allData = [...allData, ...response.data];
-                            offset += limit;
+                            offset += limit;  // Move to the next batch
                         } else {
-                            hasMoreData = false;
+                            hasMoreData = false;  // Stop fetching if no data is returned
                         }
                     } catch (error) {
                         console.error('Error during RPC call:', error);
-                        hasMoreData = false;
+                        hasMoreData = false;  // Stop fetching if there is an error
                     }
                 }
-
+    
                 setGeoJsonData(allData);
                 setFilteredGeoJsonFeatures(allData);
                 setLoading(false);
+            } else {
+                console.log('No dataset selected');
             }
         };
-
+    
         fetchGeoJsonData();
     }, [selectedDataset]);
+    
 
+    // Filter geoJsonData based on filteredObservations
     useEffect(() => {
         if (geoJsonData.length > 0) {
             const features = geoJsonData.filter(feature =>
@@ -119,6 +132,7 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         }
     }, [filteredObservations, geoJsonData]);
 
+    // Add GeoJSON layers when data is ready
     useEffect(() => {
         if (map && filteredGeoJsonFeatures.length > 0) {
             const geoJsonLayer = L.geoJSON(filteredGeoJsonFeatures, {
@@ -131,9 +145,11 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         }
     }, [filteredGeoJsonFeatures, map]);
 
+    // Function to bind pop-ups and styles to each feature
     function onEachFeature(feature, layer, filteredObservations, colorScale) {
-        const placeCode = feature.properties.name;
+        const placeCode = feature.properties.name;  // Match place_code to the correct property in GeoJSON
         const matchingObservations = filteredObservations.filter(obs => obs.place_code === placeCode);
+
         const maxValue = matchingObservations.reduce((max, obs) => Math.max(max, obs.value), 0);
 
         layer.setStyle({
@@ -143,7 +159,8 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
             weight: 1
         });
 
-        let popupContent = `<div><strong>Name:</strong> ${feature.properties.place_name}</div>`;
+        // Build popup content dynamically based on matched observations
+        let popupContent = `<div><strong>Name:</strong> ${feature.properties.place_name || placeCode}</div>`;
         if (matchingObservations.length > 0) {
             popupContent += `<div><strong>Observations:</strong><ul>`;
             matchingObservations.forEach(obs => {
@@ -157,6 +174,7 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         layer.bindPopup(popupContent);
     }
 
+    // Function to render GeoJSON layer
     const renderGeoJsonLayer = () => {
         const { colorScale, breaks } = getColorScaleAndBreaks(filteredObservations);
 
