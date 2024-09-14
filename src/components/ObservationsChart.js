@@ -22,7 +22,7 @@ const useResponsiveChart = (chartRef) => {
   }, [chartRef]);
 };
 
-function ObservationsChart({ observations, title, globalbackgroundColor}) {
+function ObservationsChart({ observations, title }) {
   const chartRef = useRef(null);
   const [chartInstance, setChartInstance] = useState(null); // State to hold the chart instance
   useResponsiveChart(chartRef); // Apply the responsive hook
@@ -119,14 +119,13 @@ useEffect(() => {
         </div>
         <div className='flex flex-col md:flex-row justify-end mt-4 space-y-2 md:space-y-0 md:space-x-2'>
         <button 
-              className=' text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
-              style={{ backgroundColor: globalbackgroundColor }}
+              className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
+              
               onClick={toggleChartAxisNew}>
             Toggle Chart Orientation
           </button>
           <button 
-              className='text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
-              style={{ backgroundColor: globalbackgroundColor }}
+              className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
               onClick={downloadImage}>
             Download Chart
           </button>
