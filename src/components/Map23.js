@@ -4,9 +4,8 @@ import 'leaflet/dist/leaflet.css';
 import supabase from '../supabaseClient';
 import L from 'leaflet';
 import chroma from 'chroma-js';
-import * as d3 from 'd3';
+import * as d3 from 'd3'; // Import D3.js
 
-// Helper function to calculate color based on the value
 function getColor(value, classes, colorScale) {
     for (let i = 0; i < classes.length - 1; i++) {
         if (value >= classes[i] && value < classes[i + 1]) {
@@ -17,7 +16,6 @@ function getColor(value, classes, colorScale) {
     return colorScale(classes[classes.length - 1]).hex();
 }
 
-// Legend component for color scale
 function Legend({ colorScale, breaks }) {
     const map = useMap();
 
@@ -54,7 +52,6 @@ function Legend({ colorScale, breaks }) {
     return null;
 }
 
-// Main map component
 function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, startColor = 'pink', endColor = '#662583' }) {
     const [geoJsonData, setGeoJsonData] = useState([]);
     const [filteredGeoJsonFeatures, setFilteredGeoJsonFeatures] = useState([]);
@@ -77,7 +74,6 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         return { colorScale, breaks };
     };
 
-    // Fetch GeoJSON data from Supabase using RPC
     useEffect(() => {
         const fetchGeoJsonData = async () => {
             const datasetId = selectedDataset && selectedDataset.value;
@@ -99,6 +95,7 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
                         });
     
                         if (!response.error && response.data.length > 0) {
+                            // Add the data to the full dataset
                             allData = [...allData, ...response.data];
                             offset += limit;  // Move to the next batch
                         } else {
@@ -122,7 +119,6 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
     }, [selectedDataset]);
     
 
-    // Filter geoJsonData based on filteredObservations
     useEffect(() => {
         if (geoJsonData.length > 0) {
             const features = geoJsonData.filter(feature =>
@@ -132,7 +128,6 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         }
     }, [filteredObservations, geoJsonData]);
 
-    // Add GeoJSON layers when data is ready
     useEffect(() => {
         if (map && filteredGeoJsonFeatures.length > 0) {
             const geoJsonLayer = L.geoJSON(filteredGeoJsonFeatures, {
@@ -145,11 +140,9 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         }
     }, [filteredGeoJsonFeatures, map]);
 
-    // Function to bind pop-ups and styles to each feature
     function onEachFeature(feature, layer, filteredObservations, colorScale) {
-        const placeCode = feature.properties.name;  // Match place_code to the correct property in GeoJSON
+        const placeCode = feature.properties.name;
         const matchingObservations = filteredObservations.filter(obs => obs.place_code === placeCode);
-
         const maxValue = matchingObservations.reduce((max, obs) => Math.max(max, obs.value), 0);
 
         layer.setStyle({
@@ -159,8 +152,7 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
             weight: 1
         });
 
-        // Build popup content dynamically based on matched observations
-        let popupContent = `<div><strong>Name:</strong> ${feature.properties.place_name || placeCode}</div>`;
+        let popupContent = `<div><strong>Name:</strong> ${feature.properties.place_name}</div>`;
         if (matchingObservations.length > 0) {
             popupContent += `<div><strong>Observations:</strong><ul>`;
             matchingObservations.forEach(obs => {
@@ -174,7 +166,6 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         layer.bindPopup(popupContent);
     }
 
-    // Function to render GeoJSON layer
     const renderGeoJsonLayer = () => {
         const { colorScale, breaks } = getColorScaleAndBreaks(filteredObservations);
 
@@ -195,23 +186,32 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         );
     };
 
-    return (
-        <div>
-            <h2 className='text-2xl font-bold text-center mt-10'>{title || 'Observation Charts'}</h2>
-            <MapContainer
-                center={[54.5, -2]}
-                zoom={7}
-                style={{ height: '600px', width: '100%' }}
-                whenCreated={setMap}
-            >
-                <TileLayer
-                    url="https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoidG9tY3ciLCJhIjoiY2x2OGxyZGw3MGl4ajJqanp0aTd6NmhtciJ9.RAPKYGC_Y5TVueF5TNoPeg"
-                    attribution='Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                {filteredGeoJsonFeatures.length > 0 && renderGeoJsonLayer()}
-            </MapContainer>
-        </div>
-    );
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (geoJsonData.length > 0 && filteredGeoJsonFeatures.length > 0) {
+        return (
+            <div>
+                <h2 className='text-2xl font-bold text-center mt-10'>{title || 'Observation Charts'}</h2>
+                <MapContainer
+                    center={[54.5, -2]}
+                    zoom={7}
+                    style={{ height: '600px', width: '100%' }}
+                    whenCreated={setMap}
+                    key={filteredGeoJsonFeatures.length}
+                >
+                    <TileLayer
+                        url="https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoidG9tY3ciLCJhIjoiY2x2OGxyZGw3MGl4ajJqanp0aTd6NmhtciJ9.RAPKYGC_Y5TVueF5TNoPeg"
+                        attribution='Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    />
+                    {renderGeoJsonLayer()}
+                </MapContainer>
+            </div>
+        );
+    }
+
+    return <div>No data available</div>;
 }
 
 export default LocalAuthorityMap23;
