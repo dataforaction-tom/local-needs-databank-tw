@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Chart from 'chart.js/auto';
 
-function SingleObservationChart({ data, name, title, startColorIndex, colorPalette, defaultChartType = 'bar' }) {
+function SingleObservationChart({ data, name, title, startColorIndex, colorPalette, defaultChartType = 'bar', globalbackgroundColor }) {
   const chartRef = useRef(null);
 
   const [chartType, setChartType] = useState(defaultChartType);

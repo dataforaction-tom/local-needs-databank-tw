@@ -27,7 +27,7 @@ const Health = () => {
           
         },
       ];
-
+      const backgroundColor = '#662583';
       return (
         <div>
         <div className="">
@@ -43,17 +43,18 @@ const Health = () => {
                   title={card.title}
                   description={card.description}
                   value={card.value}
+                  backgroundColor={backgroundColor}
                 />
               </div>
             ))}
           </div>
           
         </div>
-        <TimeSeriesDashboard dashboardId={4} />
-        <SingleChartDashboard dashboardId={7} />
-        <Dashboard dashboardId={5} defaultChartType='line'  />
-        <TimeSeriesDashboard dashboardId={8} />
-        <TimeSeriesDashboard dashboardId={17} />
+        <TimeSeriesDashboard dashboardId={4} globalbackgroundColor={backgroundColor} />
+        <SingleChartDashboard dashboardId={7}  globalbackgroundColor={backgroundColor}/>
+        <Dashboard dashboardId={5} defaultChartType='line'  globalbackgroundColor={backgroundColor} />
+        <TimeSeriesDashboard dashboardId={8} globalbackgroundColor={backgroundColor} />
+        <TimeSeriesDashboard dashboardId={17} globalbackgroundColor={backgroundColor} />
         
         </div>
       );

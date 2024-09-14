@@ -4,7 +4,7 @@ import ObservationsChart from './ObservationsChart';
 import supabase from '../supabaseClient';
 
 
-function SingleChartDashboard({ dashboardId }) {
+function SingleChartDashboard({ dashboardId, globalbackgroundColor }) {
     const [datasets, setDatasets] = useState([]);
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
@@ -150,6 +150,7 @@ const fetchObservations = async (datasetId) => {
                           published_date={selectedDataset ? selectedDataset.published_date : ''}
                           dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                           owner={selectedDataset ? selectedDataset.owner : ''}
+                          globalbackgroundColor={globalbackgroundColor}
                       />
                   )}
                   
@@ -161,6 +162,7 @@ const fetchObservations = async (datasetId) => {
                           published_date={selectedDataset ? selectedDataset.published_date : ''}
                           dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                           owner={selectedDataset ? selectedDataset.owner : ''}
+                          globalbackgroundColor={globalbackgroundColor}
                   />
                   
               </>
