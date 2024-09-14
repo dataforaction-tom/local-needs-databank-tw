@@ -7,7 +7,7 @@ const ObservationsTable = React.lazy(() => import('./ObservationsTable'));
 const LocalAuthorityMap = React.lazy(() => import('./Map'));
 const LocalAuthorityMap23 = React.lazy(() => import('./Map23'));
 
-function Dashboard({ dashboardId, defaultChartType, startColor, endColor }) {
+function Dashboard({ dashboardId, defaultChartType, startColor, endColor, globalbackgroundColor }) {
     const [datasets, setDatasets] = useState([]);
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
@@ -132,6 +132,7 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor }) {
                                 published_date={selectedDataset ? selectedDataset.published_date : ''}
                                 dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                                 owner={selectedDataset ? selectedDataset.owner : ''}
+                                globalbackgroundColor={globalbackgroundColor}
                             />
                         )}
 
@@ -143,6 +144,7 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor }) {
                             published_date={selectedDataset ? selectedDataset.published_date : ''}
                             dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                             owner={selectedDataset ? selectedDataset.owner : ''}
+                            globalbackgroundColor={globalbackgroundColor}
                         />
 
                         <LocalAuthorityMap23
@@ -156,6 +158,7 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor }) {
                             owner={selectedDataset ? selectedDataset.owner : ''}
                             startColor={startColor}
                             endColor={endColor}
+                            globalbackgroundColor={globalbackgroundColor}
                         />
 
                         {hasMultipleUniqueNames(filteredObservations) && (
@@ -168,6 +171,7 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor }) {
                                 dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                                 owner={selectedDataset ? selectedDataset.owner : ''}
                                 defaultChartType={defaultChartType}
+                                globalbackgroundColor={globalbackgroundColor}
                             />
                         )}
                     </>

@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Card from './Card';
 import LocalAuthoritiesMap from './components/Map';
+import LocalAuthorityMap23 from './components/Map23';
 
 import TimeSeriesDashboard from './components/TimeSeriesDashboard';
 
@@ -55,20 +56,23 @@ const Charity = () => {
           </div>
           
         </div>
-        <Dashboard dashboardId={9} />
-        <LocalAuthoritiesMap dashboardId={4} />
-        <TimeSeriesDashboard dashboardId={10} />
+        <Dashboard dashboardId={9}
+        globalbackgroundColor={backgroundColor} endColor={backgroundColor}   /> 
+        
+        <TimeSeriesDashboard dashboardId={10}
+        globalbackgroundColor={backgroundColor}    /> 
         <div className='flex flex-col md:flex-row justify-center items-center gap-4'>
         <div className='w-full md:w-1/2 p-2'>
-        <TimeSeriesDashboard dashboardId={11} />
+        <TimeSeriesDashboard dashboardId={11}
+        globalbackgroundColor={backgroundColor}    /> 
         </div>
         <div className='w-full md:w-1/2 p-2'>
-        <TimeSeriesDashboard dashboardId={11} defaultChartType='pie' />
+        <TimeSeriesDashboard dashboardId={11} defaultChartType='pie' globalbackgroundColor={backgroundColor}    />
         </div>
         </div>
-        <CategoryChartDashboard dashboardId={12} />
-        <Dashboard dashboardId={13} />
-        <Dashboard dashboardId={16} />
+        <CategoryChartDashboard dashboardId={12} globalbackgroundColor={backgroundColor}    /> 
+        <Dashboard dashboardId={13} globalbackgroundColor={backgroundColor} endColor={backgroundColor}   /> 
+        <Dashboard dashboardId={16} globalbackgroundColor={backgroundColor} endColor={backgroundColor}   /> 
         
         </div>
       );

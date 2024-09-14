@@ -57,12 +57,14 @@ const Youth = () => {
         <Dashboard dashboardId={18} 
         defaultChartType='line' 
         startColor="orange"  // Custom starting color
-        endColor="#662583"    />
+        endColor="#662583"
+        globalbackgroundColor={backgroundColor}    />
 
 <Dashboard dashboardId={19} 
-        defaultChartType='line' 
+        defaultChartType='bar' 
         startColor="orange"  // Custom starting color
-        endColor="#662583"    />
+        endColor="#662583"
+        globalbackgroundColor={backgroundColor}      />
         
         
         

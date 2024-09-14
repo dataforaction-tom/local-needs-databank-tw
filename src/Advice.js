@@ -57,11 +57,11 @@ const Advice = () => {
           </div>
           
         </div>
-        <Dashboard dashboardId={15} />
+        <Dashboard dashboardId={15} globalbackgroundColor={backgroundColor} endColor={backgroundColor}/>
 
-        <Dashboard dashboardId={14} />
+        <Dashboard dashboardId={14} globalbackgroundColor={backgroundColor} endColor={backgroundColor} />
         
-        <Dashboard dashboardId={2} />
+        <Dashboard dashboardId={2} globalbackgroundColor={backgroundColor} endColor={backgroundColor}/>
         
         
 
