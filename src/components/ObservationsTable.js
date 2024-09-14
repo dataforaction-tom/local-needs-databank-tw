@@ -8,6 +8,15 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [allFilters, setAllFilters] = useState([]);
 
+  // Function to format the current date
+  const getFormattedDate = () => {
+    const date = new Date();
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`; // Format: DD-MM-YYYY
+  };
+
   const placeOptions = useMemo(() => {
     const places = new Set(observations.map(obs => obs.place));
     return Array.from(places).map(place => ({ value: place, label: place }));
@@ -232,7 +241,7 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
       <div className="mt-4 flex justify-end">
         <CSVLink
           data={csvData}
-          filename="filtered-observations.csv"
+          filename={`${title || 'filtered-observations'}_${getFormattedDate()}.csv`}
           className="text-white font-medium py-2 px-4 rounded-md hover:bg-opacity-80 transition-colors duration-300"
           style={{ backgroundColor: globalbackgroundColor }} // Use global background color for CSV button
           target="_blank"
