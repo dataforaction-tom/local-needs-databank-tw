@@ -9,21 +9,24 @@ import TimeSeriesDashboard from './components/TimeSeriesDashboard';
 const Youth = () => {
     const cardData = [
         {
-          title: 'Something about youth',
-          value: '£28.3m',
-          description: 'Total Spend on Adult Social Care in England 2022-23',
+          title: 'Of young people',
+          value: '84%',
+          description: 'Believe looking after the environment is important',
+          source: "*Children's People and Nature Survey 2023"
           
         },
         {
-          title: 'Grants to Voluntary Organisations',
-          value: '£200k',
-          description: 'Grants to Voluntary Organisations via LA for Health and Social Care',
+          title: 'Of all Children',
+          value: '16.9%',
+          description: 'living in food insecure households ',
+          source: '*Households below average income (HBAI) statistics'
           
         },
         {
-          title: 'Requests for Support',
-          value: '611k',
-          description: 'Number of requests for support received from new clients 18-64 2022/23',
+          title: 'Of adolescents',
+          value: '11%',
+          description: "reported low scores for life satisfaction which classified them as ‘suffering’ in 2022",
+          source: '*HBSC survey 2022'
           
         },
       ];
@@ -46,6 +49,7 @@ const Youth = () => {
                   description={card.description}
                   value={card.value}
                   backgroundColor={backgroundColor}
+                  source={card.source}
                 />
               </div>
             ))}
@@ -60,12 +64,32 @@ const Youth = () => {
         endColor="#662583"
         globalbackgroundColor={backgroundColor}    />
 
+<Dashboard dashboardId={20} 
+        defaultChartType='line' 
+        startColor="orange"  // Custom starting color
+        endColor="#662583"
+        globalbackgroundColor={backgroundColor}    />
+
+<Dashboard dashboardId={21} 
+        defaultChartType='line' 
+        startColor="orange"  // Custom starting color
+        endColor="#662583"
+        globalbackgroundColor={backgroundColor}    />
+
 <Dashboard dashboardId={19} 
-        defaultChartType='bar' 
+        defaultChartType='line' 
         startColor="orange"  // Custom starting color
         endColor="#662583"
         globalbackgroundColor={backgroundColor}      />
+
+<Dashboard dashboardId={22} 
+        defaultChartType='line' 
+        startColor="orange"  // Custom starting color
+        endColor="#662583"
+        globalbackgroundColor={backgroundColor}    />
         
+        <TimeSeriesDashboard dashboardId={23} />
+        <SingleChartDashboard dashboardId={24} />
         
         
         </div>
