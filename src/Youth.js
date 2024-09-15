@@ -2,10 +2,13 @@ import React from 'react';
 import { useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
+import DashboardnoMap from './components/Dashboard-no-map';
+
 import Card from './Card';
 import SingleChartDashboard from './components/SingleChartDashboard';
 import { MdOutlineSportsGymnastics } from "react-icons/md";
 import TimeSeriesDashboard from './components/TimeSeriesDashboard';
+import CategoryChartDashboard from './components/CategoryChartDashboard';
 
 const Youth = () => {
   const [datasetsMetadata, setDatasetsMetadata] = useState([]);
@@ -67,9 +70,12 @@ const Youth = () => {
           </div>
           
         </div>
+
+        <TimeSeriesDashboard dashboardId={23} passDatasetMetadata={handleDatasetMetadata} />
+        <SingleChartDashboard dashboardId={24} passDatasetMetadata={handleDatasetMetadata}/>
       
        
-        <Dashboard dashboardId={18} 
+        <DashboardnoMap dashboardId={18} 
         defaultChartType='line' 
         startColor="orange"  // Custom starting color
         endColor="#662583"
@@ -99,8 +105,7 @@ const Youth = () => {
         endColor="#662583"
         globalbackgroundColor={backgroundColor}  passDatasetMetadata={handleDatasetMetadata}  />
         
-        <TimeSeriesDashboard dashboardId={23} passDatasetMetadata={handleDatasetMetadata} />
-        <SingleChartDashboard dashboardId={24} passDatasetMetadata={handleDatasetMetadata}/>
+        
 
 
      
