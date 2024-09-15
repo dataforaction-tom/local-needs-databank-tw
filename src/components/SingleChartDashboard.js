@@ -4,7 +4,7 @@ import ObservationsChart from './ObservationsChart';
 import supabase from '../supabaseClient';
 
 
-function SingleChartDashboard({ dashboardId, globalbackgroundColor }) {
+function SingleChartDashboard({ dashboardId, globalbackgroundColor, passDatasetMetadata  }) {
     const [datasets, setDatasets] = useState([]);
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
@@ -13,6 +13,7 @@ function SingleChartDashboard({ dashboardId, globalbackgroundColor }) {
     const [selectedDataset, setSelectedDataset] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isTableVisible, setIsTableVisible] = useState(true);
+    const [metadataPassed, setMetadataPassed] = useState(false);
 
 
     useEffect(() => {
@@ -45,6 +46,11 @@ function SingleChartDashboard({ dashboardId, globalbackgroundColor }) {
 
             setDatasets(options);
 
+            if (!metadataPassed && passDatasetMetadata) {
+                passDatasetMetadata(options);
+                setMetadataPassed(true); // Ensure we only pass metadata once
+            }
+
             if (options.length > 0) {
                 setSelectedDataset(options[0]);  // Set react-select option
                 fetchObservations(options[0].value);
@@ -62,9 +68,10 @@ function SingleChartDashboard({ dashboardId, globalbackgroundColor }) {
 
             setLoading(false);
         }
-
-        fetchData();
-    }, [dashboardId]);
+ if (!metadataPassed) {
+            fetchData();
+        }
+    }, [dashboardId, metadataPassed, passDatasetMetadata]);
 
     // Function to fetch observations based on the dataset ID
 const fetchObservations = async (datasetId) => {

@@ -8,7 +8,7 @@ import MultiObservationsChart from './MultiObservationsChart';
 import TimeObservationsChart from './TimeObservationsChart';
 import CategoryObservationChart from './CategoryChart';
 
-function CategoryChartDashboard({ dashboardId, globalbackgroundColor }) {
+function CategoryChartDashboard({ dashboardId, globalbackgroundColor, passDatasetMetadata }) {
     const [datasets, setDatasets] = useState([]);
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
@@ -17,6 +17,7 @@ function CategoryChartDashboard({ dashboardId, globalbackgroundColor }) {
     const [selectedDataset, setSelectedDataset] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isTableVisible, setIsTableVisible] = useState(true);
+    const [metadataPassed, setMetadataPassed] = useState(false);
 
 
     useEffect(() => {
@@ -49,6 +50,11 @@ function CategoryChartDashboard({ dashboardId, globalbackgroundColor }) {
 
             setDatasets(options);
 
+            if (!metadataPassed && passDatasetMetadata) {
+                passDatasetMetadata(options);
+                setMetadataPassed(true); // Ensure we only pass metadata once
+            }
+
             if (options.length > 0) {
                 setSelectedDataset(options[0]);  // Set react-select option
                 fetchObservations(options[0].value);
@@ -66,9 +72,10 @@ function CategoryChartDashboard({ dashboardId, globalbackgroundColor }) {
 
             setLoading(false);
         }
-
-        fetchData();
-    }, [dashboardId]);
+        if (!metadataPassed) {
+            fetchData();
+        }
+    }, [dashboardId, metadataPassed, passDatasetMetadata]);
 
     // Function to fetch observations based on the dataset ID
 const fetchObservations = async (datasetId) => {

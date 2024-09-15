@@ -6,7 +6,7 @@ import supabase from '../supabaseClient';
 
 import TimeObservationsChart from './TimeObservationsChart';
 
-function TimeSeriesDashboard({ dashboardId, defaultChartType, globalbackgroundColor }) {
+function TimeSeriesDashboard({ dashboardId, defaultChartType, globalbackgroundColor, passDatasetMetadata }) {
     const [datasets, setDatasets] = useState([]);
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
@@ -15,6 +15,7 @@ function TimeSeriesDashboard({ dashboardId, defaultChartType, globalbackgroundCo
     const [selectedDataset, setSelectedDataset] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isTableVisible, setIsTableVisible] = useState(true);
+    const [metadataPassed, setMetadataPassed] = useState(false);
 
 
     useEffect(() => {
@@ -45,6 +46,11 @@ function TimeSeriesDashboard({ dashboardId, defaultChartType, globalbackgroundCo
 
             setDatasets(options);
 
+            if (!metadataPassed && passDatasetMetadata) {
+                passDatasetMetadata(options);
+                setMetadataPassed(true); // Ensure we only pass metadata once
+            }
+
             if (options.length > 0) {
                 setSelectedDataset(options[0]); 
                 fetchObservations(options[0].value);
@@ -63,8 +69,11 @@ function TimeSeriesDashboard({ dashboardId, defaultChartType, globalbackgroundCo
             setLoading(false);
         }
 
-        fetchData();
-    }, [dashboardId]);
+
+ if (!metadataPassed) {
+            fetchData();
+        }
+    }, [dashboardId, metadataPassed, passDatasetMetadata]);
 
     // Function to fetch observations based on the dataset ID
 const fetchObservations = async (datasetId) => {

@@ -7,7 +7,7 @@ const ObservationsTable = React.lazy(() => import('./ObservationsTable'));
 const LocalAuthorityMap = React.lazy(() => import('./Map'));
 const LocalAuthorityMap23 = React.lazy(() => import('./Map23'));
 
-function Dashboard({ dashboardId, defaultChartType, startColor, endColor, globalbackgroundColor }) {
+function Dashboard({ dashboardId, defaultChartType, startColor, endColor, globalbackgroundColor, passDatasetMetadata }) {
     const [datasets, setDatasets] = useState([]);
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
@@ -16,6 +16,7 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor, global
     const [selectedDataset, setSelectedDataset] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isTableVisible, setIsTableVisible] = useState(true);
+    const [metadataPassed, setMetadataPassed] = useState(false); // New flag
 
     useEffect(() => {
         async function fetchData() {
@@ -44,6 +45,12 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor, global
 
             setDatasets(options);
 
+            // Pass dataset metadata to parent if not passed yet
+            if (!metadataPassed && passDatasetMetadata) {
+                passDatasetMetadata(options);
+                setMetadataPassed(true); // Ensure we only pass metadata once
+            }
+
             if (options.length > 0) {
                 setSelectedDataset(options[0]);
                 fetchObservations(options[0].value);
@@ -61,8 +68,11 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor, global
             setLoading(false);
         }
 
-        fetchData();
-    }, [dashboardId]);
+        // Fetch data only on the first load
+        if (!metadataPassed) {
+            fetchData();
+        }
+    }, [dashboardId, metadataPassed, passDatasetMetadata]);
 
     const fetchObservations = async (datasetId) => {
         if (!datasetId) return;
@@ -98,8 +108,6 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor, global
     };
 
     const toggleTableVisibility = () => {
-        if (typeof setIsTableVisible !== 'function') return;
-        if (typeof isTableVisible !== 'boolean') return;
         setIsTableVisible(!isTableVisible);
     };
 
