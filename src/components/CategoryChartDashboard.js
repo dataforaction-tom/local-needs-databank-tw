@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ObservationsTable from './ObservationsTable';
-import ObservationsChart from './ObservationsChart';
 import supabase from '../supabaseClient';
-import Select from 'react-select';
-import LocalAuthorityMap from './Map'; // Ensure you import your map component
-import MultiObservationsChart from './MultiObservationsChart';
-import TimeObservationsChart from './TimeObservationsChart';
 import CategoryObservationChart from './CategoryChart';
 
 function CategoryChartDashboard({ dashboardId, globalbackgroundColor, passDatasetMetadata }) {
