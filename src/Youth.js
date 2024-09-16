@@ -63,8 +63,12 @@ const Youth = () => {
         ))}
       </div>
 
-      {/* Render dashboards directly without lazy loading */}
+    
       <TimeSeriesDashboard dashboardId={23} passDatasetMetadata={handleDatasetMetadata} />
+
+    
+
+      <SingleChartDashboard dashboardId={24} passDatasetMetadata={handleDatasetMetadata} />
 
       <Dashboard_single_chart
         dashboardId={22}
@@ -74,8 +78,7 @@ const Youth = () => {
         globalbackgroundColor={backgroundColor}
         passDatasetMetadata={handleDatasetMetadata}
       />
-
-      <SingleChartDashboard dashboardId={24} passDatasetMetadata={handleDatasetMetadata} />
+      
       <DashboardnoMap
         dashboardId={18}
         defaultChartType="line"
