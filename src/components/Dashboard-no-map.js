@@ -2,6 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import ObservationsChart from './ObservationsChart';
 import supabase from '../supabaseClient';
 import MultiObservationsChart from './MultiObservationsChart';
+import { Oval } from 'react-loader-spinner';
 
 const ObservationsTable = React.lazy(() => import('./ObservationsTable'));
 
@@ -127,7 +128,12 @@ function DashboardnoMap({ dashboardId, defaultChartType, startColor, endColor, g
                         {isTableVisible ? 'Hide Table' : 'Show Table'}
                     </button>
                 </div>
-                {loading ? <p className="text-center">Loading...</p> : (
+                {loading ? (
+                     <div className="loader-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+                        <Oval color="#00BFFF" height={80} width={80} /> 
+                        <p>Loading data...</p>
+                    </div>
+                ) : (
                     <>
                         {isTableVisible && (
                             <ObservationsTable

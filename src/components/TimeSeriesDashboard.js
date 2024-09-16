@@ -5,6 +5,7 @@ import supabase from '../supabaseClient';
 
 
 import TimeObservationsChart from './TimeObservationsChart';
+import { Oval } from 'react-loader-spinner';
 
 function TimeSeriesDashboard({ dashboardId, defaultChartType, globalbackgroundColor, passDatasetMetadata }) {
     const [datasets, setDatasets] = useState([]);
@@ -143,7 +144,12 @@ const fetchObservations = async (datasetId) => {
                     {isTableVisible ? 'Hide Table' : 'Show Table'}
                 </button>
             </div>
-            {loading ? <p className="text-center">Loading...</p> : (
+            {loading ? (
+                     <div className="loader-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+                        <Oval color="#662583" height={80} width={80} /> 
+                        <p>Loading data...</p>
+                    </div>
+                ) : (
                 <>
                   {isTableVisible && (
                       <ObservationsTable

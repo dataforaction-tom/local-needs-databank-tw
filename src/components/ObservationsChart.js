@@ -56,6 +56,8 @@ useEffect(() => {
       responsive: true,
       maintainAspectRatio: false,
       indexAxis,
+      normalized: true,
+      animation: false,
       scales: {
         x: { barPercentage: 1, categoryPercentage: 0.6 },
         y: { beginAtZero: false }
