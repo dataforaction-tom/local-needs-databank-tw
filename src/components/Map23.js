@@ -6,8 +6,10 @@ import L from 'leaflet';
 import chroma from 'chroma-js';
 import * as d3 from 'd3';
 import { Oval } from 'react-loader-spinner'; // Import loader
+import { openDB } from 'idb'; // Import IndexedDB helper
 
-function Legend({ colorScale, breaks }) {
+// Legend Component with title
+function Legend({ colorScale, breaks, title }) {
     const map = useMap();
 
     useEffect(() => {
@@ -20,6 +22,9 @@ function Legend({ colorScale, breaks }) {
             div.style.boxShadow = '0 0 15px rgba(0,0,0,0.2)';
             div.style.borderRadius = '5px';
             div.style.fontSize = '14px';
+
+            // Title for the legend
+            div.innerHTML = `<strong>${title}</strong><br>`;
 
             // Generate legend items based on the breaks
             for (let i = 0; i < breaks.length - 1; i++) {
@@ -38,7 +43,7 @@ function Legend({ colorScale, breaks }) {
         return () => {
             map.removeControl(legend);
         };
-    }, [map, colorScale, breaks]);
+    }, [map, colorScale, breaks, title]);
 
     return null;
 }
@@ -48,7 +53,38 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
     const [filteredGeoJsonFeatures, setFilteredGeoJsonFeatures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [map, setMap] = useState(null);
+    const CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 1 week in milliseconds
 
+    // Initialise IndexedDB
+    async function initDB() {
+        return openDB('map-cache', 1, {
+            upgrade(db) {
+                db.createObjectStore('geojson');
+            },
+        });
+    }
+
+    // Save geojson data to IndexedDB
+    async function saveToCache(key, data) {
+        const db = await initDB();
+        const tx = db.transaction('geojson', 'readwrite');
+        tx.store.put({ data, timestamp: Date.now() }, key);
+        await tx.done;
+    }
+
+    // Get data from IndexedDB
+    async function getFromCache(key) {
+        const db = await initDB();
+        const tx = db.transaction('geojson');
+        const cached = await tx.store.get(key);
+        if (cached && (Date.now() - cached.timestamp < CACHE_EXPIRY)) {
+            return cached.data;
+        } else {
+            return null; // Expired or not found
+        }
+    }
+
+    // Fetch GeoJSON data, check cache first
     const fetchGeoJsonData = async () => {
         const datasetId = selectedDataset && selectedDataset.value;
         const limit = 100;
@@ -59,12 +95,22 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         if (datasetId) {
             setLoading(true);
 
+            // Try getting from cache
+            let cachedData = await getFromCache(`geojson-${datasetId}`);
+            if (cachedData) {
+                setGeoJsonData(cachedData);
+                setFilteredGeoJsonFeatures(cachedData);
+                setLoading(false);
+                return;
+            }
+
+            // If no cache, fetch data from Supabase
             while (hasMoreData) {
                 try {
                     const response = await supabase.rpc('build_map', {
                         p_dataset_id: parseInt(datasetId, 10),
                         p_limit: limit,
-                        p_offset: offset
+                        p_offset: offset,
                     });
 
                     if (!response.error && response.data.length > 0) {
@@ -81,6 +127,7 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
 
             setGeoJsonData(allData);
             setFilteredGeoJsonFeatures(allData);
+            saveToCache(`geojson-${datasetId}`, allData); // Save fetched data to cache
             setLoading(false);
         }
     };
@@ -114,7 +161,7 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
     useEffect(() => {
         if (map && filteredGeoJsonFeatures.length > 0) {
             const geoJsonLayer = L.geoJSON(filteredGeoJsonFeatures, {
-                onEachFeature: (feature, layer) => onEachFeature(feature, layer)
+                onEachFeature: (feature, layer) => onEachFeature(feature, layer),
             }).addTo(map);
             const bounds = geoJsonLayer.getBounds();
             map.fitBounds(bounds, { padding: [50, 50] });
@@ -132,7 +179,7 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
             fillColor: colorScale(maxValue).hex(),
             fillOpacity: 0.8,
             color: 'white',
-            weight: 1
+            weight: 1,
         });
 
         let popupContent = `<div><strong>Name:</strong> ${feature.properties.place_name}</div>`;
@@ -158,10 +205,10 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
                     color: 'white',
                     fillColor: colorScale(feature.properties.observations.reduce((max, obs) => Math.max(max, obs.value), 0)).hex(),
                     weight: 2,
-                    fillOpacity: 0.9
+                    fillOpacity: 0.9,
                 })}
             />
-            <Legend colorScale={colorScale} breaks={breaks} />
+            <Legend colorScale={colorScale} breaks={breaks} title={filteredObservations.length > 0 ? filteredObservations[0].name : 'Legend'} />
         </>
     );
 

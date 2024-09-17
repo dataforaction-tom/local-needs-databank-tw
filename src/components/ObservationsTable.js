@@ -241,7 +241,7 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
       <div className="mt-4 flex justify-end">
         <CSVLink
           data={csvData}
-          filename={`${title || 'filtered-observations'}_${getFormattedDate()}.csv`}
+          filename={`${title || 'filtered-observations'}.csv`}
           className="text-white font-medium py-2 px-4 rounded-md hover:bg-opacity-80 transition-colors duration-300"
           style={{ backgroundColor: globalbackgroundColor }} // Use global background color for CSV button
           target="_blank"
