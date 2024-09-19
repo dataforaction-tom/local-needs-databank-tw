@@ -23,19 +23,19 @@ const Youth = () => {
     {
       title: 'Of young people',
       value: '84%',
-      description: 'Believe looking after the environment is important',
+      description: 'believe looking after the environment is important',
       source: "*Children's People and Nature Survey 2023"
     },
     {
-      title: 'Of all Children',
+      title: 'Of all children',
       value: '16.9%',
-      description: 'living in food insecure households',
-      source: '*Households below average income (HBAI) statistics'
+      description: 'live in food insecure households',
+      source: '*Households below average income (HBAI) statistics 2023'
     },
     {
       title: 'Of adolescents',
       value: '11%',
-      description: "reported low scores for life satisfaction which classified them as ‘suffering’ in 2022",
+      description: "reported low scores of life satisfaction which classified them as ‘suffering’ in 2022",
       source: '*HBSC survey 2022'
     }
   ];
