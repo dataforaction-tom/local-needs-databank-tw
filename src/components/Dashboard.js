@@ -19,7 +19,7 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor, global
     const [selectedDataset, setSelectedDataset] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isTableVisible, setIsTableVisible] = useState(true);
-    const [metadataPassed, setMetadataPassed] = useState(false); // New flag
+    const [metadataPassed, setMetadataPassed] = useState(false); 
     const CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 1 week in milliseconds
 
     // Initialise IndexedDB

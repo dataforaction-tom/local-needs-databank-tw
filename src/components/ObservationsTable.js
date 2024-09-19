@@ -34,9 +34,11 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
 
   const yearOptions = useMemo(() => {
     const years = new Set(observations.map(obs => obs.year));
-    return Array.from(years).map(year => ({ value: year, label: year }));
+    return Array.from(years)
+      .sort((a, b) => a - b)  // Sort the years in ascending order
+      .map(year => ({ value: year, label: year }));
   }, [observations]);
-
+  
   useEffect(() => {
     if (selectedRegion === null) {
       const nonNullRegions = regionOptions.filter(option => option.value !== null);
@@ -136,12 +138,22 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
     getTableBodyProps,
     headerGroups,
     rows,
-    prepareRow
+    prepareRow,
+    setSortBy,
+    state: { sortBy }
   } = useTable(
     {
       columns,
       data: observations,
-      initialState: { pageIndex: 0 },
+      initialState: {
+        pageIndex: 0,
+        sortBy: [
+          {
+            id: 'place', // Sort by the 'place' field
+            desc: false  // Ascending order (alphabetical)
+          }
+        ]
+      },
       state: { filters: allFilters },
       filterTypes
     },
@@ -149,6 +161,19 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
     useGlobalFilter,
     useSortBy
   );
+  
+  useEffect(() => {
+    // Reset the sorting by 'place' alphabetically every time a filter changes
+    if (sortBy.length === 0 || sortBy[0].id !== 'place') {
+      setSortBy([
+        {
+          id: 'place',  // Reset sorting by 'place'
+          desc: false   // Ensure alphabetical order
+        }
+      ]);
+    }
+  }, [allFilters, setSortBy, sortBy]); // Watch for filter changes and current sorting state
+  
 
   useEffect(() => {
     setFilteredObservations(rows.map(row => row.original));
@@ -255,7 +280,12 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
         <p className='text-xs italic'>Data made available under {license}</p>
         <p className='text-xs italic'>Owner: {owner}</p>
         <p className='text-xs italic'>Published {published_date}</p>
-        <p className='text-xs italic'>Original Data Available at {original_url}</p>
+        <p className='text-xs italic'>
+        Original Data Available at{' '}
+        <a href={original_url} target='_blank' rel='noopener noreferrer' className='text-blue-500 underline'>
+            {original_url}
+        </a>
+    </p>
       </div>
     </div>
   );
