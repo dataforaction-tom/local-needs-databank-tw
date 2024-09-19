@@ -63,12 +63,39 @@ const Youth = () => {
         ))}
       </div>
 
+      
+      <Dashboard
+        dashboardId={19}
+        defaultChartType="line"
+        startColor="orange"
+        endColor="#662583"
+        globalbackgroundColor={backgroundColor}
+        passDatasetMetadata={handleDatasetMetadata}
+      />
+
+    <DashboardnoMap
+        dashboardId={18}
+        defaultChartType="line"
+        startColor="orange"
+        endColor="#662583"
+        globalbackgroundColor={backgroundColor}
+        passDatasetMetadata={handleDatasetMetadata}
+      />
     
       <TimeSeriesDashboard dashboardId={23} passDatasetMetadata={handleDatasetMetadata} />
 
     
 
       <SingleChartDashboard dashboardId={24} passDatasetMetadata={handleDatasetMetadata} />
+
+      <DashboardnoMap
+        dashboardId={21}
+        defaultChartType="line"
+        startColor="orange"
+        endColor="#662583"
+        globalbackgroundColor={backgroundColor}
+        passDatasetMetadata={handleDatasetMetadata}
+      />
 
       <Dashboard_single_chart
         dashboardId={22}
@@ -79,14 +106,7 @@ const Youth = () => {
         passDatasetMetadata={handleDatasetMetadata}
       />
       
-      <DashboardnoMap
-        dashboardId={18}
-        defaultChartType="line"
-        startColor="orange"
-        endColor="#662583"
-        globalbackgroundColor={backgroundColor}
-        passDatasetMetadata={handleDatasetMetadata}
-      />
+      
       <DashboardnoMap
         dashboardId={20}
         defaultChartType="line"
@@ -95,22 +115,7 @@ const Youth = () => {
         globalbackgroundColor={backgroundColor}
         passDatasetMetadata={handleDatasetMetadata}
       />
-      <DashboardnoMap
-        dashboardId={21}
-        defaultChartType="line"
-        startColor="orange"
-        endColor="#662583"
-        globalbackgroundColor={backgroundColor}
-        passDatasetMetadata={handleDatasetMetadata}
-      />
-      <Dashboard
-        dashboardId={19}
-        defaultChartType="line"
-        startColor="orange"
-        endColor="#662583"
-        globalbackgroundColor={backgroundColor}
-        passDatasetMetadata={handleDatasetMetadata}
-      />
+      
       
 
       {/* Datasets Metadata Table */}
