@@ -5,17 +5,24 @@ import DashboardnoMap from './components/Dashboard-no-map';
 import Card from './Card';
 import TimeSeriesDashboard from './components/TimeSeriesDashboard';
 import SingleChartDashboard from './components/SingleChartDashboard';
-import Dashboard_single_chart from './components/Dashboard_single_chart';
+import DashboardSingleChart from './components/DashboardSingleChart';
 
 const Youth = () => {
   const [datasetsMetadata, setDatasetsMetadata] = useState([]);
 
   const handleDatasetMetadata = (newDatasets) => {
     setDatasetsMetadata((prevDatasets) => {
-      const newEntries = newDatasets.filter(newDataset =>
-        !prevDatasets.some(existingDataset => existingDataset.value === newDataset.value)
-      );
-      return [...prevDatasets, ...newEntries];
+      const updatedDatasets = [...prevDatasets];
+
+      // metadata is inserted in order of appearanace
+      newDatasets.forEach(newDataset => {
+        const existingIndex = updatedDatasets.findIndex(dataset => dataset.value === newDataset.value);
+        if (existingIndex === -1) {
+          updatedDatasets.push(newDataset); 
+        }
+      });
+
+      return updatedDatasets;
     });
   };
 
@@ -73,7 +80,7 @@ const Youth = () => {
         passDatasetMetadata={handleDatasetMetadata}
       />
 
-    <DashboardnoMap
+      <DashboardnoMap
         dashboardId={18}
         defaultChartType="line"
         startColor="orange"
@@ -81,12 +88,16 @@ const Youth = () => {
         globalbackgroundColor={backgroundColor}
         passDatasetMetadata={handleDatasetMetadata}
       />
-    
-      <TimeSeriesDashboard dashboardId={23} passDatasetMetadata={handleDatasetMetadata} />
 
-    
+      <TimeSeriesDashboard
+        dashboardId={23}
+        passDatasetMetadata={handleDatasetMetadata}
+      />
 
-      <SingleChartDashboard dashboardId={24} passDatasetMetadata={handleDatasetMetadata} />
+      <SingleChartDashboard
+        dashboardId={24}
+        passDatasetMetadata={handleDatasetMetadata}
+      />
 
       <DashboardnoMap
         dashboardId={21}
@@ -97,16 +108,16 @@ const Youth = () => {
         passDatasetMetadata={handleDatasetMetadata}
       />
 
-      <Dashboard_single_chart
+      <DashboardSingleChart
         dashboardId={22}
         defaultChartType="line"
         startColor="orange"
         endColor="#662583"
         globalbackgroundColor={backgroundColor}
         passDatasetMetadata={handleDatasetMetadata}
+        baseline={15}
       />
-      
-      
+
       <DashboardnoMap
         dashboardId={20}
         defaultChartType="line"
@@ -115,8 +126,6 @@ const Youth = () => {
         globalbackgroundColor={backgroundColor}
         passDatasetMetadata={handleDatasetMetadata}
       />
-      
-      
 
       {/* Datasets Metadata Table */}
       <div className="p-5 my-5">

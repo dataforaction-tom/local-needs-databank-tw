@@ -3,7 +3,7 @@ import { useTable, useFilters, useGlobalFilter, useSortBy } from 'react-table';
 import ColumnFilter from './ColumnFilter'; // Import your custom ColumnFilter
 import { CSVLink } from 'react-csv';
 
-function ObservationsTable({ observations, setFilteredObservations, title, license, owner, dataset_description, original_url, published_date, globalbackgroundColor }) {
+function ObservationsTable({ observations, setFilteredObservations, title, license, owner, dataset_description, original_url, published_date, globalbackgroundColor, baseline }) {
 
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [allFilters, setAllFilters] = useState([]);
@@ -102,6 +102,7 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
             globalbackgroundColor={globalbackgroundColor} // Pass the global background color
           />
         ),
+        filter: 'multiSelect',
         filterOptions: yearOptions
       }
     ];
@@ -116,7 +117,7 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
     }
 
     return baseColumns;
-  }, [observations, placeOptions, nameOptions, regionOptions, yearOptions, globalbackgroundColor]);
+  }, [observations, placeOptions, nameOptions, regionOptions, yearOptions, globalbackgroundColor, baseline]);
 
   const filterTypes = useMemo(() => ({
     multiSelect: (rows, columnId, filterValues) => {

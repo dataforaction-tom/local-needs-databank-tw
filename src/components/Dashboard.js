@@ -10,7 +10,7 @@ const ObservationsTable = React.lazy(() => import('./ObservationsTable'));
 
 
 
-function Dashboard({ dashboardId, defaultChartType, startColor, endColor, globalbackgroundColor, passDatasetMetadata }) {
+function Dashboard({ dashboardId, defaultChartType, startColor, endColor, globalbackgroundColor, passDatasetMetadata, baseline }) {
     const [datasets, setDatasets] = useState([]);
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
@@ -123,7 +123,7 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor, global
         if (!metadataPassed) {
             fetchData();
         }
-    }, [dashboardId, metadataPassed, passDatasetMetadata]);
+    }, [dashboardId, metadataPassed, passDatasetMetadata, baseline]);
 
     const fetchObservations = async (datasetId) => {
         if (!datasetId) return;

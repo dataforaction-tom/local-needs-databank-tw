@@ -1,15 +1,17 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import Chart from 'chart.js/auto';
+import annotationPlugin from 'chartjs-plugin-annotation';
 
-// Custom hook to adjust chart height dynamically based on window width
+// Register the annotation plugin
+Chart.register(annotationPlugin);
+
 const useResponsiveChart = (chartRef) => {
   useEffect(() => {
     const handleResize = () => {
-      // Adjust height when width is below a breakpoint
       if (window.innerWidth < 768) {
-        chartRef.current.style.height = '400px'; // Set a more suitable height for mobile
+        chartRef.current.style.height = '400px';
       } else {
-        chartRef.current.style.height = '600px'; // Use default height for non-mobile devices
+        chartRef.current.style.height = '600px';
       }
     };
 
@@ -22,72 +24,111 @@ const useResponsiveChart = (chartRef) => {
   }, [chartRef]);
 };
 
-function ObservationsChart({ observations, title }) {
+function ObservationsChart({ observations, title, baseline }) {
+  console.log(baseline);
   const chartRef = useRef(null);
-  const [chartInstance, setChartInstance] = useState(null); // State to hold the chart instance
-  useResponsiveChart(chartRef); // Apply the responsive hook
+  const [chartInstance, setChartInstance] = useState(null);
+  useResponsiveChart(chartRef); 
   const [indexAxis, setIndexAxis] = useState('x');
 
- const colorPalette = useMemo(() => {
-  return ['#662583', '#C7215D', '#881866', '#dd35a5', '#EE4023'];
-}, []); // Empty dependency array means this runs only once when the component mounts
+  // Base brand colours
+  const baseColors = useMemo(() => ['#662583', '#C7215D', '#881866', '#dd35a5', '#EE4023'], []); 
 
-const computedColorMapping = useMemo(() => {
-  const newColorMapping = {};
-  observations.forEach((obs, index) => {
-    if (!newColorMapping[obs.name]) {
-      newColorMapping[obs.name] = colorPalette[index % colorPalette.length];
+  // Memoise computedColorMapping to avoid recalculating every render
+  const computedColorMapping = useMemo(() => {
+    const newColorMapping = {};
+    observations.forEach((obs, index) => {
+      const color = baseColors[index % baseColors.length];
+      const datasetKey = `${obs.name} (${obs.year})`;
+
+      if (!newColorMapping[datasetKey]) {
+        newColorMapping[datasetKey] = color;
+      }
+    });
+    return newColorMapping;
+  }, [observations, baseColors]);
+
+  useEffect(() => {
+    if (!chartRef.current) return;
+  
+    const chartContext = chartRef.current.getContext('2d');
+    const places = [...new Set(observations.map(obs => obs.place))].sort();
+  
+    // Destroy existing chart before creating a new one
+    if (chartInstance) {
+      chartInstance.destroy();
     }
-  });
-  return newColorMapping;
-}, [observations, colorPalette]); 
-
-useEffect(() => {
-  const chartContext = chartRef.current.getContext('2d');
-  const places = [...new Set(observations.map(obs => obs.place))].sort();
-
-  chartInstance && chartInstance.destroy(); // Destroy existing chart before creating a new one
-
-  const datasets = createDatasets(observations, places, computedColorMapping);
-  const newChartInstance = new Chart(chartContext, {
-    type: 'bar',
-    data: { labels: places, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis,
-      normalized: true,
-      animation: false,
-      scales: {
-        x: { barPercentage: 1, categoryPercentage: 0.6 },
-        y: { beginAtZero: false }
-      },
-      plugins: { legend: { display: true } }
-    }
-  });
-
-  setChartInstance(newChartInstance); // Save the new chart instance
-  return () => newChartInstance.destroy(); // Cleanup on component unmount
-}, [observations, computedColorMapping, indexAxis]);
+  
+    const datasets = createDatasets(observations, places, computedColorMapping);
+  
+    // Define the baseline annotation if the `baseline` prop is passed
+    const baselineAnnotation = baseline ? {
+      type: 'line',
+      yMin: baseline, // Set baseline value on the y-axis
+      yMax: baseline,
+      borderColor: 'rgba(75, 192, 192, 0.8)',
+      borderWidth: 2,
+      borderDash: [6, 6], // Dotted line
+      label: {
+        enabled: true,
+        content: `Baseline: ${baseline}`,
+        position: 'end',
+        backgroundColor: 'rgba(75, 192, 192, 0.8)'
+      }
+    } : null;
+  
+    const newChartInstance = new Chart(chartContext, {
+      type: 'bar',
+      data: { labels: places, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis,
+        normalized: true,
+        animation: false,
+        scales: {
+          x: { barPercentage: 1, categoryPercentage: 0.6 },
+          y: { beginAtZero: false }
+        },
+        plugins: {
+          legend: { display: true },
+          annotation: {
+            annotations: baselineAnnotation ? { line1: baselineAnnotation } : {}
+          }
+        }
+      }
+    });
+  
+    setChartInstance(newChartInstance);
+  
+    // Cleanup to avoid memory leaks
+    return () => {
+      newChartInstance.destroy();
+    };
+  }, [chartRef, observations, computedColorMapping, indexAxis, baseline]);
 
   function createDatasets(data, places, colorMapping) {
     const datasetMap = {};
 
     data.forEach(obs => {
       const name = obs.name;
+      const year = obs.year;
       const value = parseFloat(obs.value);
 
-      if (!datasetMap[name]) {
-        datasetMap[name] = {
-          label: name,
+      const datasetKey = `${name} (${year})`;
+
+      if (!datasetMap[datasetKey]) {
+        datasetMap[datasetKey] = {
+          label: datasetKey,
           data: Array(places.length).fill(0),
-          backgroundColor: colorMapping[name],
-          borderColor: colorMapping[name]
+          backgroundColor: colorMapping[datasetKey],
+          borderColor: colorMapping[datasetKey]
         };
       }
+
       const placeIndex = places.indexOf(obs.place);
       if (placeIndex !== -1) {
-        datasetMap[name].data[placeIndex] = value;
+        datasetMap[datasetKey].data[placeIndex] = value;
       }
     });
 
@@ -95,7 +136,7 @@ useEffect(() => {
   }
 
   const toggleChartAxisNew = () => {
-    setIndexAxis(indexAxis === 'x' ? 'y' : 'x'); // Toggle index axis to switch chart orientation
+    setIndexAxis(indexAxis === 'x' ? 'y' : 'x');
   };
 
   const downloadImage = () => {
@@ -114,26 +155,26 @@ useEffect(() => {
 
   return (
     <div className='relative p-5 m-5'>
-      <h2 className='text-xl font-bold'>{title || 'Filtered Observations Table'}</h2>
-      
-      <div style={{ position: 'relative', width: '100%', Height: '400px' }}>
-          <canvas ref={chartRef} />
-        </div>
-        <div className='flex flex-col md:flex-row justify-end mt-4 space-y-2 md:space-y-0 md:space-x-2'>
-        <button 
-              className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
-              
-              onClick={toggleChartAxisNew}>
-            Toggle Chart Orientation
-          </button>
-          <button 
-              className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
-              onClick={downloadImage}>
-            Download Chart
-          </button>
-        </div>
+      <h2 className='text-xl font-bold'>{title || 'Filtered Observations Chart'}</h2>
+
+      <div style={{ position: 'relative', width: '100%', height: '400px' }}>
+        <canvas ref={chartRef} />
       </div>
-    
+      <div className='flex flex-col md:flex-row justify-end mt-4 space-y-2 md:space-y-0 md:space-x-2'>
+        <button
+          className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
+          onClick={toggleChartAxisNew}
+        >
+          Toggle Chart Orientation
+        </button>
+        <button
+          className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'
+          onClick={downloadImage}
+        >
+          Download Chart
+        </button>
+      </div>
+    </div>
   );
 }
 

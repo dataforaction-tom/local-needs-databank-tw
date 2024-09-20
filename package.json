@@ -12,6 +12,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@vercel/analytics": "^1.2.2",
     "chart.js": "^4.4.2",
+    "chartjs-plugin-annotation": "^3.0.1",
     "chartjs-plugin-datalabels": "^2.2.0",
     "chartjs-to-image": "^1.2.2",
     "chroma-js": "^2.4.2",
