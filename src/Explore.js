@@ -5,7 +5,9 @@ import AllDashboard from './components/AllDashboard';
 import ObservationsTable from './components/ObservationsTable';
 import ObservationsChart from './components/ObservationsChart';
 import LocalAuthorityMap from './components/Map';
+import LocalAuthorityMap23 from './components/Map23';
 import { FaChartBar } from 'react-icons/fa';
+import RadarChart from './components/RadarChart';
 
 const customStyles = {
     control: (base, state) => ({
@@ -205,14 +207,7 @@ const Explore = () => {
                 isClearable={true}
                 styles={customStyles}
             />
-            <Select
-                options={singleDatasets}
-                onChange={setSelectedSingle}
-                value={selectedSingle}
-                placeholder="Select a Single/General Dataset"
-                isClearable={true}
-                styles={customStyles}
-            />
+           
              <div className="col-span-2 space-y-4">
                     <Select
                 options={localAuthorities}
@@ -244,19 +239,31 @@ const Explore = () => {
             <ObservationsTable
                 observations={observations}
                 setFilteredObservations={setFilteredObservations}
+                title={selectedPlace?.title || ''}
+            originalUrl={selectedPlace?.originalUrl || ''}
+            owner={selectedPlace?.owner || ''}
+            datasetDescription={selectedPlace?.description || ''}
+            license={selectedPlace?.license || ''}
+                
                 
             />
             <ObservationsChart
                 observations={filteredObservations}
                 title="Detailed Observations"
             />
-            <LocalAuthorityMap
-           
-            filteredObservations={filteredObservations}
-        />
+            <RadarChart
+                        observations={filteredObservations}
+                        title="Detailed Observations Radar Chart"
+                    />
+            
         </>
     )}
-            {selectedPlace && <AllDashboard placeDataset={selectedPlace} />}
+            {selectedPlace && <AllDashboard 
+            placeDataset={selectedPlace} title={selectedPlace.title} 
+            originalUrl={selectedPlace.originalUrl} 
+            owner={selectedPlace.owner} 
+            datasetDescription={selectedPlace.description} 
+            license={selectedPlace.license} />}
             {selectedTime && <AllDashboard timeDataset={selectedTime} />}
             {selectedSingle && <AllDashboard singleDataset={selectedSingle} />}
         </div>

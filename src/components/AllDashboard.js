@@ -7,6 +7,7 @@ import TimeObservationsChart from './TimeObservationsChart';
 import Select from 'react-select';
 import supabase from '../supabaseClient'; // Ensure correct path
 import LocalAuthorityMap23 from './Map23';
+import SingleObservationChart from './SingleObservationChart';
 
 function AllDashboard({ placeDataset, timeDataset, singleDataset }) {
     const [observations, setObservations] = useState([]);
@@ -62,9 +63,9 @@ function AllDashboard({ placeDataset, timeDataset, singleDataset }) {
                             setFilteredObservations={setFilteredObservations}
                             title={activeDataset.label}
                             license={activeDataset.license}
-                            originalUrl={activeDataset.originalUrl}
-                            publishedDate={activeDataset.publishedDate}
-                            description={activeDataset.description}
+                            original_url={activeDataset.originalUrl}
+                            published_date={activeDataset.publishedDate}
+                            dataset_description={activeDataset.description}
                             owner={activeDataset.owner}
                         />
                     )}
@@ -72,13 +73,17 @@ function AllDashboard({ placeDataset, timeDataset, singleDataset }) {
 
                     {placeDataset && (
                         <>
-                            <ObservationsChart observations={filteredObservations} title={placeDataset.label} />
+                            <ObservationsChart observations={filteredObservations} title={placeDataset.label}  />
                             <LocalAuthorityMap23 selectedDataset={placeDataset} filteredObservations={filteredObservations} title={placeDataset.label} />
                         </>
                     )}
 
                     {timeDataset && (
                         <TimeObservationsChart observations={filteredObservations} title={timeDataset.label} />
+                    )}
+
+                    {singleDataset && (
+                        <SingleObservationChart observations={filteredObservations} title={timeDataset.label} />
                     )}
                 </>
             )}
