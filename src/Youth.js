@@ -115,7 +115,7 @@ const Youth = () => {
         endColor="#662583"
         globalbackgroundColor={backgroundColor}
         passDatasetMetadata={handleDatasetMetadata}
-        baseline={15}
+        baseline={15.9}
       />
 
       <DashboardnoMap

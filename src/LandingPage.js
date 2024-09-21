@@ -1,12 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaRegHospital, FaHandsHelping, FaBookOpen, FaChartBar, FaPlusCircle } from 'react-icons/fa';
+import { MdOutlineSportsGymnastics } from "react-icons/md";
 
 const LandingPage = () => {
     const navItems = [
         { name: 'Health & Social Care', path: '/health', icon: <FaRegHospital size="3em" /> },
         { name: 'Advice and Support', path: '/advice', icon: <FaHandsHelping size="3em" /> },
         { name: 'Charity Sector', path: '/charity', icon: <FaBookOpen size="3em" /> },
+        {name: 'Youth', path: '/youth', icon: <MdOutlineSportsGymnastics size="3em" />},
         { name: 'Data Explorer', path: '/explore', icon: <FaChartBar size="3em" /> },
         { name: 'Contribute', path: '/contribute', icon: <FaPlusCircle size="3em" /> }
     ];

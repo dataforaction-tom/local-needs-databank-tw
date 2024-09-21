@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { FaRegHospital, FaHandsHelping, FaBookOpen, FaChartBar, FaPlusCircle } from 'react-icons/fa';
+import { MdOutlineSportsGymnastics } from "react-icons/md";
 
 const Navigation = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
-    { name: 'Health & Social care', path: '/health', icon: <FaRegHospital className="mr-1" /> },
+    { name: 'Health & Social', path: '/health', icon: <FaRegHospital className="mr-1" /> },
     { name: 'Advice and support', path: '/advice', icon: <FaHandsHelping className="mr-1" /> },
     { name: 'Charity sector', path: '/charity', icon: <FaBookOpen className="mr-1" /> },
+    {name: 'Youth', path: '/youth', icon: <MdOutlineSportsGymnastics className="mr-1" />},
     { name: 'Data Explorer', path: '/explore', icon: <FaChartBar className="mr-1" /> },
     { name: 'Contribute', path: '/contribute', icon: <FaPlusCircle className="mr-1" /> }
   ];
