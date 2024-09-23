@@ -7,8 +7,29 @@ import TimeSeriesDashboard from './components/TimeSeriesDashboard';
 import SingleChartDashboard from './components/SingleChartDashboard';
 import DashboardSingleChart from './components/DashboardSingleChart';
 
+const staticDatasetMetadata = [
+  {
+    label: "Children's People and Nature Survey 2023",
+    license: 'Open Government Licence v3.0',
+    owner: 'Natural England',
+    original_url: 'https://www.gov.uk/government/statistics/the-childrens-people-and-nature-survey-for-england-2023-update'
+  },
+  {
+    label: 'Households below average income (HBAI) statistics 2023',
+    license: 'Open Government Licence v3.0',
+    owner: 'Department for Work and Pensions',
+    original_url: 'https://www.gov.uk/government/collections/households-below-average-income-hbai--2'
+  },
+  {
+    label: 'HBSC survey 2022',
+    license: 'Creative Commons Attribution 4.0',
+    owner: 'World Health Organization',
+    original_url: 'https://data-browser.hbsc.org/'
+  }
+];
+
 const Youth = () => {
-  const [datasetsMetadata, setDatasetsMetadata] = useState([]);
+  const [datasetsMetadata, setDatasetsMetadata] = useState(staticDatasetMetadata);
 
   const handleDatasetMetadata = (newDatasets) => {
     setDatasetsMetadata((prevDatasets) => {
@@ -116,6 +137,7 @@ const Youth = () => {
         globalbackgroundColor={backgroundColor}
         passDatasetMetadata={handleDatasetMetadata}
         baseline={15.9}
+        baselineLabel="Uk absolute poverty level %"
       />
 
       <DashboardnoMap

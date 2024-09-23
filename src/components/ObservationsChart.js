@@ -24,8 +24,8 @@ const useResponsiveChart = (chartRef) => {
   }, [chartRef]);
 };
 
-function ObservationsChart({ observations, title, baseline }) {
-  console.log(baseline);
+function ObservationsChart({ observations, title, baseline, baselineLabel }) {
+  console.log(baseline, baselineLabel);
   const chartRef = useRef(null);
   const [chartInstance, setChartInstance] = useState(null);
   useResponsiveChart(chartRef); 
@@ -59,23 +59,42 @@ function ObservationsChart({ observations, title, baseline }) {
       chartInstance.destroy();
     }
   
-    const datasets = createDatasets(observations, places, computedColorMapping);
-  
-    // Define the baseline annotation if the `baseline` prop is passed
-    const baselineAnnotation = baseline ? {
-      type: 'line',
-      yMin: baseline, // Set baseline value on the y-axis
-      yMax: baseline,
-      borderColor: 'rgba(75, 192, 192, 0.8)',
+  // Create datasets for observations
+  const datasets = createDatasets(observations, places, computedColorMapping);
+
+  // Conditionally add the baseline dataset if baseline and baselineLabel are defined
+  if (baseline && baselineLabel) {
+    datasets.push({
+      label: `${baselineLabel}: ${baseline}`, // This appears in the legend
+      data: Array(places.length).fill(null), // Empty data, won't plot anything
+      borderColor: 'rgba(75, 192, 192, 0.8)', // Match the annotation color
+      backgroundColor: 'transparent', // Prevent bars from being drawn
       borderWidth: 2,
-      borderDash: [6, 6], // Dotted line
-      label: {
-        enabled: true,
-        content: `Baseline: ${baseline}`,
-        position: 'end',
-        backgroundColor: 'rgba(75, 192, 192, 0.8)'
+      type: 'line' // Makes it look like a line in the legend
+    });
+  }
+
+  // Define the baseline annotation if the `baseline` prop is passed
+  const baselineAnnotation = baseline ? {
+    type: 'line',
+    yMin: baseline, // Set baseline value on the y-axis
+    yMax: baseline,
+    borderColor: 'rgba(75, 192, 192, 0.8)',
+    borderWidth: 2,
+    borderDash: [6, 6], 
+    label: {
+      enabled: true,
+      content: baselineLabel ? baselineLabel : `Baseline: ${baseline}`, // Use label if available
+      position: 'end',
+      backgroundColor: 'rgba(75, 192, 192, 0.8)',
+      color: '#fff',
+      padding: 10,
+      font: {
+        style: 'bold',
+        size: 15
       }
-    } : null;
+    }
+  } : null;
   
     const newChartInstance = new Chart(chartContext, {
       type: 'bar',
@@ -105,7 +124,7 @@ function ObservationsChart({ observations, title, baseline }) {
     return () => {
       newChartInstance.destroy();
     };
-  }, [chartRef, observations, computedColorMapping, indexAxis, baseline]);
+  }, [chartRef, observations, computedColorMapping, indexAxis, baseline, baselineLabel]);
 
   function createDatasets(data, places, colorMapping) {
     const datasetMap = {};

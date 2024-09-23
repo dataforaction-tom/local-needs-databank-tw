@@ -9,7 +9,7 @@ const ObservationsTable = React.lazy(() => import('./ObservationsTable'));
 
 const LocalAuthorityMap23 = React.lazy(() => import('./Map23'));
 
-function DashboardSingleChart({ dashboardId, defaultChartType, startColor, endColor, globalbackgroundColor, passDatasetMetadata, baseline }) {
+function DashboardSingleChart({ dashboardId, defaultChartType, startColor, endColor, globalbackgroundColor, passDatasetMetadata, baseline, baselineLabel }) {
     const [datasets, setDatasets] = useState([]);
     const [observations, setObservations] = useState([]);
     const [filteredObservations, setFilteredObservations] = useState([]);
@@ -74,7 +74,7 @@ function DashboardSingleChart({ dashboardId, defaultChartType, startColor, endCo
         if (!metadataPassed) {
             fetchData();
         }
-    }, [dashboardId, metadataPassed, passDatasetMetadata, baseline]);
+    }, [dashboardId, metadataPassed, passDatasetMetadata, baseline, baselineLabel]);
 
     const fetchObservations = async (datasetId) => {
         if (!datasetId) return;
@@ -161,6 +161,7 @@ function DashboardSingleChart({ dashboardId, defaultChartType, startColor, endCo
                             owner={selectedDataset ? selectedDataset.owner : ''}
                             globalbackgroundColor={globalbackgroundColor}
                             baseline={baseline}
+                            baselineLabel={baselineLabel}
                         />
 
                         <LocalAuthorityMap23
