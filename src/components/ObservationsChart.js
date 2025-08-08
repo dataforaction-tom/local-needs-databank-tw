@@ -24,7 +24,7 @@ const useResponsiveChart = (chartRef) => {
   }, [chartRef]);
 };
 
-function ObservationsChart({ observations, title, baseline, baselineLabel }) {
+const ObservationsChart = React.memo(function ObservationsChart({ observations, title, baseline, baselineLabel }) {
   console.log(baseline, baselineLabel);
   const chartRef = useRef(null);
   const [chartInstance, setChartInstance] = useState(null);
@@ -96,6 +96,8 @@ function ObservationsChart({ observations, title, baseline, baselineLabel }) {
     }
   } : null;
   
+    const formatNumber = (num) => new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }).format(num);
+
     const newChartInstance = new Chart(chartContext, {
       type: 'bar',
       data: { labels: places, datasets },
@@ -107,12 +109,26 @@ function ObservationsChart({ observations, title, baseline, baselineLabel }) {
         animation: false,
         scales: {
           x: { barPercentage: 1, categoryPercentage: 0.6 },
-          y: { beginAtZero: false }
+          y: {
+            beginAtZero: false,
+            ticks: {
+              callback: (value) => formatNumber(value)
+            }
+          }
         },
         plugins: {
           legend: { display: true },
           annotation: {
             annotations: baselineAnnotation ? { line1: baselineAnnotation } : {}
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const label = context.dataset.label || '';
+                const value = context.parsed?.y ?? context.parsed;
+                return `${label}: ${formatNumber(value)}`;
+              }
+            }
           }
         }
       }
@@ -195,6 +211,6 @@ function ObservationsChart({ observations, title, baseline, baselineLabel }) {
       </div>
     </div>
   );
-}
+});
 
 export default ObservationsChart;

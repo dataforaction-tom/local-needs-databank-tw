@@ -1,10 +1,13 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import ObservationsChart from './ObservationsChart';
+import React, { useState, useEffect, lazy, Suspense, useMemo } from 'react';
+
 import supabase from '../supabaseClient';
-import MultiObservationsChart from './MultiObservationsChart';
+
 import { Oval } from 'react-loader-spinner'; // Import spinner
 import { openDB } from 'idb'; // Importing IndexedDB helper
-import LocalAuthorityMap23 from './Map23';
+import Select from 'react-select';
+const LocalAuthorityMap23 = React.lazy(() => import('./Map23'));
+const MultiObservationsChart = React.lazy(() => import('./MultiObservationsChart'));
+const ObservationsChart = React.lazy(() => import('./ObservationsChart'));
 
 const ObservationsTable = React.lazy(() => import('./ObservationsTable'));
 
@@ -97,8 +100,17 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor, global
                 }
 
                 if (options.length > 0) {
-                    setSelectedDataset(options[0]);
-                    fetchObservations(options[0].value);
+                    // If URL contains datasetId, use it; otherwise default to first
+                    const params = new URLSearchParams(window.location.search);
+                    const datasetIdParam = params.get('datasetId');
+                    const regionParam = params.get('region');
+                    const matched = datasetIdParam ? options.find(o => String(o.value) === String(datasetIdParam)) : null;
+                    const initialDataset = matched || options[0];
+                    setSelectedDataset(initialDataset);
+                    if (regionParam) {
+                        setSelectedRegion(regionParam);
+                    }
+                    fetchObservations(initialDataset.value);
                 }
             }
 
@@ -124,6 +136,22 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor, global
             fetchData();
         }
     }, [dashboardId, metadataPassed, passDatasetMetadata, baseline, baselineLabel]);
+
+    // Refetch when region changes
+    useEffect(() => {
+        if (selectedDataset?.value) {
+            fetchObservations(selectedDataset.value);
+        }
+    }, [selectedRegion]);
+
+    // Keep URL in sync with selections
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (selectedDataset?.value) params.set('datasetId', String(selectedDataset.value));
+        if (selectedRegion) params.set('region', selectedRegion);
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState(null, '', newUrl);
+    }, [selectedDataset, selectedRegion]);
 
     const fetchObservations = async (datasetId) => {
         if (!datasetId) return;
@@ -155,8 +183,8 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor, global
         }
     };
 
-    const handleRegionChange = (e) => {
-        setSelectedRegion(e.target.value);
+    const handleRegionChange = (option) => {
+        setSelectedRegion(option?.value || 'All');
     };
 
     const toggleTableVisibility = () => {
@@ -171,8 +199,27 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor, global
     return (
         <Suspense fallback={<div>Loading...</div>}>
             <div className="bg-slate-50 p-3 md:p-5 m-3 md:m-5">
-                <div className="flex flex-col md:flex-row justify-between items-center">
-                    <div className="flex-grow md:flex md:flex-grow"></div>
+                <div className="flex flex-col md:flex-row justify-between items-center gap-3">
+                    {/* Dataset selector */}
+                    <div className="w-full md:w-1/2">
+                        <Select
+                            value={selectedDataset}
+                            onChange={handleDatasetChange}
+                            options={datasets}
+                            placeholder="Select dataset..."
+                            classNamePrefix="select"
+                        />
+                    </div>
+                    {/* Region selector */}
+                    <div className="w-full md:w-1/4">
+                        <Select
+                            value={{ value: selectedRegion, label: selectedRegion }}
+                            onChange={handleRegionChange}
+                            options={useMemo(() => (regions || []).map(r => ({ value: r, label: r })), [regions])}
+                            placeholder="Region"
+                            classNamePrefix="select"
+                        />
+                    </div>
                     <button
                         onClick={toggleTableVisibility}
                         className="w-full md:w-auto bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300 mt-2 md:mt-0"
@@ -207,34 +254,8 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor, global
                             />
                         )}
 
-                        <ObservationsChart
-                            observations={filteredObservations}
-                            title={selectedDataset ? selectedDataset.label : ''}
-                            license={selectedDataset ? selectedDataset.license : ''}
-                            original_url={selectedDataset ? selectedDataset.original_url : ''}
-                            published_date={selectedDataset ? selectedDataset.published_date : ''}
-                            dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
-                            owner={selectedDataset ? selectedDataset.owner : ''}
-                            globalbackgroundColor={globalbackgroundColor}
-                            baselineLabel={baselineLabel}
-                        />
-
-                        <LocalAuthorityMap23
-                            selectedDataset={selectedDataset}
-                            filteredObservations={filteredObservations}
-                            title={selectedDataset ? selectedDataset.label : ''}
-                            license={selectedDataset ? selectedDataset.license : ''}
-                            original_url={selectedDataset ? selectedDataset.original_url : ''}
-                            published_date={selectedDataset ? selectedDataset.published_date : ''}
-                            dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
-                            owner={selectedDataset ? selectedDataset.owner : ''}
-                            startColor={startColor}
-                            endColor={endColor}
-                            globalbackgroundColor={globalbackgroundColor}
-                        />
-
-                        {hasMultipleUniqueNames(filteredObservations) && (
-                            <MultiObservationsChart
+                        <Suspense fallback={<div className="my-10 flex justify-center"><Oval color="#00BFFF" height={50} width={50} /></div>}>
+                            <ObservationsChart
                                 observations={filteredObservations}
                                 title={selectedDataset ? selectedDataset.label : ''}
                                 license={selectedDataset ? selectedDataset.license : ''}
@@ -242,9 +263,41 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor, global
                                 published_date={selectedDataset ? selectedDataset.published_date : ''}
                                 dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
                                 owner={selectedDataset ? selectedDataset.owner : ''}
-                                defaultChartType={defaultChartType}
+                                globalbackgroundColor={globalbackgroundColor}
+                                baselineLabel={baselineLabel}
+                            />
+                        </Suspense>
+
+                        <Suspense fallback={<div className="my-10 flex justify-center"><Oval color="#00BFFF" height={50} width={50} /></div>}>
+                            <LocalAuthorityMap23
+                                selectedDataset={selectedDataset}
+                                filteredObservations={filteredObservations}
+                                title={selectedDataset ? selectedDataset.label : ''}
+                                license={selectedDataset ? selectedDataset.license : ''}
+                                original_url={selectedDataset ? selectedDataset.original_url : ''}
+                                published_date={selectedDataset ? selectedDataset.published_date : ''}
+                                dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                                owner={selectedDataset ? selectedDataset.owner : ''}
+                                startColor={startColor}
+                                endColor={endColor}
                                 globalbackgroundColor={globalbackgroundColor}
                             />
+                        </Suspense>
+
+                        {hasMultipleUniqueNames(filteredObservations) && (
+                            <Suspense fallback={<div className="my-10 flex justify-center"><Oval color="#00BFFF" height={50} width={50} /></div>}>
+                                <MultiObservationsChart
+                                    observations={filteredObservations}
+                                    title={selectedDataset ? selectedDataset.label : ''}
+                                    license={selectedDataset ? selectedDataset.license : ''}
+                                    original_url={selectedDataset ? selectedDataset.original_url : ''}
+                                    published_date={selectedDataset ? selectedDataset.published_date : ''}
+                                    dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                                    owner={selectedDataset ? selectedDataset.owner : ''}
+                                    defaultChartType={defaultChartType}
+                                    globalbackgroundColor={globalbackgroundColor}
+                                />
+                            </Suspense>
                         )}
                     </>
                 )}

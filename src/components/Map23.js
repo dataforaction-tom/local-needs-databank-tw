@@ -26,13 +26,16 @@ function Legend({ colorScale, breaks, title }) {
             // Title for the legend
             div.innerHTML = `<strong>${title}</strong><br>`;
 
+            // Number formatter for legend values
+            const formatNumber = (num) => new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }).format(num);
+
             // Generate legend items based on the breaks
             for (let i = 0; i < breaks.length - 1; i++) {
                 const from = breaks[i];
                 const to = breaks[i + 1];
                 const color = colorScale((from + to) / 2).hex();
 
-                div.innerHTML += `<i style="background: ${color}; width: 18px; height: 18px; display: inline-block; margin-right: 5px;"></i> ${from}&ndash;${to}<br>`;
+                div.innerHTML += `<i style="background: ${color}; width: 18px; height: 18px; display: inline-block; margin-right: 5px;"></i> ${formatNumber(from)}&ndash;${formatNumber(to)}<br>`;
             }
 
             return div;
@@ -52,7 +55,6 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
     const [geoJsonData, setGeoJsonData] = useState([]);
     const [filteredGeoJsonFeatures, setFilteredGeoJsonFeatures] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [map, setMap] = useState(null);
     const CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 1 week in milliseconds
 
     // Initialise IndexedDB
@@ -158,22 +160,31 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         return { colorScale, breaks };
     }, [filteredObservations, startColor, endColor]);
 
+    // Precompute a set of allowed place codes for fast feature filtering
+    const allowedPlaceCodes = useMemo(() => new Set(filteredObservations.map(obs => obs.place_code)), [filteredObservations]);
+
     useEffect(() => {
-        if (map && filteredGeoJsonFeatures.length > 0) {
-            const geoJsonLayer = L.geoJSON(filteredGeoJsonFeatures, {
-                onEachFeature: (feature, layer) => onEachFeature(feature, layer),
-            }).addTo(map);
-            const bounds = geoJsonLayer.getBounds();
-            map.fitBounds(bounds, { padding: [50, 50] });
-        } else if (map) {
-            map.setView([54.5, -2], 6);
+        if (geoJsonData.length > 0) {
+            const features = geoJsonData.filter(feature => allowedPlaceCodes.has(feature.properties.name));
+            setFilteredGeoJsonFeatures(features);
+        } else {
+            setFilteredGeoJsonFeatures([]);
         }
-    }, [filteredGeoJsonFeatures, map]);
+    }, [geoJsonData, allowedPlaceCodes]);
+
+    // Precompute max values by place code for efficient styling
+    const placeCodeToMaxValue = useMemo(() => {
+        const map = new Map();
+        for (const obs of filteredObservations) {
+            const current = map.get(obs.place_code);
+            map.set(obs.place_code, current !== undefined ? Math.max(current, obs.value) : obs.value);
+        }
+        return map;
+    }, [filteredObservations]);
 
     const onEachFeature = (feature, layer) => {
         const placeCode = feature.properties.name;
-        const matchingObservations = filteredObservations.filter(obs => obs.place_code === placeCode);
-        const maxValue = matchingObservations.reduce((max, obs) => Math.max(max, obs.value), 0);
+        const maxValue = placeCodeToMaxValue.get(placeCode) ?? 0;
 
         layer.setStyle({
             fillColor: colorScale(maxValue).hex(),
@@ -182,11 +193,13 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
             weight: 1,
         });
 
+        const matchingObservations = filteredObservations.filter(obs => obs.place_code === placeCode);
+        const formatNumber = (num) => new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }).format(num);
         let popupContent = `<div><strong>Name:</strong> ${feature.properties.place_name}</div>`;
         if (matchingObservations.length > 0) {
             popupContent += `<div><strong>Observations:</strong><ul>`;
             matchingObservations.forEach(obs => {
-                popupContent += `<li>${obs.name} (${obs.year}): ${obs.value}</li>`;
+                popupContent += `<li>${obs.name} (${obs.year}): ${formatNumber(obs.value)}</li>`;
             });
             popupContent += `</ul></div>`;
         } else {
@@ -196,17 +209,34 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
         layer.bindPopup(popupContent);
     };
 
+    // Component to fit bounds when features change (avoids duplicating layers)
+    function FitBounds({ features }) {
+        const mapInstance = useMap();
+        useEffect(() => {
+            if (!mapInstance) return;
+            if (features && features.length > 0) {
+                const layer = L.geoJSON(features);
+                const bounds = layer.getBounds();
+                if (bounds.isValid()) {
+                    mapInstance.fitBounds(bounds, { padding: [50, 50] });
+                }
+            } else {
+                mapInstance.setView([54.5, -2], 6);
+            }
+        }, [mapInstance, features]);
+        return null;
+    }
+
     const renderGeoJsonLayer = () => (
         <>
             <GeoJSON
                 data={filteredGeoJsonFeatures}
                 onEachFeature={onEachFeature}
-                style={(feature) => ({
+                style={{
                     color: 'white',
-                    fillColor: colorScale(feature.properties.observations.reduce((max, obs) => Math.max(max, obs.value), 0)).hex(),
-                    weight: 2,
-                    fillOpacity: 0.9,
-                })}
+                    weight: 1,
+                    fillOpacity: 0.8,
+                }}
             />
             <Legend colorScale={colorScale} breaks={breaks} title={filteredObservations.length > 0 ? filteredObservations[0].name : 'Legend'} />
         </>
@@ -229,13 +259,12 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
                     center={[54.5, -2]}
                     zoom={7}
                     style={{ height: '600px', width: '100%' }}
-                    whenCreated={setMap}
-                    key={filteredGeoJsonFeatures.length}
                 >
                     <TileLayer
                         url="https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoidG9tY3ciLCJhIjoiY2x2OGxyZGw3MGl4ajJqanp0aTd6NmhtciJ9.RAPKYGC_Y5TVueF5TNoPeg"
                         attribution='Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
+                    <FitBounds features={filteredGeoJsonFeatures} />
                     {renderGeoJsonLayer()}
                 </MapContainer>
             </div>

@@ -1,21 +1,21 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
 import Navigation from './components/Navigation';
-import Health from './Health';
-import Youth from './Youth';
-import Contribute from './Contribute';
-import ErrorBoundary from './ErrorBoundary'; // Ensure this is correctly imported
-import Context from './Context'
+import ErrorBoundary from './ErrorBoundary';
 import { FilterProvider } from './components/FilterContext';
-import Advice from './Advice'
-import Charity from './Charity';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Explore from './Explore';
-import LandingPage from './LandingPage';
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from "@vercel/analytics/react";
+
+const Health = lazy(() => import('./Health'));
+const Youth = lazy(() => import('./Youth'));
+const Contribute = lazy(() => import('./Contribute'));
+const Context = lazy(() => import('./Context'));
+const Advice = lazy(() => import('./Advice'));
+const Charity = lazy(() => import('./Charity'));
+const Explore = lazy(() => import('./Explore'));
+const LandingPage = lazy(() => import('./LandingPage'));
 
 const queryClient = new QueryClient();
 
@@ -32,17 +32,18 @@ function App() {
       <Navigation /> 
       <div className="App">
         <ErrorBoundary>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/health" element={<Health />} />
-            <Route path="/advice" element={<Advice />} />
-            <Route path="/contribute" element={<Contribute />} />
-            <Route path="/context" element={<Context />} />
-            <Route path="/charity" element={<Charity />} />
-            <Route path="/explore" element={<Explore />} />
-            <Route path="/youth" element={<Youth />} />
-            
-          </Routes>
+              <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
+                <Routes>
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/health" element={<Health />} />
+                  <Route path="/advice" element={<Advice />} />
+                  <Route path="/contribute" element={<Contribute />} />
+                  <Route path="/context" element={<Context />} />
+                  <Route path="/charity" element={<Charity />} />
+                  <Route path="/explore" element={<Explore />} />
+                  <Route path="/youth" element={<Youth />} />
+                </Routes>
+              </Suspense>
         </ErrorBoundary>
       </div>
       

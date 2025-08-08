@@ -91,7 +91,11 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
       {
         Header: 'Value',
         accessor: 'value',
-        Filter: ColumnFilter // No need for filters in 'value'
+        Filter: ColumnFilter, // No need for filters in 'value'
+        Cell: ({ value }) => {
+          const formatNumber = (num) => new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }).format(num);
+          return <span className="block text-right">{formatNumber(value)}</span>;
+        }
       },
       {
         Header: 'Year',
