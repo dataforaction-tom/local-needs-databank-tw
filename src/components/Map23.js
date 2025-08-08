@@ -232,10 +232,18 @@ function LocalAuthorityMap23({ selectedDataset, filteredObservations, title, sta
             <GeoJSON
                 data={filteredGeoJsonFeatures}
                 onEachFeature={onEachFeature}
-                style={{
-                    color: 'white',
-                    weight: 1,
-                    fillOpacity: 0.8,
+                style={(feature) => {
+                    const placeCode = feature.properties.name;
+                    const maxValue = placeCodeToMaxValue.get(placeCode);
+                    if (maxValue === undefined) {
+                        return { color: 'transparent', fillOpacity: 0, weight: 0 };
+                    }
+                    return {
+                        color: 'white',
+                        weight: 1,
+                        fillOpacity: 0.8,
+                        fillColor: colorScale(maxValue).hex(),
+                    };
                 }}
             />
             <Legend colorScale={colorScale} breaks={breaks} title={filteredObservations.length > 0 ? filteredObservations[0].name : 'Legend'} />

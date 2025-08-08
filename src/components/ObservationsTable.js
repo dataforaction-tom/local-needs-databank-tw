@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { useTable, useFilters, useGlobalFilter, useSortBy } from 'react-table';
+import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, flexRender } from '@tanstack/react-table';
 import ColumnFilter from './ColumnFilter'; // Import your custom ColumnFilter
 import { CSVLink } from 'react-csv';
 
@@ -48,87 +48,66 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
     }
   }, [regionOptions]);
 
-  const columns = useMemo(() => {
-    const showDatasetColumn = observations.some(obs => obs.datasetTitle);
+  const showDatasetColumn = useMemo(() => observations.some(obs => obs.datasetTitle), [observations]);
 
+  const columns = useMemo(() => {
     const baseColumns = [
       {
-        Header: 'Observation',
-        accessor: 'name',
-        Filter: ({ column }) => (
-          <ColumnFilter
-            column={column}
-            globalbackgroundColor={globalbackgroundColor} // Pass the global background color
-          />
-        ),
-        filter: 'multiSelect',
-        filterOptions: nameOptions
+        id: 'name',
+        accessorKey: 'name',
+        header: 'Observation',
+        filterFn: 'multiSelect',
+        meta: { filterOptions: nameOptions },
       },
       {
-        Header: 'Place',
-        accessor: 'place',
-        Filter: ({ column }) => (
-          <ColumnFilter
-            column={column}
-            globalbackgroundColor={globalbackgroundColor} // Pass the global background color
-          />
-        ),
-        filter: 'multiSelect',
-        filterOptions: placeOptions
+        id: 'place',
+        accessorKey: 'place',
+        header: 'Place',
+        filterFn: 'multiSelect',
+        meta: { filterOptions: placeOptions },
       },
       {
-        Header: 'Region',
-        accessor: 'region',
-        Filter: ({ column }) => (
-          <ColumnFilter
-            column={column}
-            globalbackgroundColor={globalbackgroundColor} // Pass the global background color
-          />
-        ),
-        filter: 'multiSelect',
-        filterOptions: regionOptions
+        id: 'region',
+        accessorKey: 'region',
+        header: 'Region',
+        filterFn: 'multiSelect',
+        meta: { filterOptions: regionOptions },
       },
       {
-        Header: 'Value',
-        accessor: 'value',
-        Filter: ColumnFilter, // No need for filters in 'value'
-        Cell: ({ value }) => {
-          const formatNumber = (num) => new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }).format(num);
-          return <span className="block text-right">{formatNumber(value)}</span>;
+        id: 'value',
+        accessorKey: 'value',
+        header: 'Value',
+        cell: info => {
+          const num = info.getValue();
+          const formatNumber = (n) => new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }).format(n);
+          return <span className="block text-right">{formatNumber(num)}</span>;
         }
       },
       {
-        Header: 'Year',
-        accessor: 'year',
-        Filter: ({ column }) => (
-          <ColumnFilter
-            column={column}
-            globalbackgroundColor={globalbackgroundColor} // Pass the global background color
-          />
-        ),
-        filter: 'multiSelect',
-        filterOptions: yearOptions
+        id: 'year',
+        accessorKey: 'year',
+        header: 'Year',
+        filterFn: 'multiSelect',
+        meta: { filterOptions: yearOptions },
       }
     ];
 
     if (showDatasetColumn) {
       baseColumns.push({
-        Header: 'DataSet',
-        accessor: 'datasetTitle',
-        id: 'title',
-        disableFilters: true
+        id: 'datasetTitle',
+        accessorKey: 'datasetTitle',
+        header: 'DataSet',
       });
     }
 
     return baseColumns;
-  }, [observations, placeOptions, nameOptions, regionOptions, yearOptions, globalbackgroundColor, baseline]);
+  }, [showDatasetColumn, nameOptions, placeOptions, regionOptions, yearOptions]);
 
-  const filterTypes = useMemo(() => ({
-    multiSelect: (rows, columnId, filterValues) => {
-      if (filterValues.length === 0) return rows;
-      return rows.filter(row => filterValues.includes(row.values[columnId]));
-    }
-  }), []);
+  const multiSelectFilterFn = (row, columnId, filterValues) => {
+    if (!Array.isArray(filterValues) || filterValues.length === 0) return true;
+    const cellValue = row.getValue(columnId);
+    return filterValues.includes(cellValue);
+  };
 
   useEffect(() => {
     const newFilters = [
@@ -138,58 +117,32 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
     setAllFilters(newFilters);
   }, [selectedRegion]);
 
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-    setSortBy,
-    state: { sortBy }
-  } = useTable(
-    {
-      columns,
-      data: observations,
-      initialState: {
-        pageIndex: 0,
-        sortBy: [
-          {
-            id: 'place', // Sort by the 'place' field
-            desc: false  // Ascending order (alphabetical)
-          }
-        ]
-      },
-      state: { filters: allFilters },
-      filterTypes
-    },
-    useFilters,
-    useGlobalFilter,
-    useSortBy
-  );
+  const [columnFilters, setColumnFilters] = useState([]);
+
+  const table = useReactTable({
+    data: observations,
+    columns,
+    state: { columnFilters },
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    filterFns: { multiSelect: multiSelectFilterFn },
+  });
   
-  useEffect(() => {
-    // Reset the sorting by 'place' alphabetically every time a filter changes
-    if (sortBy.length === 0 || sortBy[0].id !== 'place') {
-      setSortBy([
-        {
-          id: 'place',  // Reset sorting by 'place'
-          desc: false   // Ensure alphabetical order
-        }
-      ]);
-    }
-  }, [allFilters, setSortBy, sortBy]); // Watch for filter changes and current sorting state
+  // Note: sorting handled via table state; keep simple ascending for place by default via column config if needed
   
 
   useEffect(() => {
-    setFilteredObservations(rows.map(row => row.original));
-  }, [rows, setFilteredObservations]);
+    setFilteredObservations(table.getRowModel().rows.map(row => row.original));
+  }, [observations, columnFilters, table, setFilteredObservations]);
 
   // Function to generate CSV data
-  const getCsvData = (rows, columns, metadata) => {
+  const getCsvData = (rows, headers, metadata) => {
     const dataRows = rows.map(row => {
       const newRow = {};
-      columns.forEach(column => {
-        newRow[column.Header] = row[column.accessor];
+      headers.forEach(({ label, key }) => {
+        newRow[label] = row[key];
       });
       return newRow;
     });
@@ -213,13 +166,25 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
   };
 
   // Generate csvData based on current rows and columns
-  const csvData = useMemo(() => getCsvData(rows.map(row => row.original), columns, {
+  const csvHeaders = useMemo(() => {
+    const base = [
+      { label: 'Observation', key: 'name' },
+      { label: 'Place', key: 'place' },
+      { label: 'Region', key: 'region' },
+      { label: 'Value', key: 'value' },
+      { label: 'Year', key: 'year' },
+    ];
+    if (showDatasetColumn) base.push({ label: 'DataSet', key: 'datasetTitle' });
+    return base;
+  }, [showDatasetColumn]);
+
+  const csvData = useMemo(() => getCsvData(table.getRowModel().rows.map(row => row.original), csvHeaders, {
     dataset_description,
     license,
     owner,
     published_date,
     original_url
-  }), [rows, columns, dataset_description, license, owner, published_date, original_url]);
+  }), [table, csvHeaders, dataset_description, license, owner, published_date, original_url]);
 
   const scrollContainerStyle = { maxHeight: '400px', overflowY: 'auto' };
 
@@ -233,36 +198,33 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
       </div>
 
       <div style={scrollContainerStyle}>
-        <table {...getTableProps()} className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50 sticky top-0">
-            {headerGroups.map(headerGroup => (
-              <tr {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map(column => (
-                  <th
-                    {...column.getHeaderProps(column.getSortByToggleProps())}
-                    className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
-                    style={{ backgroundColor: globalbackgroundColor }} // Use global background color for header
-                  >
-                    {column.render('Header')}
-                    {column.canFilter && column.id !== 'value' && column.id !== 'date' ? column.render('Filter') : null}
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50 sticky top-0 z-10">
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <th key={header.id} className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider" style={{ backgroundColor: globalbackgroundColor }}>
+                    <div className="flex flex-col gap-1">
+                      <div>{flexRender(header.column.columnDef.header, header.getContext())}</div>
+                      {header.column.getCanFilter() && header.column.columnDef.meta?.filterOptions?.length ? (
+                        <ColumnFilter column={header.column} globalbackgroundColor={globalbackgroundColor} />
+                      ) : null}
+                    </div>
                   </th>
                 ))}
               </tr>
             ))}
           </thead>
-          <tbody {...getTableBodyProps()} className="divide-y divide-gray-200">
-            {rows.map((row, index) => {
-              prepareRow(row);
-              return (
-                <tr {...row.getRowProps()} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}`}>
-                  {row.cells.map(cell => (
-                    <td {...cell.getCellProps()} className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold border">
-                      {cell.render('Cell')}
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
+          <tbody className="divide-y divide-gray-200">
+            {table.getRowModel().rows.map((row, index) => (
+              <tr key={row.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}`}>
+                {row.getVisibleCells().map(cell => (
+                  <td key={cell.id} className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold border">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

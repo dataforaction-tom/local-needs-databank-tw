@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, GeoJSON, useMap  } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import supabase from '../supabaseClient';
@@ -61,7 +61,6 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
     const [geoJsonData, setGeoJsonData] = useState([]);
     const [filteredGeoJsonFeatures, setFilteredGeoJsonFeatures] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [map, setMap] = useState(null);
 
     const getColorScaleAndBreaks = (data) => {
         const values = data.flatMap(feature => feature.properties.observations.map(obs => obs.value));
@@ -128,30 +127,56 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
    
     
 
+    // Only include features that have at least one filtered observation for that place
     useEffect(() => {
         if (geoJsonData.length > 0) {
-            const features = geoJsonData.filter(feature =>
-                filteredObservations.some(obs => obs.place === feature.properties.lad22nm)
-            );
+            const allowedPlaceNames = new Set(filteredObservations.map(obs => obs.place));
+            const features = geoJsonData.filter(feature => allowedPlaceNames.has(feature.properties.lad22nm));
             setFilteredGeoJsonFeatures(features);
+        } else {
+            setFilteredGeoJsonFeatures([]);
         }
     }, [filteredObservations, geoJsonData]);
 
-    useEffect(() => {
-        if (map && filteredGeoJsonFeatures.length > 0) {
-            const geoJsonLayer = L.geoJSON(filteredGeoJsonFeatures, {
-                onEachFeature: (feature, layer) => onEachFeature(feature, layer)
-            }).addTo(map);
-            const bounds = geoJsonLayer.getBounds();
-            map.fitBounds(bounds, { padding: [50, 50] });
-        } else if (map) {
-            map.setView([54.5, -2], 6);
+    // Precompute max value per place from filtered observations only
+    const placeNameToMaxValue = useMemo(() => {
+        const map = new Map();
+        for (const obs of filteredObservations) {
+            const current = map.get(obs.place);
+            map.set(obs.place, current !== undefined ? Math.max(current, obs.value) : obs.value);
         }
-    }, [filteredGeoJsonFeatures, map]);
+        return map;
+    }, [filteredObservations]);
+
+    // Fit bounds to features when they change
+    function FitBounds({ features }) {
+        const mapInstance = useMap();
+        useEffect(() => {
+            if (!mapInstance) return;
+            if (features && features.length > 0) {
+                const layer = L.geoJSON(features);
+                const bounds = layer.getBounds();
+                if (bounds.isValid()) {
+                    mapInstance.fitBounds(bounds, { padding: [50, 50] });
+                }
+            } else {
+                mapInstance.setView([54.5, -2], 6);
+            }
+        }, [mapInstance, features]);
+        return null;
+    }
     
 
     const onEachFeature = (feature, layer, colorScale) => {
-        let maxValue = feature.properties.observations.reduce((max, obs) => Math.max(max, obs.value), 0);
+        const placeName = feature.properties.lad22nm;
+        const maxValue = placeNameToMaxValue.get(placeName);
+        if (maxValue === undefined) {
+            // No filtered observations for this place (should be rare due to filtering)
+            layer.setStyle({ fillOpacity: 0, color: 'transparent', weight: 0 });
+            layer.bindPopup(`<div><strong>Name:</strong> ${placeName}</div><div>No observations available.</div>`);
+            return;
+        }
+
         layer.setStyle({
             fillColor: colorScale(maxValue).hex(),
             fillOpacity: 0.8,
@@ -159,11 +184,13 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
             weight: 1
         });
 
-        let popupContent = `<div><strong>Name:</strong> ${feature.properties.lad22nm}</div>`;
-        if (feature.properties.observations.length > 0) {
+        const formatNumber = (num) => new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 }).format(num);
+        const matching = filteredObservations.filter(obs => obs.place === placeName);
+        let popupContent = `<div><strong>Name:</strong> ${placeName}</div>`;
+        if (matching.length > 0) {
             popupContent += `<div><strong>Observations:</strong><ul>`;
-            feature.properties.observations.forEach(obs => {
-                popupContent += `<li>${obs.name} (${obs.year}): ${obs.value}</li>`;
+            matching.forEach(obs => {
+                popupContent += `<li>${obs.name} (${obs.year}): ${formatNumber(obs.value)}</li>`;
             });
             popupContent += `</ul></div>`;
         } else {
@@ -174,22 +201,26 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
 
     const renderGeoJsonLayer = () => {
         const { colorScale, breaks } = getColorScaleAndBreaks(filteredGeoJsonFeatures);
-    
-       
         return (
             <>
-            
-            <GeoJSON
-                data={filteredGeoJsonFeatures}
-                onEachFeature={(feature, layer) => onEachFeature(feature, layer, colorScale)}
-                style={(feature) => ({
-                    color: 'white',
-                    fillColor: colorScale(feature.properties.observations.reduce((max, obs) => Math.max(max, obs.value), 0)).hex(),
-                    weight: 2,
-                    fillOpacity: 0.9
-                })}
-            />
-            <Legend colorScale={colorScale} breaks={breaks} />
+                <GeoJSON
+                    data={filteredGeoJsonFeatures}
+                    onEachFeature={(feature, layer) => onEachFeature(feature, layer, colorScale)}
+                    style={(feature) => {
+                        const placeName = feature.properties.lad22nm;
+                        const maxValue = placeNameToMaxValue.get(placeName);
+                        if (maxValue === undefined) {
+                            return { color: 'transparent', fillOpacity: 0, weight: 0 };
+                        }
+                        return {
+                            color: 'white',
+                            fillColor: colorScale(maxValue).hex(),
+                            weight: 1,
+                            fillOpacity: 0.8,
+                        };
+                    }}
+                />
+                <Legend colorScale={colorScale} breaks={breaks} />
             </>
         );
     };
@@ -205,13 +236,13 @@ function LocalAuthorityMap({ selectedDataset, filteredObservations, title }) {
             center={[54.5, -2]}
             zoom={7}
             style={{ height: '600px', width: '100%' }}
-            whenCreated={setMap}
             key={filteredGeoJsonFeatures.length}
         >
             <TileLayer
             url="https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoidG9tY3ciLCJhIjoiY2x2OGxyZGw3MGl4ajJqanp0aTd6NmhtciJ9.RAPKYGC_Y5TVueF5TNoPeg"
                 attribution='Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 ></TileLayer>
+            <FitBounds features={filteredGeoJsonFeatures} />
             {renderGeoJsonLayer()}
         </MapContainer>
         </div>

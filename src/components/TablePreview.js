@@ -1,5 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useTable } from 'react-table';
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+} from '@tanstack/react-table';
 import Select from 'react-select';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -8,6 +12,7 @@ const customStyles = {
   option: (provided, state) => ({
     ...provided,
     color: 'black',
+    zIndex: 9999,
   }),
   control: styles => ({ ...styles, backgroundColor: 'white' }),
   singleValue: (provided, state) => {
@@ -29,6 +34,8 @@ const customStyles = {
       color: 'white',
     },
   }),
+  menu: base => ({ ...base, zIndex: 9999, minWidth: 260, width: 260 }),
+  menuPortal: base => ({ ...base, zIndex: 9999 }),
 };
 
 const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows, cellErrors, validationSummary }) => {
@@ -46,59 +53,61 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows, cel
     }
   }, [columnsValid, data.length]);
 
-  const dataColumns = useMemo(() => {
-    if (!columnsValid) return [];
+  const mappingOptions = useMemo(() => ([
+    { value: 'Place', label: 'Place' },
+    { value: 'Date', label: 'Date' },
+    { value: 'Period', label: 'Period' },
+    { value: 'Name', label: 'Name' },
+    { value: 'Value', label: 'Value' },
+    { value: 'Ignore', label: 'Ignore' },
+  ]), []);
 
-    return columns.map((column, idx) => ({
-      Header: () => (
+  const columnDefs = useMemo(() => {
+    if (!columnsValid) return [];
+    return columns.map((colName, idx) => ({
+      id: String(colName),
+      accessorKey: colName,
+      minSize: 240,
+      size: 260,
+      header: () => (
         <div>
-          <Select
-            options={[
-              { value: 'Place', label: 'Place' },
-              { value: 'Date', label: 'Date' },
-              { value: 'Period', label: 'Period' },
-              { value: 'Name', label: 'Name' },
-              { value: 'Value', label: 'Value' },
-              
-              { value: 'Ignore', label: 'Ignore' }
-            ]}
-            value={mappings[idx]}
-            onChange={option => onMappingChange(idx, option)}
-            className='mb-2'
-            styles={customStyles}
-          />
-          {column}
+          <div className='mb-1 min-w-[220px] w-[260px]'>
+            <Select
+              options={mappingOptions}
+              value={mappings[idx]}
+              onChange={option => onMappingChange(idx, option)}
+              styles={customStyles}
+              menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+              menuPosition="fixed"
+              menuPlacement="bottom"
+            />
+          </div>
+          <div className='opacity-80'>{colName}</div>
         </div>
       ),
-      accessor: column
+      cell: info => info.getValue(),
     }));
-  }, [columns, mappings, onMappingChange]);
+  }, [columns, columnsValid, mappings, onMappingChange, customStyles, mappingOptions]);
 
-  const tableInstance = useTable({
-    columns: dataColumns,
-    data: dataValid ? data : []
+  const table = useReactTable({
+    data: dataValid ? data : [],
+    columns: columnDefs,
+    getCoreRowModel: getCoreRowModel(),
   });
-
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-  } = tableInstance;
 
   // Build sets for fast checks
   const errorRowSet = useMemo(() => new Set(errorRows || []), [errorRows]);
   const hasCellError = (rowIndex) => !!cellErrors && !!cellErrors[rowIndex] && Object.keys(cellErrors[rowIndex]).length > 0;
 
   // Compute rows to show
+  const allRows = table.getRowModel().rows;
   const filteredRows = useMemo(() => {
-    if (!showErrorsOnly) return rows;
+    if (!showErrorsOnly) return allRows;
     if (activeErrorColumnId) {
-      return rows.filter(r => !!cellErrors?.[r.index]?.[activeErrorColumnId]);
+      return allRows.filter(r => !!cellErrors?.[r.index]?.[activeErrorColumnId]);
     }
-    return rows.filter(r => errorRowSet.has(r.index) || hasCellError(r.index));
-  }, [rows, showErrorsOnly, errorRowSet, cellErrors, activeErrorColumnId]);
+    return allRows.filter(r => errorRowSet.has(r.index) || hasCellError(r.index));
+  }, [allRows, showErrorsOnly, errorRowSet, cellErrors, activeErrorColumnId]);
 
   const limitedRows = filteredRows.slice(0, 100);
 
@@ -202,39 +211,37 @@ const TablePreview = ({ data, columns, mappings, onMappingChange, errorRows, cel
         </div>
       )}
       <div ref={containerRef} style={{ maxHeight: '60vh', overflow: 'auto' }}>
-        <table {...getTableProps()} className='min-w-full divide-y divide-gray-200'>
+        <table className='min-w-full table-fixed divide-y divide-gray-200'>
           <thead className='bg-gray-50 sticky top-0'>
-            {headerGroups.map(headerGroup => (
-              <tr {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map(column => (
-                  <th ref={el => { if (el) headerRefs.current[column.id] = el; }} {...column.getHeaderProps()} className={`px-3 md:px-4 py-2 text-left text-[10px] md:text-xs font-medium uppercase tracking-wider whitespace-nowrap ${activeErrorColumnId === column.id ? 'bg-[#C7215D] text-white' : 'bg-[#662583] text-white'}`}>
-                    {column.render('Header')}
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <th
+                    key={header.id}
+                    ref={el => { if (el) headerRefs.current[header.column.id] = el; }}
+                    className={`px-3 md:px-4 py-2 text-left text-[10px] md:text-xs font-medium uppercase tracking-wider ${activeErrorColumnId === header.column.id ? 'bg-[#C7215D] text-white' : 'bg-[#662583] text-white'}`}
+                    style={{ width: header.getSize ? header.getSize() : undefined }}
+                  >
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </th>
                 ))}
               </tr>
             ))}
           </thead>
-          <tbody {...getTableBodyProps()}>
-            {limitedRows.map(row => {
-              prepareRow(row);
-              return (
-                <tr ref={el => { if (el) rowRefs.current[row.index] = el; }} {...row.getRowProps({
-                  style: {
-                    backgroundColor: errorRows.includes(row.index) ? '#f8d7da' : '' // Light red background for error rows
-                  }
-                })}>
-                  {row.cells.map(cell => {
-                    const colName = cell.column.id;
-                    const errors = cellErrors?.[row.index]?.[colName];
-                    return (
-                      <td {...cell.getCellProps()} className={`px-3 md:px-4 py-2 whitespace-nowrap text-[11px] md:text-sm font-semibold border ${errors ? 'bg-red-50 text-red-700' : 'text-gray-900'} ${activeErrorColumnId === colName ? 'ring-2 ring-[#C7215D]' : ''}`} title={errors ? errors.join('\\n') : ''}>
-                        {cell.render('Cell')}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
+          <tbody>
+            {limitedRows.map(row => (
+              <tr key={row.id} ref={el => { if (el) rowRefs.current[row.index] = el; }} style={{ backgroundColor: errorRows.includes(row.index) ? '#f8d7da' : '' }}>
+                {row.getVisibleCells().map(cell => {
+                  const colName = cell.column.id;
+                  const errors = cellErrors?.[row.index]?.[colName];
+                  return (
+                    <td key={cell.id} className={`px-3 md:px-4 py-2 text-[11px] md:text-sm font-semibold border ${errors ? 'bg-red-50 text-red-700' : 'text-gray-900'} ${activeErrorColumnId === colName ? 'ring-2 ring-[#C7215D]' : ''}`} title={errors ? errors.join('\n') : ''} style={{ width: cell.column.getSize ? cell.column.getSize() : undefined }}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
