@@ -7,6 +7,8 @@ import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Analytics } from "@vercel/analytics/react";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Health = lazy(() => import('./Health'));
 const Youth = lazy(() => import('./Youth'));
@@ -29,6 +31,7 @@ function App() {
     <FilterProvider>
     <Router>
     <Analytics/>
+          <ToastContainer position="bottom-right" newestOnTop closeOnClick pauseOnHover theme="light" />
       <Navigation /> 
       <div className="App">
         <ErrorBoundary>

@@ -61,14 +61,25 @@ const CSVUploadComponent = () => {
     ];
   
   const [errorRows, setErrorRows] = useState([]);
+  const [cellErrors, setCellErrors] = useState({}); // { [rowIndex]: { [columnName]: [errorType,...] } }
+  const [validationSummary, setValidationSummary] = useState({}); // { errorType: count }
   
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [lastDeleteBackup, setLastDeleteBackup] = useState(null); // { data, cellErrors, errorRows }
   const [completionStatus, setCompletionStatus] = useState({
     value: false,
     place: false,
     date: false,
     name: false
+  });
+
+  // Simple schema rules per logical field
+  const [schemaRules, setSchemaRules] = useState({
+    Place: { required: true, type: 'string', unique: false, enum: '' },
+    Date: { required: true, type: 'date', unique: false, enum: '' },
+    Value: { required: true, type: 'number', unique: false, enum: '', min: '', max: '' },
+    Period: { required: false, type: 'string', unique: false, enum: '' },
   });
   
   const toggleFields = () => {
@@ -76,27 +87,43 @@ const CSVUploadComponent = () => {
   };
 
   function parseDate(input) {
+    // Handle Date instances directly
+    if (input instanceof Date) {
+      if (isValid(input)) return formatISO(input, { representation: 'date' });
+      return null;
+    }
+
+    const src = input == null ? '' : String(input).trim();
+    if (!src) return null;
+
     const formats = [
       'dd/MM/yyyy', // UK date format
       'MM/dd/yyyy', // US date format
-      'yyyy-MM-dd', // ISO format (just in case it's already correct)
+      'yyyy-MM-dd', // ISO format
     ];
   
-    console.log(`Parsing date: ${input}`); // Log the input
+    console.log(`Parsing date: ${src}`);
   
     for (let format of formats) {
-      const parsedDate = parse(input, format, new Date());
-      console.log(`Trying format ${format}:`, parsedDate); // Log each attempt
-  
+      const parsedDate = parse(src, format, new Date());
+      console.log(`Trying format ${format}:`, parsedDate);
       if (isValid(parsedDate)) {
-        const isoDate = formatISO(parsedDate, { representation: 'date' });
-        console.log(`Valid date found: ${isoDate}`); // Log the successful conversion
-        return isoDate; // Return the date in ISO format if valid
+        return formatISO(parsedDate, { representation: 'date' });
+      }
+    }
+
+    // Best effort: plain 4-digit year
+    if (/^\d{4}$/.test(src)) {
+      const yearNum = Number(src);
+      if (yearNum >= 1900 && yearNum <= 2100) {
+        const isoDate = `${src}-01-01`;
+        console.log(`Best-effort year-only date -> ${isoDate}`);
+        return isoDate;
       }
     }
   
     console.log('No valid date format found, returning null.');
-    return null; // Return null if no valid date is found
+    return null;
   }
   
 
@@ -148,22 +175,30 @@ const CSVUploadComponent = () => {
           }
   
           const headers = results.meta.fields;
-          setData(results.data);
+          // Post-process numeric strings (remove thousands separators) now that worker mode is enabled
+          const normalizedRows = results.data.map((row) => {
+            const newRow = { ...row };
+            headers.forEach((h) => {
+              const v = newRow[h];
+              if (typeof v === 'string' && v.includes(',')) {
+                const cleanedValue = parseFloat(v.replace(/,/g, ''));
+                if (!isNaN(cleanedValue)) newRow[h] = cleanedValue;
+              }
+            });
+            return newRow;
+          });
+          setData(normalizedRows);
           setColumns(headers);
           const initialMappings = headers.map(header => ({ value: 'Ignore', label: 'Ignore' }));
           setHeaderMappings(initialMappings);
   
-          const dataWithDatesProcessed = await Promise.all(results.data.map(async (row) => {
-            const newRow = { ...row };
-            for (const header of results.meta.fields) {
-              if (header === 'Date') { // Adjust according to your specific logic
-                newRow[header] = await parseDate(row[header]) || 'Invalid date';
-              }
-            }
-            return newRow;
-          }));
-  
+          // Normalize any mapped Date columns
+          const dataWithDatesProcessed = normalizedRows; // will adjust post-mapping as well
           setData(dataWithDatesProcessed);
+          // Run validations using a raw parse without headers for structural checks
+          await runValidations(file, headers, dataWithDatesProcessed);
+          // Apply schema-driven validations
+          applySchemaValidation(dataWithDatesProcessed, headers, initialMappings);
         } else {
           setMessage('Error in CSV format: No data or incorrect format.');
           toast.error('Error in CSV format: No data or incorrect format.');
@@ -172,16 +207,198 @@ const CSVUploadComponent = () => {
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true,
-      transform: (value, header) => {
-        if (typeof value === 'string' && value.includes(',')) {
-          // Remove commas from numeric values and convert to a number
-          const cleanedValue = parseFloat(value.replace(/,/g, ''));
-          if (!isNaN(cleanedValue)) {
-            return cleanedValue;
+      worker: true,
+      // Note: transform is not supported with worker:true (cannot clone functions). We normalize values after parse.
+    });
+  };
+
+  // Infer and validate using raw rows
+  const runValidations = (file, headers, dataWithDatesProcessed) => {
+    return new Promise((resolve) => {
+      Papa.parse(file, {
+        header: false,
+        dynamicTyping: false,
+        skipEmptyLines: false,
+        complete: ({ data: rawRows }) => {
+          try {
+            const summary = {};
+            const addSummary = (type, inc = 1) => { summary[type] = (summary[type] || 0) + inc; };
+
+            if (!rawRows || rawRows.length === 0) {
+              setCellErrors({});
+              setErrorRows([]);
+              setValidationSummary(summary);
+              resolve();
+              return;
+            }
+
+            // Header checks
+            const headerRow = rawRows[0] || [];
+            const isHeaderMissing = headerRow.length === 0 || headerRow.every(cell => String(cell || '').trim() === '');
+            if (isHeaderMissing) addSummary('Header missing', 1);
+
+            // Column names
+            const columnNames = headers && headers.length ? headers : headerRow.map((h, idx) => (String(h || '').trim() || `Column ${idx + 1}`));
+            const missingNameIndexes = columnNames.map((h, i) => ({ h, i })).filter(x => String(x.h || '').trim() === '').map(x => x.i);
+            if (missingNameIndexes.length > 0) addSummary('Column name missing', missingNameIndexes.length);
+            const nameCounts = columnNames.reduce((acc, n) => { const k = n || ''; acc[k] = (acc[k] || 0) + 1; return acc; }, {});
+            const duplicateNames = Object.entries(nameCounts).filter(([, c]) => c > 1);
+            if (duplicateNames.length > 0) addSummary('Duplicate column name', duplicateNames.length);
+
+            // Row structure checks
+            const headerLen = columnNames.length;
+            const rowErrorsSet = new Set();
+            const perCellErrors = {};
+
+            for (let r = 1; r < rawRows.length; r += 1) {
+              const row = rawRows[r];
+              const isCompletelyEmpty = !row || row.every(cell => String(cell || '').trim() === '');
+              if (isCompletelyEmpty) {
+                addSummary('Empty row', 1);
+                rowErrorsSet.add(r - 1); // align to data index (exclude header)
+                continue;
+              }
+              const len = row ? row.length : 0;
+              if (len < headerLen) { addSummary('Missing cell', 1); rowErrorsSet.add(r - 1); }
+              if (len > headerLen) { addSummary('Extra cell', 1); rowErrorsSet.add(r - 1); }
+            }
+
+            // Type inference: determine numeric columns and flag non-numeric values
+            const dataRows = rawRows.slice(1);
+            const numericLikely = columnNames.map((_, colIdx) => {
+              const values = dataRows.map(row => row?.[colIdx]).filter(v => String(v ?? '').trim() !== '');
+              if (values.length === 0) return false;
+              const numCount = values.filter(v => !isNaN(Number(String(v).replace(/,/g, '')))).length;
+              return (numCount / values.length) >= 0.7; // threshold
+            });
+
+            dataRows.forEach((row, rIdx) => {
+              if (!row) return;
+              row.forEach((cell, cIdx) => {
+                const rowIndex = rIdx; // already aligned to data index
+                const colName = columnNames[cIdx] || `Column ${cIdx + 1}`;
+                if (numericLikely[cIdx]) {
+                  const isNum = !isNaN(Number(String(cell).replace(/,/g, '')));
+                  if (String(cell).trim() !== '' && !isNum) {
+                    perCellErrors[rowIndex] = perCellErrors[rowIndex] || {};
+                    perCellErrors[rowIndex][colName] = perCellErrors[rowIndex][colName] || [];
+                    perCellErrors[rowIndex][colName].push('Wrong data type (expected number)');
+                    addSummary('Wrong data type', 1);
+                    rowErrorsSet.add(rowIndex);
+                  }
+                }
+              });
+            });
+
+            setCellErrors(perCellErrors);
+            setErrorRows(Array.from(rowErrorsSet));
+            setValidationSummary(summary);
+            resolve();
+          } catch (e) {
+            console.error('Validation failed', e);
+            resolve();
           }
         }
-        return value;
+      });
+    });
+  };
+
+  // Helper to get mapping from logical field name to column index
+  const getLogicalFieldToIndex = (headers, mappings) => {
+    const map = {};
+    mappings.forEach((m, idx) => {
+      if (m && m.value && m.value !== 'Ignore') {
+        map[m.value] = idx;
       }
+    });
+    return map;
+  };
+
+  const applySchemaValidation = (rows, headers, mappings) => {
+    const fieldToIndex = getLogicalFieldToIndex(headers, mappings);
+    const newCellErrors = { ...cellErrors };
+    const newRowErrors = new Set(errorRows);
+    const newSummary = { ...validationSummary };
+
+    const addSummary = (type) => { newSummary[type] = (newSummary[type] || 0) + 1; };
+
+    // Unique trackers per logical field
+    const seenValues = {};
+    Object.keys(schemaRules).forEach((field) => { if (schemaRules[field].unique) seenValues[field] = new Set(); });
+
+    rows.forEach((row, rIdx) => {
+      Object.entries(fieldToIndex).forEach(([field, cIdx]) => {
+        const rules = schemaRules[field];
+        if (!rules) return;
+        const colName = headers[cIdx];
+        const rawVal = row[colName];
+        const valStr = rawVal == null ? '' : String(rawVal).trim();
+        const errors = [];
+
+        // Required
+        if (rules.required && (valStr === '')) {
+          errors.push('Required value missing');
+          addSummary('Required value missing');
+        }
+
+        // Type
+        if (valStr !== '') {
+          if (rules.type === 'number') {
+            const isNum = typeof rawVal === 'number' || !isNaN(Number(String(rawVal).replace(/,/g, '')));
+            if (!isNum) { errors.push('Wrong data type (expected number)'); addSummary('Wrong data type'); }
+            // Min/Max
+            const num = Number(String(rawVal).replace(/,/g, ''));
+            if (rules.min !== '' && !isNaN(Number(rules.min)) && num < Number(rules.min)) { errors.push(`Below minimum (${rules.min})`); addSummary('Below minimum'); }
+            if (rules.max !== '' && !isNaN(Number(rules.max)) && num > Number(rules.max)) { errors.push(`Above maximum (${rules.max})`); addSummary('Above maximum'); }
+          } else if (rules.type === 'date') {
+            const parsed = parseDate(valStr);
+            if (!parsed || parsed === 'Invalid date') { errors.push('Wrong data type (expected date)'); addSummary('Wrong data type'); }
+          } else {
+            // string: no-op
+          }
+        }
+
+        // Enum
+        if (rules.enum && rules.enum.trim() !== '' && valStr !== '') {
+          const set = new Set(rules.enum.split(',').map(s => s.trim()).filter(Boolean));
+          if (!set.has(valStr)) { errors.push('Value not in allowed set'); addSummary('Value not in allowed set'); }
+        }
+
+        // Unique (non-empty values)
+        if (rules.unique && valStr !== '') {
+          const seen = seenValues[field];
+          if (seen) {
+            const key = valStr.toLowerCase();
+            if (seen.has(key)) { errors.push('Duplicate value (should be unique)'); addSummary('Duplicate value'); }
+            else { seen.add(key); }
+          }
+        }
+
+        if (errors.length > 0) {
+          newCellErrors[rIdx] = newCellErrors[rIdx] || {};
+          newCellErrors[rIdx][colName] = [...(newCellErrors[rIdx][colName] || []), ...errors];
+          newRowErrors.add(rIdx);
+        }
+      });
+    });
+
+    setCellErrors(newCellErrors);
+    setErrorRows(Array.from(newRowErrors));
+    setValidationSummary(newSummary);
+  };
+
+  // Normalize date columns based on current mappings (any column mapped to 'Date')
+  const normalizeDatesByMapping = (rows, headers, mappings) => {
+    const fieldToIndex = getLogicalFieldToIndex(headers, mappings);
+    const dateIndex = fieldToIndex['Date'];
+    if (dateIndex === undefined) return rows;
+    const dateHeader = headers[dateIndex];
+    return rows.map((row) => {
+      const cloned = { ...row };
+      const v = cloned[dateHeader];
+      const parsed = parseDate(v);
+      if (parsed) cloned[dateHeader] = parsed;
+      return cloned;
     });
   };
   
@@ -207,6 +424,12 @@ const CSVUploadComponent = () => {
     newMappings[index] = option;
     setHeaderMappings(newMappings);
     validateMappings(newMappings); // Validate whenever mappings change
+    // Re-apply normalization and validation after mapping changes
+    if (data.length > 0 && columns.length > 0) {
+      const normalized = normalizeDatesByMapping(data, columns, newMappings);
+      setData(normalized);
+      applySchemaValidation(normalized, columns, newMappings);
+    }
   };
   
 
@@ -264,6 +487,59 @@ const CSVUploadComponent = () => {
       setLoading(false);
     }
   };
+
+  const exportErrors = () => {
+    const rows = [];
+    Object.entries(cellErrors).forEach(([rowIndex, cols]) => {
+      Object.entries(cols).forEach(([colName, errs]) => {
+        rows.push({ row: Number(rowIndex) + 2, column: colName, errors: errs.join('; ') }); // +2 to account for header and 0-index
+      });
+    });
+    const csvHeader = 'row,column,errors\n';
+    const csvBody = rows.map(r => `${r.row},"${r.column}","${r.errors}"`).join('\n');
+    const blob = new Blob([csvHeader + csvBody], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'validation-errors.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Fix suggestions: auto-trim, normalize case, remove thousands separators, best-effort date parsing
+  const applyFixSuggestions = () => {
+    if (data.length === 0) return;
+    let fixed = data.map((row) => {
+      const newRow = { ...row };
+      Object.keys(newRow).forEach((key) => {
+        let v = newRow[key];
+        if (typeof v === 'string') {
+          // Trim and collapse whitespace
+          v = v.trim().replace(/\s+/g, ' ');
+          // Remove thousands separators if numeric-like
+          if (/^-?[\d,.]+$/.test(v)) {
+            const num = Number(v.replace(/,/g, ''));
+            if (!isNaN(num)) v = num;
+          }
+          // Best-effort date normalization where header exactly 'Date'
+          if (key === 'Date') {
+            const parsed = parseDate(v);
+            if (parsed && parsed !== 'Invalid date') v = parsed;
+          }
+        }
+        newRow[key] = v;
+      });
+      return newRow;
+    });
+    // Also normalize based on mapping in case the Date column is not literally named 'Date'
+    fixed = normalizeDatesByMapping(fixed, columns, headerMappings);
+    setData(fixed);
+    // Re-validate with current mappings and schema
+    applySchemaValidation(fixed, columns, headerMappings);
+    toast.success('Applied fix suggestions and re-validated');
+  };
   
   
 const submitData = async (data, mappings, additionalFields, datasetId) => {
@@ -273,6 +549,10 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
   const errorRows = [];
   const processedData = [];
   const rowHasError = [];
+
+  // Determine name column and count of value columns
+  const nameColIndex = mappings.findIndex(m => m && m.value === 'Name');
+  const valueColIndices = mappings.map((m, i) => (m && m.value === 'Value') ? i : -1).filter(i => i >= 0);
 
   data.forEach((row, rowIndex) => {
     // For each row, create an entry for each "value" column selected
@@ -301,12 +581,25 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
             rowHasError = true;
           }
         } else {
-          entry['name'] = headers[idx];  // Use the column header as the 'name'
+          // Resolve the name: prefer mapped Name column if provided
+          if (nameColIndex !== -1) {
+            const baseName = row[headers[nameColIndex]];
+            const headerName = headers[idx];
+            if (valueColIndices.length > 1 && baseName != null && String(baseName).trim() !== '') {
+              entry['name'] = `${String(baseName).trim()} - ${headerName}`;
+            } else if (baseName != null && String(baseName).trim() !== '') {
+              entry['name'] = String(baseName).trim();
+            } else {
+              entry['name'] = headerName;
+            }
+          } else {
+            entry['name'] = headers[idx];  // Fallback to value column header
+          }
           entry['value'] = value;  // Store the number as 'value'
 
           // Include other mapped fields
           mappings.forEach((m, i) => {
-            if (m.value !== 'Ignore' && m.label !== 'Value') {
+            if (m.value !== 'Ignore' && m.value !== 'Value' && m.value !== 'Name') {
               if (m.value === 'Place') {
                 entry['place_upload'] = row[headers[i]];
               }
@@ -527,6 +820,20 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
 )}
       </div>
       <div className='my-5 bg-slate-100'>
+      {data.length > 0 && (
+        <div className='p-4 text-sm bg-purple-50 border border-purple-200 rounded mb-3'>
+          <div className='font-semibold mb-2'>How to map your columns</div>
+          <ul className='list-disc list-inside space-y-1'>
+            <li>
+              <span className='font-semibold'>Multiple Value columns</span>: map each numeric column to <span className='font-semibold'>Value</span>. The column header becomes the observation <span className='font-semibold'>Name</span>.
+            </li>
+            <li>
+              <span className='font-semibold'>Single Value + Name column</span>: map the text column to <span className='font-semibold'>Name</span> and the numeric column to <span className='font-semibold'>Value</span>.
+            </li>
+          </ul>
+          <div className='mt-2 text-slate-700'>If both a Name column and multiple Value columns are provided, the saved name becomes “Name - ValueHeader”.</div>
+        </div>
+      )}
       {data.length > 0 && columns.length > 0 && (
         <TablePreview
           data={data}
@@ -534,6 +841,8 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
           mappings={headerMappings}
           onMappingChange={handleMappingChange}
           errorRows={errorRows}
+          cellErrors={cellErrors}
+          validationSummary={validationSummary}
         />
       )}
       
@@ -541,6 +850,86 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
       </div>
       {data.length > 0 && columns.length > 0 && (
         <>
+      <div className='bg-slate-100 p-4 rounded mb-4'>
+        <h3 className='font-bold mb-2'>Validation rules</h3>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+          {Object.entries(schemaRules).map(([field, rules]) => (
+            <div key={field} className='border rounded p-3'>
+              <div className='font-semibold mb-2'>{field}</div>
+              <div className='flex items-center gap-2 mb-2'>
+                <label className='text-sm w-24'>Required</label>
+                <input type='checkbox' checked={rules.required} onChange={(e) => setSchemaRules(prev => ({ ...prev, [field]: { ...prev[field], required: e.target.checked } }))} />
+              </div>
+              <div className='flex items-center gap-2 mb-2'>
+                <label className='text-sm w-24'>Type</label>
+                <select className='border p-1 rounded text-sm' value={rules.type} onChange={(e) => setSchemaRules(prev => ({ ...prev, [field]: { ...prev[field], type: e.target.value } }))}>
+                  <option value='string'>string</option>
+                  <option value='number'>number</option>
+                  <option value='date'>date</option>
+                </select>
+              </div>
+              <div className='flex items-center gap-2 mb-2'>
+                <label className='text-sm w-24'>Unique</label>
+                <input type='checkbox' checked={rules.unique} onChange={(e) => setSchemaRules(prev => ({ ...prev, [field]: { ...prev[field], unique: e.target.checked } }))} />
+              </div>
+              {field === 'Value' && (
+                <div className='flex items-center gap-2 mb-2'>
+                  <label className='text-sm w-24'>Min</label>
+                  <input className='border p-1 rounded text-sm w-24' type='number' value={rules.min} onChange={(e) => setSchemaRules(prev => ({ ...prev, [field]: { ...prev[field], min: e.target.value } }))} />
+                  <label className='text-sm w-12'>Max</label>
+                  <input className='border p-1 rounded text-sm w-24' type='number' value={rules.max} onChange={(e) => setSchemaRules(prev => ({ ...prev, [field]: { ...prev[field], max: e.target.value } }))} />
+                </div>
+              )}
+              <div className='flex items-center gap-2 mb-2'>
+                <label className='text-sm w-24'>Enum</label>
+                <input className='border p-1 rounded text-sm flex-1' placeholder='Comma-separated allowed values' value={rules.enum} onChange={(e) => setSchemaRules(prev => ({ ...prev, [field]: { ...prev[field], enum: e.target.value } }))} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className='mt-2 flex flex-col md:flex-row gap-2 items-start md:items-center justify-between'>
+          <div className='flex gap-2'>
+            <button
+              onClick={() => {
+                const errorRowSet = new Set(Object.keys(cellErrors).map(k => Number(k)));
+                if (errorRowSet.size === 0) {
+                  toast.info('No error rows to delete');
+                  return;
+                }
+                const confirmed = window.confirm(`Delete ${errorRowSet.size} row(s) with errors? This can be undone.`);
+                if (!confirmed) return;
+                setLastDeleteBackup({ data: [...data], cellErrors: { ...cellErrors }, errorRows: [...errorRows] });
+                const filtered = data.filter((_, idx) => !errorRowSet.has(idx));
+                setData(filtered);
+                setCellErrors({});
+                setErrorRows([]);
+                toast.success('Removed rows with errors');
+              }}
+              className='bg-red-100 text-red-800 font-medium py-2 px-4 rounded-md hover:bg-red-200 transition-colors duration-300'
+            >
+              Delete rows with errors
+            </button>
+            {lastDeleteBackup && (
+              <button
+                onClick={() => {
+                  setData(lastDeleteBackup.data);
+                  setCellErrors(lastDeleteBackup.cellErrors);
+                  setErrorRows(lastDeleteBackup.errorRows);
+                  setLastDeleteBackup(null);
+                  toast.success('Undo successful');
+                }}
+                className='bg-white border text-slate-800 font-medium py-2 px-4 rounded-md hover:bg-slate-50 transition-colors duration-300'
+              >
+                Undo
+              </button>
+            )}
+          </div>
+          <div className='flex gap-2'>
+            <button onClick={() => applySchemaValidation(data, columns, headerMappings)} className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'>Re-validate</button>
+            <button onClick={applyFixSuggestions} className='bg-slate-200 text-slate-900 font-medium py-2 px-4 rounded-md hover:bg-slate-300 transition-colors duration-300'>Apply fix suggestions</button>
+          </div>
+        </div>
+      </div>
       <p className='my-5 text-lg font-bold'>All submissions require a Place, Date and Value. You can view which of these you have provided or indicated below. At 100% you have all the required fields</p>
       <div className="w-full bg-gray-300">
       <div className="bg-[#662583] text-xs font-medium text-blue-100 text-center p-0.5 leading-none" style={{ width: `${calculateCompletionPercentage()}%` }}> {calculateCompletionPercentage()}% Complete</div>
@@ -549,6 +938,11 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
       {Object.keys(completionStatus).map(key => (
         <RequirementFeedback key={key} isComplete={completionStatus[key]} field={key.charAt(0).toUpperCase() + key.slice(1)} />
       ))}
+      </div>
+      <div className='mt-3'>
+        <button onClick={exportErrors} className='bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300'>Download error report</button>
+        {/* Hidden anchor to support header link on Contribute page */}
+        <a id='download-error-report' href='#' onClick={(e) => { e.preventDefault(); exportErrors(); }} style={{ display: 'none' }}>download</a>
       </div>
       </>
       )}

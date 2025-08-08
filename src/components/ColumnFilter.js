@@ -62,16 +62,18 @@ function ColumnFilter({ column, onFilterChange, globalbackgroundColor }) {
   const selectedValues = options.filter(option => filterValue.includes(option.value));
 
   return (
-    <Select
-      isMulti
-      value={selectedValues}
-      onChange={handleChange}
-      options={options}
-      className="text-sm w-full"
-      styles={customStyles} // Apply dynamic styles
-      isDisabled={options.length === 0}
-      placeholder={options.length > 0 ? "Select..." : "No options available"}
-    />
+    <div className="min-w-[160px] md:min-w-[220px]">
+      <Select
+        isMulti
+        value={selectedValues}
+        onChange={handleChange}
+        options={options}
+        className="text-[11px] md:text-sm"
+        styles={customStyles} // Apply dynamic styles
+        isDisabled={options.length === 0}
+        placeholder={options.length > 0 ? "Filter..." : "No options"}
+      />
+    </div>
   );
 }
 
