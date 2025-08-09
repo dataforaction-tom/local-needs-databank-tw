@@ -3,6 +3,7 @@ import ObservationsChart from './ObservationsChart';
 import supabase from '../supabaseClient';
 import MultiObservationsChart from './MultiObservationsChart';
 import { Oval } from 'react-loader-spinner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ObservationsTable = React.lazy(() => import('./ObservationsTable'));
 
@@ -135,19 +136,30 @@ function DashboardnoMap({ dashboardId, defaultChartType, startColor, endColor, g
                     </div>
                 ) : (
                     <>
-                        {isTableVisible && (
-                            <ObservationsTable
-                                title={selectedDataset ? selectedDataset.label : ''}
-                                observations={observations}
-                                setFilteredObservations={setFilteredObservations}
-                                license={selectedDataset ? selectedDataset.license : ''}
-                                original_url={selectedDataset ? selectedDataset.original_url : ''}
-                                published_date={selectedDataset ? selectedDataset.published_date : ''}
-                                dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
-                                owner={selectedDataset ? selectedDataset.owner : ''}
-                                globalbackgroundColor={globalbackgroundColor}
-                            />
-                        )}
+                        <AnimatePresence initial={false}>
+                            {isTableVisible && (
+                                <motion.section
+                                    key="observations-table"
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                                    aria-live="polite"
+                                >
+                                    <ObservationsTable
+                                        title={selectedDataset ? selectedDataset.label : ''}
+                                        observations={observations}
+                                        setFilteredObservations={setFilteredObservations}
+                                        license={selectedDataset ? selectedDataset.license : ''}
+                                        original_url={selectedDataset ? selectedDataset.original_url : ''}
+                                        published_date={selectedDataset ? selectedDataset.published_date : ''}
+                                        dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                                        owner={selectedDataset ? selectedDataset.owner : ''}
+                                        globalbackgroundColor={globalbackgroundColor}
+                                    />
+                                </motion.section>
+                            )}
+                        </AnimatePresence>
 
                         <ObservationsChart
                             observations={filteredObservations}

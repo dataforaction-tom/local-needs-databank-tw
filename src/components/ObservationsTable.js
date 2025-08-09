@@ -199,11 +199,12 @@ function ObservationsTable({ observations, setFilteredObservations, title, licen
 
       <div style={scrollContainerStyle}>
         <table className="min-w-full divide-y divide-gray-200">
+          <caption className="sr-only">Observations table for {title || 'current dataset'}</caption>
           <thead className="bg-gray-50 sticky top-0 z-10">
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <th key={header.id} className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider" style={{ backgroundColor: globalbackgroundColor }}>
+                  <th key={header.id} scope="col" className="px-3 py-3 text-left text-xs font-medium text-white uppercase tracking-wider" style={{ backgroundColor: globalbackgroundColor }}>
                     <div className="flex flex-col gap-1">
                       <div>{flexRender(header.column.columnDef.header, header.getContext())}</div>
                       {header.column.getCanFilter() && header.column.columnDef.meta?.filterOptions?.length ? (

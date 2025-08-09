@@ -5,6 +5,7 @@ import supabase from '../supabaseClient';
 import { Oval } from 'react-loader-spinner'; // Import spinner
 import { openDB } from 'idb'; // Importing IndexedDB helper
 import Select from 'react-select';
+import { motion, AnimatePresence } from 'framer-motion';
 const LocalAuthorityMap23 = React.lazy(() => import('./Map23'));
 const MultiObservationsChart = React.lazy(() => import('./MultiObservationsChart'));
 const ObservationsChart = React.lazy(() => import('./ObservationsChart'));
@@ -240,19 +241,30 @@ function Dashboard({ dashboardId, defaultChartType, startColor, endColor, global
                     </div>
                 ) : (
                     <>
-                        {isTableVisible && (
-                            <ObservationsTable
-                                title={selectedDataset ? selectedDataset.label : ''}
-                                observations={observations}
-                                setFilteredObservations={setFilteredObservations}
-                                license={selectedDataset ? selectedDataset.license : ''}
-                                original_url={selectedDataset ? selectedDataset.original_url : ''}
-                                published_date={selectedDataset ? selectedDataset.published_date : ''}
-                                dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
-                                owner={selectedDataset ? selectedDataset.owner : ''}
-                                globalbackgroundColor={globalbackgroundColor}
-                            />
-                        )}
+                        <AnimatePresence initial={false}>
+                            {isTableVisible && (
+                                <motion.section
+                                    key="observations-table"
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                                    aria-live="polite"
+                                >
+                                    <ObservationsTable
+                                        title={selectedDataset ? selectedDataset.label : ''}
+                                        observations={observations}
+                                        setFilteredObservations={setFilteredObservations}
+                                        license={selectedDataset ? selectedDataset.license : ''}
+                                        original_url={selectedDataset ? selectedDataset.original_url : ''}
+                                        published_date={selectedDataset ? selectedDataset.published_date : ''}
+                                        dataset_description={selectedDataset ? selectedDataset.dataset_description : ''}
+                                        owner={selectedDataset ? selectedDataset.owner : ''}
+                                        globalbackgroundColor={globalbackgroundColor}
+                                    />
+                                </motion.section>
+                            )}
+                        </AnimatePresence>
 
                         <Suspense fallback={<div className="my-10 flex justify-center"><Oval color="#00BFFF" height={50} width={50} /></div>}>
                             <ObservationsChart

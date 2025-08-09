@@ -4,10 +4,9 @@ import supabase from './supabaseClient'; // Ensure the correct path
 import AllDashboard from './components/AllDashboard';
 import ObservationsTable from './components/ObservationsTable';
 import ObservationsChart from './components/ObservationsChart';
-import LocalAuthorityMap from './components/Map';
-import LocalAuthorityMap23 from './components/Map23';
 import { FaChartBar } from 'react-icons/fa';
 import RadarChart from './components/RadarChart';
+import { motion } from 'framer-motion';
 
 const customStyles = {
     control: (base, state) => ({
@@ -168,105 +167,125 @@ const Explore = () => {
         
     
     return (
-        
-        <div className="px-4 sm:px-6 lg:px-8">
-            <div className="text-sm font-bold text-gray-800 mt-2 mb-3 flex items-end flex justify-end mr-5 mt-5">
-                <FaChartBar className="text-[#662583] mr-2" size="2em" />
-                Data Explorer Dashboard
+      <div className="px-4 sm:px-6 lg:px-8 py-8 bg-gradient-to-b from-purple-50 to-white">
+        <div className="max-w-7xl mx-auto">
+          <header className="mb-6 flex items-center gap-3">
+            <FaChartBar className="text-[#662583]" size="1.75em" />
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">Data Explorer</h1>
+          </header>
+
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start"
+          >
+            <div className="md:col-span-1 bg-white rounded-2xl p-6 shadow ring-1 ring-slate-200">
+              <h2 className="text-xl font-bold text-slate-900">Explore the databank</h2>
+              <p className="mt-2 text-slate-700 text-sm">
+                Choose datasets to build your own dashboard. Place datasets include geography (maps), Time datasets include trends, and you can also explore all observations for selected local authorities.
+              </p>
+              <ul className="mt-3 text-sm text-slate-700 list-disc list-inside">
+                <li>Use one or combine multiple controls</li>
+                <li>Filter the table to refine the charts</li>
+              </ul>
             </div>
-            
-            <div className="w-9/10 mx-auto bg-gray-100 p-6">
-            <div className='text-2xl font-bold my-2'>
-            <h2>Local Needs Databank Explorer</h2>
-
+            <div className="md:col-span-2 bg-white rounded-2xl p-6 shadow ring-1 ring-slate-200">
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label htmlFor="place-datasets" className="block text-sm font-medium text-slate-700 mb-1">Place datasets</label>
+                  <Select
+                    inputId="place-datasets"
+                    options={placeDatasets}
+                    onChange={setSelectedPlace}
+                    value={selectedPlace}
+                    placeholder="Select a Place dataset"
+                    isClearable
+                    styles={customStyles}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="time-datasets" className="block text-sm font-medium text-slate-700 mb-1">Time datasets</label>
+                  <Select
+                    inputId="time-datasets"
+                    options={timeDatasets}
+                    onChange={setSelectedTime}
+                    value={selectedTime}
+                    placeholder="Select a Time dataset"
+                    isClearable
+                    styles={customStyles}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="single-datasets" className="block text-sm font-medium text-slate-700 mb-1">Single datasets</label>
+                  <Select
+                    inputId="single-datasets"
+                    options={singleDatasets}
+                    onChange={setSelectedSingle}
+                    value={selectedSingle}
+                    placeholder="Select a Single dataset"
+                    isClearable
+                    styles={customStyles}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="la-select" className="block text-sm font-medium text-slate-700 mb-1">Local authorities</label>
+                  <Select
+                    inputId="la-select"
+                    options={localAuthorities}
+                    onChange={setSelectedLAs}
+                    value={selectedLAs}
+                    placeholder="Select Local Authorities"
+                    isClearable
+                    isMulti
+                    styles={customStyles}
+                  />
+                </div>
+              </div>
             </div>
-    <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-1 text-pretty">
-            <p>Here you can explore the data within the Local Needs Databank in your own way. Selecting datasets from the select keys to the right will render charts based on that dataset for you.</p>
-            <br></br>
-            <p>Each of the select boxes will allow you to create a dashboard based on the dataset you select. Some of these are <b>'Place'</b> datasets, meaning they have geographic data, so will create charts and a map with location details</p>
-            <br></br>
-            <p>The <b>'Time'</b> select box allows your to look at datasets that have a time element, so you can look at trends over time</p>
-            <br></br>
-            <p>The <b>'Local Authority'</b> select box allows you to explore EVERY observation related to one or more Local Authorities. From there you can <b>filter</b> in the table the observations you actually want</p>
-        </div>
-        <div className="col-span-2 space-y-4">
-            <Select
-                options={placeDatasets}
-                onChange={setSelectedPlace}
-                value={selectedPlace}
-                placeholder="Select a Place Dataset"
-                isClearable={true}
-                styles={customStyles}
-            />
-            <Select
-                options={timeDatasets}
-                onChange={setSelectedTime}
-                value={selectedTime}
-                placeholder="Select a Time Dataset"
-                isClearable={true}
-                styles={customStyles}
-            />
-           
-             <div className="col-span-2 space-y-4">
-                    <Select
-                options={localAuthorities}
-                onChange={setSelectedLAs}
-                value={selectedLAs}
-                placeholder="Select Local Authorities"
-                isClearable={true}
-                isMulti={true}  // Enable multi-selection
-                styles={customStyles}
-                />
-        </div>
-        </div>
-    </div>
-    <div className="mt-6 grid grid-cols-3 gap-4 b">
-        <div className="col-span-1">
-            <p>You only need to use one select field, though you can potentially use all 4 and create your own dashboard for exploration, using datasets from across the databank</p>
-            <br></br>
-            <p>For more details on how you could use the Data Explorer page, please see the <b>help video</b></p>
-        </div>
-       
-    </div>
-</div>
+          </motion.section>
 
+          <section className="mt-8">
+            {loading ? (
+              <p className="text-slate-700">Loading observations...</p>
+            ) : (
+              selectedLAs.length > 0 && (
+                <div className="bg-white rounded-2xl p-6 shadow ring-1 ring-slate-200">
+                  <ObservationsTable
+                    observations={observations}
+                    setFilteredObservations={setFilteredObservations}
+                    title={selectedPlace?.title || ''}
+                    original_url={selectedPlace?.originalUrl || ''}
+                    owner={selectedPlace?.owner || ''}
+                    dataset_description={selectedPlace?.description || ''}
+                    license={selectedPlace?.license || ''}
+                    published_date={selectedPlace?.publishedDate || ''}
+                  />
+                  <div className="mt-6 grid grid-cols-1 gap-6">
+                    <ObservationsChart observations={filteredObservations} title="Detailed Observations" />
+                    <RadarChart observations={filteredObservations} title="Detailed Observations Radar Chart" />
+                  </div>
+                </div>
+              )
+            )}
+          </section>
 
-{loading ? (
-        <p>Loading observations...</p>
-    ) : selectedLAs.length > 0 && (  // Render components only when selectedLA is truthy
-        <>
-            <ObservationsTable
-                observations={observations}
-                setFilteredObservations={setFilteredObservations}
-                title={selectedPlace?.title || ''}
-            originalUrl={selectedPlace?.originalUrl || ''}
-            owner={selectedPlace?.owner || ''}
-            datasetDescription={selectedPlace?.description || ''}
-            license={selectedPlace?.license || ''}
-                
-                
-            />
-            <ObservationsChart
-                observations={filteredObservations}
-                title="Detailed Observations"
-            />
-            <RadarChart
-                        observations={filteredObservations}
-                        title="Detailed Observations Radar Chart"
-                    />
-            
-        </>
-    )}
-            {selectedPlace && <AllDashboard 
-            placeDataset={selectedPlace} title={selectedPlace.title} 
-            originalUrl={selectedPlace.originalUrl} 
-            owner={selectedPlace.owner} 
-            datasetDescription={selectedPlace.description} 
-            license={selectedPlace.license} />}
+          <section className="mt-8 grid grid-cols-1 gap-6">
+            {selectedPlace && (
+              <AllDashboard
+                placeDataset={selectedPlace}
+                title={selectedPlace.title}
+                originalUrl={selectedPlace.originalUrl}
+                owner={selectedPlace.owner}
+                datasetDescription={selectedPlace.description}
+                license={selectedPlace.license}
+              />
+            )}
             {selectedTime && <AllDashboard timeDataset={selectedTime} />}
             {selectedSingle && <AllDashboard singleDataset={selectedSingle} />}
+          </section>
         </div>
+      </div>
     );
 };
 

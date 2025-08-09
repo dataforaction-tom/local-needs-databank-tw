@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Papa from 'papaparse';
 import TablePreview from './TablePreview';
 import supabase from '../supabaseClient';
@@ -6,6 +6,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Select from 'react-select';
 import { parse, isValid, formatISO } from 'date-fns';
+import { FiUploadCloud } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 
 
 
@@ -15,6 +17,9 @@ const CSVUploadComponent = () => {
   const [showFields, setShowFields] = useState(false); // State to control the visibility of input fields
   const [headerMappings, setHeaderMappings] = useState([]);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounterRef = useRef(0);
+  const fileInputRef = useRef(null);
 
   const [additionalFields, setAdditionalFields] = useState({
     name: '',
@@ -132,11 +137,41 @@ const CSVUploadComponent = () => {
     e.stopPropagation(); // Stop propagation to prevent affecting other elements.
   };
 
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current += 1;
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current <= 0) {
+      setIsDragging(false);
+      dragCounterRef.current = 0;
+    }
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation(); // Ensure the event does not propagate.
+    setIsDragging(false);
+    dragCounterRef.current = 0;
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFileDrop(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleDropzoneClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handleDropzoneKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleDropzoneClick();
     }
   };
 
@@ -665,40 +700,68 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
   };
 
   return (
-    <div>
+    <div className="max-w-6xl mx-auto px-4 py-8 bg-gradient-to-b from-purple-50 to-white">
       <ToastContainer />
-      <div className="grid grid-cols-3 gap-4 items-center bg-slate-50">
-      
-        <div className="col-span-1 justify-center">
-        
-            <p className='text-xl font-bold'>To get started read our guidance or drop in a csv to the right</p>
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch bg-white rounded-2xl p-6 md:p-8 shadow-lg ring-1 ring-slate-200">
+        <div className="md:col-span-1 flex flex-col justify-center">
+          <h1 className="text-3xl font-extrabold text-slate-900">Upload your CSV</h1>
+          <p className="mt-2 text-slate-700">Drag and drop your file, or choose a CSV from your device. After upload, map your columns and validate before submitting.</p>
+          <ul className="mt-4 text-sm text-slate-700 list-disc list-inside">
+            <li>Accepted format: .csv</li>
+            <li>Header row required</li>
+            <li>No personal data</li>
+          </ul>
+          {message && (
+            <div className='mt-4 rounded-md border border-red-200 bg-red-50 text-red-700 text-sm p-3'>
+              {message}
+            </div>
+          )}
         </div>
-        <div className="col-span-2 space-y-4">
-      <div
-        className='border-dashed border-4 border-gray-400 bg-purple-100 py-12 flex justify-center items-center cursor-pointer my-10'
-        style={{ position: 'relative' }} // Ensure this div is positioned relatively
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-      >
-        <input
-          type="file"
-          accept=".csv"
-          onChange={(e) => handleFileDrop(e.target.files[0])}
-          style={{ width: "100%", height: "100%", opacity: 0, position: "absolute", zIndex: 10 }}
-        />
-        <p>Drag and drop your CSV file here, or click to select files</p>
-      </div>
-      </div>
+        <div className="md:col-span-2">
+          <motion.div
+            role="button"
+            tabIndex={0}
+            aria-label="Upload CSV by drag and drop or browse"
+            aria-describedby="dropzone-help"
+            onClick={handleDropzoneClick}
+            onKeyDown={handleDropzoneKeyDown}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className={`group relative my-4 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-14 transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 ${isDragging ? 'border-[#662583] bg-purple-50' : 'border-slate-300 bg-gradient-to-br from-white to-purple-50 hover:border-[#662583] focus:ring-[#662583]'}`}
+          >
+            <FiUploadCloud className={`mb-4 h-12 w-12 ${isDragging ? 'text-[#662583]' : 'text-slate-400'} group-hover:text-[#662583]`} aria-hidden="true" />
+            <div className="text-center">
+              <div className="text-slate-900 font-semibold text-lg">Drag and drop your CSV</div>
+              <div className="text-slate-600 text-sm">or</div>
+              <div className="mt-3">
+                <button type="button" onClick={handleDropzoneClick} className="inline-flex items-center rounded-md bg-[#662583] px-4 py-2 text-white font-medium shadow-sm hover:bg-[#C7215D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#662583]">Browse files</button>
+              </div>
+              <div id="dropzone-help" className="mt-2 text-xs text-slate-500">Max file size depends on your browser memory</div>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={(e) => e.target.files && e.target.files[0] && handleFileDrop(e.target.files[0])}
+              className="sr-only"
+            />
+          </motion.div>
+        </div>
+      </section>
 
-      {/* Display error or success messages */}
-      {message && <p className='font-semibold text-xl text-red-500'>{message}</p>}
+      {/* Display error or success messages (secondary) */}
+      {message && <p className='font-semibold text-base text-red-600 mt-3'>{message}</p>}
 
-      <div className='flex flex-col space-y-4 font-semibold text-black mb-4  p-6 rounded-lg'>
+      <div className='flex flex-col space-y-4 font-semibold text-black mb-6 mt-6 p-6 rounded-2xl bg-white shadow ring-1 ring-slate-200'>
       {data.length > 0 && (
         <>
-        <h2 className='font-bold text-2xl'> Please enter the Metadata for your dataset here</h2>
-        <p className=''>By this we mean any information about your dataset, like a name, where you might be able to find the original data, when it was published etc. You don't have to give this information, but it will help us other users.</p>
-    <input 
+        <h2 className='font-bold text-2xl'>Add dataset metadata</h2>
+        <p className='text-slate-700'>Provide a title, license, source URL and other context. This helps others understand and reuse your data.</p>
+        <input 
         type="text" 
         placeholder="Dataset Title" 
         value={datasetFields.title} 
@@ -800,28 +863,28 @@ const submitData = async (data, mappings, additionalFields, datasetId) => {
 
 
 {data.length > 0 && (
-  <div className='flex flex-col space-y-4 font-semibold text-black mb-4 bg-slate-100 p-6 rounded-lg'>
-      <p>Important - If you do not have a particular column in your data, you can use the input fields below to add to your data. PLEASE BE AWARE This will add the value you enter to EVERY row of your data.</p>
-      <p>For example, if you add Newcastle in the Place field, every row in your data will show as having been in Newcastle.</p>
-      <p>Click below to show these fields</p>
+  <div className='flex flex-col space-y-4 font-semibold text-black mb-6 bg-white p-6 rounded-2xl shadow ring-1 ring-slate-200'>
+      <div>
+        <h3 className='font-bold text-xl'>Optional: Add fields to every row</h3>
+        <p className='text-slate-700 text-sm'>If your CSV is missing a column, you can add a constant value for all rows. For example, set Place to "Newcastle" to apply it to every row.</p>
+      </div>
       <div className='flex items-center justify-center'>
-        <button onClick={toggleFields} className="bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300 w-1/3 my-1">
+        <button onClick={toggleFields} aria-expanded={showFields} className="bg-[#662583] text-white font-medium py-2 px-4 rounded-md hover:bg-[#C7215D] transition-colors duration-300 w-full md:w-1/3 my-1">
           {showFields ? 'Hide Additional Fields' : 'Show Additional Fields'}
         </button>
       </div>
       {showFields && (
-        <div className='flex flex-col space-y-4'>
-          <input type="text" placeholder="Place" value={additionalFields.place} onChange={(e) => handleFieldChange('place', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
-          <input type="date" placeholder="Date" value={additionalFields.date} onChange={(e) => handleFieldChange('date', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
-          <input type="text" placeholder="Period" value={additionalFields.period} onChange={(e) => handleFieldChange('period', e.target.value)} className="p-2 border placeholder-black placeholder-italic" />
+        <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
+          <input type="text" placeholder="Place" value={additionalFields.place} onChange={(e) => handleFieldChange('place', e.target.value)} className="p-2 border rounded placeholder-black placeholder-italic" />
+          <input type="date" placeholder="Date" value={additionalFields.date} onChange={(e) => handleFieldChange('date', e.target.value)} className="p-2 border rounded placeholder-black placeholder-italic" />
+          <input type="text" placeholder="Period" value={additionalFields.period} onChange={(e) => handleFieldChange('period', e.target.value)} className="p-2 border rounded placeholder-black placeholder-italic" />
         </div>
       )}
   </div>
 )}
-      </div>
-      <div className='my-5 bg-slate-100'>
+      <div className='my-6'>
       {data.length > 0 && (
-        <div className='p-4 text-sm bg-purple-50 border border-purple-200 rounded mb-3'>
+        <div className='p-4 text-sm bg-purple-50 border border-purple-200 rounded-2xl mb-3'>
           <div className='font-semibold mb-2'>How to map your columns</div>
           <ul className='list-disc list-inside space-y-1'>
             <li>
