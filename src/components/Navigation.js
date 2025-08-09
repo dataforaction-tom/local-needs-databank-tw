@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaRegHospital, FaHandsHelping, FaBookOpen, FaChartBar, FaPlusCircle } from 'react-icons/fa';
+import { FaRegHospital, FaHandsHelping, FaBookOpen, FaChartBar, FaPlusCircle, FaMapMarked } from 'react-icons/fa';
 import { MdOutlineSportsGymnastics } from 'react-icons/md';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -13,6 +13,7 @@ const Navigation = () => {
     { name: 'Charity sector', path: '/charity', icon: <FaBookOpen className="mr-1" /> },
     { name: 'Youth', path: '/youth', icon: <MdOutlineSportsGymnastics className="mr-1" /> },
     { name: 'Data Explorer', path: '/explore', icon: <FaChartBar className="mr-1" /> },
+    { name: 'Areas of need', path: '/top-areas', icon: <FaMapMarked className="mr-1" /> },
     { name: 'Contribute', path: '/contribute', icon: <FaPlusCircle className="mr-1" /> },
   ];
 

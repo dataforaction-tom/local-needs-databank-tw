@@ -20,6 +20,7 @@ const Advice = lazy(() => import('./Advice'));
 const Charity = lazy(() => import('./Charity'));
 const Explore = lazy(() => import('./Explore'));
 const LandingPage = lazy(() => import('./LandingPage'));
+const TopAreas = lazy(() => import('./TopAreas'));
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ function AppRoutes() {
             <Route path="/charity" element={<PageContainer><Charity /></PageContainer>} />
             <Route path="/explore" element={<PageContainer><Explore /></PageContainer>} />
             <Route path="/youth" element={<PageContainer><Youth /></PageContainer>} />
+            <Route path="/top-areas" element={<PageContainer><TopAreas /></PageContainer>} />
           </Routes>
         </AnimatePresence>
       </Suspense>

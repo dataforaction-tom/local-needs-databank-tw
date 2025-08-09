@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaRegHospital, FaHandsHelping, FaBookOpen, FaChartBar, FaPlusCircle } from 'react-icons/fa';
+import { FaRegHospital, FaHandsHelping, FaBookOpen, FaChartBar, FaPlusCircle, FaMapMarked } from 'react-icons/fa';
 import { MdOutlineSportsGymnastics } from "react-icons/md";
 import { motion } from 'framer-motion';
 
@@ -11,6 +11,7 @@ const LandingPage = () => {
         { name: 'Charity Sector', path: '/charity', icon: <FaBookOpen size="3em" /> },
         {name: 'Youth', path: '/youth', icon: <MdOutlineSportsGymnastics size="3em" />},
         { name: 'Data Explorer', path: '/explore', icon: <FaChartBar size="3em" /> },
+        { name: 'Areas of need', path: '/top-areas', icon: <FaMapMarked size="3em" /> },
         { name: 'Contribute', path: '/contribute', icon: <FaPlusCircle size="3em" /> }
     ];
 
